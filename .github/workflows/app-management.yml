@@ -4,21 +4,52 @@ on:
   push:
     branches:
       - main
+    # paths:
+    #   - 'app-management/**'
   pull_request:
     branches:
-      - main
-  path:
-    - 'app-management/**'
+      - main  
+
+# Set default wokring directory to app-management
+defaults:
+  run:
+    working-directory: ./app-management
 
 jobs:
-  run-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    - uses: actions/cache@v2
-    - run: npm ci
-    - run: npm run test:cov
-    
+  test_and_build:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:cov
+      - run: npm run build
+  docker_build:
+    name: Docker Build
+    needs: test_and_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3   
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.ACCESS_TOKEN }}
+      - uses: docker/build-push-action@v4
+        with:
+          context: ./app-management
+          file: ./app-management/Dockerfile
+          push: true
+          tags: ghcr.io/deployment-helper/app-management:lastest
 

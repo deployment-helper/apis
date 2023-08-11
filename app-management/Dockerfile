@@ -7,6 +7,8 @@ COPY nest-cli.json ./
 COPY package*.json ./
 COPY tsconfig*.json ./
 
+LABEL org.opencontainers.image.source=https://github.com/deployment-helper/apis
+
 RUN npm install
 RUN npm run build
 
