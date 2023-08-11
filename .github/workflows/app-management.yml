@@ -36,8 +36,7 @@ jobs:
       - run: npm run test:cov
       - run: npm run build
   docker_build:
-    name: Docker Build
-    needs: test_and_build
+    name: Github Container Registry build and push    
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3   
@@ -52,4 +51,27 @@ jobs:
           file: ./app-management/Dockerfile
           push: true
           tags: ghcr.io/deployment-helper/app-management:lastest
+  docker_build_aws:
+    name: AWS Container Registry build and push    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3   
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./app-management
+          file: ./app-management/Dockerfile
+          push: true
+          tags: 168490963129.dkr.ecr.us-east-1.amazonaws.com/app-management:latest          
 
