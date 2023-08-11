@@ -11,5 +11,5 @@ This is a collection of all APIs for `Deployment-Helper` project.
 ### Run
 
 `docker build -t app-management .`
-`docker run -p 3000:3000 -e PORT=3000 app-management`
+`docker run -p 8080:8080 -e "PORT=8080" app-management`
 
