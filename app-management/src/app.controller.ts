@@ -1,6 +1,5 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './services/app.service';
-import { ConfigService } from '@nestjs/config';
 import { PermissionEntity } from './entities/permission.entity';
 import { PermissionService } from './services/permission.service';
 

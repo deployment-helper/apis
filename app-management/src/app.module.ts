@@ -19,7 +19,7 @@ import { ProjectEntity } from './entities/project.entity';
     database: process.env.DB_NAME,
     entities: [__dirname + '/**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/migrations/*{.ts,.js}'],
-    synchronize: true
+    synchronize: false,
   }),
   TypeOrmModule.forFeature([PermissionEntity,ProjectEntity])
 ],
