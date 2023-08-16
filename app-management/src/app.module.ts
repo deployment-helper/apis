@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './services/app.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PermissionEntity } from './entities/permission.entity';
 import { PermissionService } from './services/permission.service';
 import { ProjectEntity } from './entities/project.entity';
