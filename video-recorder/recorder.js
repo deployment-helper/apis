@@ -4,8 +4,8 @@ import { PuppeteerScreenRecorder } from "puppeteer-screen-recorder";
 
 import { RecorderConfig } from "./config";
 
-// Milli seconds
-const VIDEO_DURATION = 1000 * 10;
+// Milli seconds mills * sec * min
+const VIDEO_DURATION = 1000 * 60 * 5;
 const LOGGING_INTERVAL = 1000 * 2;
 
 export const run = async (pageurl, videoPath) => {
@@ -32,17 +32,44 @@ export const run = async (pageurl, videoPath) => {
     console.log(`Time reamaining ${timeRemaining} ms`);
   }, LOGGING_INTERVAL);
 
-  const sleep = new Promise((res, rej) => {
-    setTimeout(() => {
-      // all will check for fun call promises
-      Promise.all([recorder.stop(), browser.close()])
-        .then(res)
-        .catch(rej)
+  
+page.click("#punch-start-presentation-left");
+
+const clicks = [1000* 2, 1000* 2, 1000 * 2];
+
+let clickcount = 0;
+
+function setClickDelay(ms){
+
+  setTimeout(()=>{
+    clickcount++;
+    page.keyboard.press("ArrowRight").then(()=>{
+      if(clickcount === clicks.length){
+      Promise.all([recorder.stop(), browser.close()])        
         .finally(() => {
           clearInterval(interval);
         });
-    }, VIDEO_DURATION);
-  });
+      }else{
+        setClickDelay(clicks[clickcount]);
+      }
+      
+    });
+  },ms)
 
-  await sleep;
+}
+
+setClickDelay(clicks[clickcount]);
+  // const sleep = new Promise((res, rej) => {
+  //   setTimeout(() => {
+  //     // all will check for fun call promises
+  //     Promise.all([recorder.stop(), browser.close()])
+  //       .then(res)
+  //       .catch(rej)
+  //       .finally(() => {
+  //         clearInterval(interval);
+  //       });
+  //   }, VIDEO_DURATION);
+  // });
+
+  // await sleep;
 };
