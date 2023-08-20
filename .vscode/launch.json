@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug AppMgt",
+            "cwd": "${workspaceFolder}/app-management",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "start:debug",
+                "--",
+                "--inspect-brk"
+            ],
+            "autoAttachChildProcesses": true,
+            "restart": true,
+            "sourceMaps": true,
+            "stopOnEntry": true,
+            "console": "integratedTerminal"
+        }
+    ]
+}
