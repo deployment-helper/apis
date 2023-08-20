@@ -22,9 +22,10 @@ export class AuthService {
   }
 
   async createToken(code: string): Promise<any> {
+    const url = new URL('/oauth2/token', this.AWS_COGNITO_POOL_URL);
     const { data } = await firstValueFrom(
       this.httpserv
-        .post(this.AWS_COGNITO_POOL_URL, undefined, {
+        .post(url.href, undefined, {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
@@ -49,18 +50,68 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<any> {
-    // TODO: error handling
+    const url = new URL('/oauth2/token', this.AWS_COGNITO_POOL_URL);
     const { data } = await firstValueFrom(
-      this.httpserv.post(this.AWS_COGNITO_POOL_URL, undefined, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        params: {
-          grant_type: 'refresh_token',
-          client_id: this.CLIENT_ID,
-          refresh_token: refreshToken,
-        },
-      }),
+      this.httpserv
+        .post(url.href, undefined, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          params: {
+            grant_type: 'refresh_token',
+            client_id: this.CLIENT_ID,
+            refresh_token: refreshToken,
+          },
+        })
+        .pipe(
+          catchError((error: AxiosError) => {
+            throw new HttpException('Error', error.response.status);
+          }),
+        ),
+    );
+
+    return data;
+  }
+
+  async getUserInfo(accessToken: string): Promise<any> {
+    const url = new URL('/oauth2/userInfo', this.AWS_COGNITO_POOL_URL);
+    const { data } = await firstValueFrom(
+      this.httpserv
+        .get(url.href, {
+          headers: {
+            Authorization: accessToken,
+          },
+        })
+        .pipe(
+          catchError((error: AxiosError) => {
+            throw new HttpException('Error', error.response.status);
+          }),
+        ),
+    );
+
+    return data;
+  }
+
+  async revokeToken(accessToken: string): Promise<any> {
+    const url = new URL('/oauth2/revoke', this.AWS_COGNITO_POOL_URL);
+
+    const { data } = await firstValueFrom(
+      this.httpserv
+        .post(url.href, undefined, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          params: {
+            token: accessToken,
+            client_id: this.CLIENT_ID,
+          },
+        })
+        .pipe(
+          catchError((error: AxiosError) => {
+            console.log(error);
+            throw new HttpException('Error', error.response.status);
+          }),
+        ),
     );
 
     return data;
