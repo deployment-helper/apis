@@ -1,19 +1,19 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class ProjectEntity{
-    @PrimaryGeneratedColumn()
-    id:number;
+export class ProjectEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    name:string;
+  @Column()
+  name: string;
 
-    @Column()
-    description:string;
+  @Column()
+  description: string;
 
-    @Column()
-    addedAt:Date;
+  @Column()
+  addedAt: Date;
 
-    @Column()
-    updatedAt:Date;
+  @Column()
+  updatedAt: Date;
 }

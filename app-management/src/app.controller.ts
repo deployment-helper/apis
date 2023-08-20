@@ -5,7 +5,10 @@ import { PermissionService } from './services/permission.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService,private permServ:PermissionService) {}
+  constructor(
+    private readonly appService: AppService,
+    private permServ: PermissionService,
+  ) {}
 
   @Get('/health')
   getHealth(): string {
@@ -20,11 +23,9 @@ export class AppController {
   @Post('/project')
   createProject(): string {
     const permission = new PermissionEntity();
-    permission.userId = "123456789";
+    permission.userId = '123456789';
     permission.permission = 'create_project';
-    this.permServ.create(permission); 
+    this.permServ.create(permission);
     return permission.userId;
-
   }
-
 }
