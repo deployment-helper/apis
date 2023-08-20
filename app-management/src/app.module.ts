@@ -7,10 +7,11 @@ import { AppService } from './services/app.service';
 import { PermissionEntity } from './entities/permission.entity';
 import { PermissionService } from './services/permission.service';
 import { ProjectEntity } from './entities/project.entity';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
-  imports: [ConfigModule.forRoot(),TypeOrmModule.forRoot({
+  imports: [ConfigModule.forRoot({isGlobal:true}),TypeOrmModule.forRoot({
     type: 'postgres',
     host: process.env.DB_HOST,
     port: 5432,
@@ -21,7 +22,8 @@ import { ProjectEntity } from './entities/project.entity';
     migrations: [__dirname + '/migrations/*{.ts,.js}'],
     synchronize: false,
   }),
-  TypeOrmModule.forFeature([PermissionEntity,ProjectEntity])
+  TypeOrmModule.forFeature([PermissionEntity,ProjectEntity]),
+  AuthModule
 ],
   controllers: [AppController],
   providers: [AppService, PermissionService],
