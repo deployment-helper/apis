@@ -8,6 +8,7 @@ import { PermissionEntity } from './entities/permission.entity';
 import { PermissionService } from './services/permission.service';
 import { ProjectEntity } from './entities/project.entity';
 import { AuthModule } from './auth/auth.module';
+import { YoutubeModule } from './youtube/youtube.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     TypeOrmModule.forFeature([PermissionEntity, ProjectEntity]),
     AuthModule,
+    YoutubeModule,
   ],
   controllers: [AppController],
   providers: [AppService, PermissionService],

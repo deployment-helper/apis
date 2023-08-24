@@ -1,8 +1,15 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpException, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
+import * as jwks from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
+import e from 'express';
 
 @Injectable()
 export class AuthService {
@@ -10,6 +17,8 @@ export class AuthService {
   private GRANT_TYPE: string;
   private REDIRECT_URI: string;
   private CLIENT_ID: string;
+
+  private jwksIns: jwks.JwksClient;
 
   constructor(
     private readonly httpserv: HttpService,
@@ -19,6 +28,9 @@ export class AuthService {
     this.CLIENT_ID = configServ.getOrThrow('CLIENT_ID');
     this.REDIRECT_URI = configServ.getOrThrow('REDIRECT_URI');
     this.GRANT_TYPE = configServ.getOrThrow('GRANT_TYPE');
+    this.jwksIns = new jwks.JwksClient({
+      jwksUri: configServ.getOrThrow('AWS_COGNITO_JWKS_URL'),
+    });
   }
 
   async createToken(code: string): Promise<any> {
@@ -108,11 +120,43 @@ export class AuthService {
         })
         .pipe(
           catchError((error: AxiosError) => {
-            console.log(error);
             throw new HttpException('Error', error.response.status);
           }),
         ),
     );
+
+    return data;
+  }
+
+  getKey(header, callback) {
+    this.jwksIns.getSigningKey(header.kid, (err, key) => {
+      const signingKey = key.getPublicKey();
+      try {
+        callback(null, signingKey);
+      } catch (e) {
+        console.log(e);
+      }
+    });
+  }
+
+  async validateToken(accessToken: string): Promise<any> {
+    const token =
+      accessToken && accessToken.split(' ').length >= 2
+        ? accessToken.split(' ')[1]
+        : accessToken;
+    const p = new Promise((res, rej) => {
+      jwt.verify(token, this.getKey.bind(this), (err, decoded) => {
+        if (err) {
+          rej(err);
+        } else {
+          res(decoded);
+        }
+      });
+    });
+
+    const data = await p.catch((err) => {
+      throw new UnauthorizedException(err.message);
+    });
 
     return data;
   }

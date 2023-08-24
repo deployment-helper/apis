@@ -33,4 +33,9 @@ export class AuthController {
   revokeToken(@Body('refresh_token') refreshToken): Promise<any> {
     return this.serv.revokeToken(refreshToken.trim());
   }
+
+  @Get('validateToken')
+  validateToken(@Headers('Authorization') accessToken): Promise<any> {
+    return this.serv.validateToken(accessToken);
+  }
 }

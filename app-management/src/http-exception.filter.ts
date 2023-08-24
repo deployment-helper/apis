@@ -19,11 +19,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     this.logger.warn(
       'Http Exception',
-      `Status:${status}, path:${request.url}}`,
+      `Status:${status}, message:${exception.message}, name:${exception.name}, path:${request.url}}`,
     );
 
     response.status(status).json({
       statusCode: status,
+      message: exception.message,
+      name: exception.name,
       timestamp: new Date().toISOString(),
       path: request.url,
     });
