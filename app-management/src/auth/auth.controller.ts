@@ -5,9 +5,11 @@ import {
   Headers,
   Query,
   UseFilters,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { HttpExceptionFilter } from 'src/http-exception.filter';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
@@ -25,6 +27,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @UseGuards(AuthGuard)
   getUserInfo(@Headers('Authorization') accessToken): Promise<any> {
     return this.serv.getUserInfo(accessToken);
   }
@@ -35,6 +38,7 @@ export class AuthController {
   }
 
   @Get('validateToken')
+  @UseGuards(AuthGuard)
   validateToken(@Headers('Authorization') accessToken): Promise<any> {
     return this.serv.validateToken(accessToken);
   }
