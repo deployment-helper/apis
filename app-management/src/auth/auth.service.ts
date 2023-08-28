@@ -9,7 +9,6 @@ import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import * as jwks from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
-import e from 'express';
 
 @Injectable()
 export class AuthService {
