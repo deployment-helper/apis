@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import * as jwks from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
@@ -26,9 +31,7 @@ export class AuthGuard implements CanActivate {
     });
   }
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest<Request>();
     const accessToken = req.headers.authorization;
     const token =
@@ -46,6 +49,10 @@ export class AuthGuard implements CanActivate {
       });
     });
 
-    return p;
+    const isValid = await p.catch(() => {
+      throw new UnauthorizedException('Invalid token');
+    });
+
+    return await isValid;
   }
 }
