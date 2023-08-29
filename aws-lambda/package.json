@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build-layer": "echo 'build layer'"
+  },
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.398.0",
+    "@aws-sdk/lib-dynamodb": "^3.398.0",
+    "dotenv": "^16.3.1"
+  }
+}
