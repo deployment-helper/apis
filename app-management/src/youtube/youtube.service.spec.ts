@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { YoutubeService } from './youtube.service';
+import { ConfigModule } from '@nestjs/config';
 
 describe('YoutubeService', () => {
   let service: YoutubeService;
@@ -7,6 +8,7 @@ describe('YoutubeService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [YoutubeService],
+      imports: [ConfigModule.forRoot({ isGlobal: true })],
     }).compile();
 
     service = module.get<YoutubeService>(YoutubeService);
