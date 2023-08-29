@@ -50,7 +50,7 @@ export class AuthService {
         .pipe(
           catchError((error: AxiosError) => {
             throw new HttpException(
-              'Something went wrong',
+              JSON.stringify(error.response.data),
               error.response.status,
             );
           }),
