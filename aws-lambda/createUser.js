@@ -14,8 +14,8 @@ export const handler = async (event) => {
   const command = new PutCommand({
     TableName: "users",
     Item: {
-      email: "test-l1@example.com",
-      userId: "test-l1",
+      email: event.request.userAttributes.email,
+      userId: event.request.userAttributes.sub,
       slideProjects: [
         {
           projectName: DEFAULT_PROJECT_NAME,
@@ -30,12 +30,10 @@ export const handler = async (event) => {
   });
 
   await docClient.send(command);
-  // TODO implement
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify(event),
-  };
-  return response;
+
+  console.log(event.request);
+
+  return event;
 };
 
 export default handler;
