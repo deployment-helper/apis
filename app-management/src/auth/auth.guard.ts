@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import * as jwks from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
@@ -40,7 +39,7 @@ export class AuthGuard implements CanActivate {
         : accessToken;
 
     const p = new Promise<boolean>((res, rej) => {
-      jwt.verify(token, this.getKey.bind(this), (err, decoded) => {
+      jwt.verify(token, this.getKey.bind(this), (err) => {
         if (err) {
           rej(false);
         } else {
