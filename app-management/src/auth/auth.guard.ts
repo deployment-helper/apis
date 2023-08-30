@@ -39,10 +39,11 @@ export class AuthGuard implements CanActivate {
         : accessToken;
 
     const p = new Promise<boolean>((res, rej) => {
-      jwt.verify(token, this.getKey.bind(this), (err) => {
+      jwt.verify(token, this.getKey.bind(this), (err, decoded) => {
         if (err) {
           rej(false);
         } else {
+          req['user'] = decoded;
           res(true);
         }
       });
