@@ -1,3 +1,5 @@
+import { ProjectModel } from './models/user.model';
+
 export interface Option {
   en: string;
   hi?: string;
@@ -39,10 +41,32 @@ export interface User {
   image: string;
 }
 
+export enum ProjectTypes {
+  slideProjects = 'slideProjects',
+}
+
+export interface IProject {
+  projectId: string;
+  projectName: string;
+}
+
+export interface IUser {
+  email: string;
+  updated_at: Date;
+  userId: string;
+  name?: string;
+}
+
+export type IUserWithProjectTypes = {
+  [key in ProjectTypes]: Array<ProjectModel>;
+} & IUser;
+
 interface exoportDefault {
   Presentation: Presentation;
   Slide: Slide;
   Option: Option;
+  Project: IProject;
+  ProjectTypes: ProjectTypes;
 }
 
 export default exoportDefault;

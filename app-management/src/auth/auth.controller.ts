@@ -10,11 +10,12 @@ import {
 import { AuthService } from './auth.service';
 import { HttpExceptionFilter } from 'src/http-exception.filter';
 import { AuthGuard } from './auth.guard';
+import { UserEntity } from 'src/dynamodb/user.entity';
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
 export class AuthController {
-  constructor(private serv: AuthService) {}
+  constructor(private serv: AuthService, private userEntity: UserEntity) {}
 
   @Get('createToken')
   createTokenByCode(@Query('code') code): Promise<any> {
@@ -28,8 +29,12 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  getUserInfo(@Headers('Authorization') accessToken): Promise<any> {
-    return this.serv.getUserInfo(accessToken);
+  async getUserInfo(@Headers('Authorization') accessToken): Promise<any> {
+    const user = await this.serv.getUserInfo(accessToken);
+
+    const dbUser: any = await this.userEntity.get(user.email);
+
+    return dbUser?.Item;
   }
 
   @Get('revoke')

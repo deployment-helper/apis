@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './client.service';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { UserModel } from 'src/models/user.model';
 
 @Injectable()
 export class UserEntity {
@@ -17,6 +18,11 @@ export class UserEntity {
         updated_at: new Date().toISOString(),
       },
     });
+    return this.db.send(command);
+  }
+
+  get(email: string) {
+    const command = UserModel.toDynamoDbGetItemCommand(email);
     return this.db.send(command);
   }
 }

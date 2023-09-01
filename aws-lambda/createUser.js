@@ -21,11 +21,12 @@ export const handler = async (event) => {
           projectName: DEFAULT_PROJECT_NAME,
           // base64 unique_id, combination userId + current date time
           projectId: Buffer.from(
-            `test-l1-${new Date().toISOString()}`
+            `${event.request.userAttributes.sub}-${new Date().toISOString()}`
           ).toString("base64"),
         },
       ],
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     },
   });
 

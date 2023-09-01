@@ -14,11 +14,6 @@ export class SlidesController {
     private s3: S3Service,
   ) {}
 
-  @Get('getUser')
-  async createUser() {
-    return this.user.add('test@example.com', 'test1');
-  }
-
   @Post('createPresentation')
   async addProject(@Body() presentation: PresentationDto, @Req() req: any) {
     const id = Buffer.from(
