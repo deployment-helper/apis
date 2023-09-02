@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './client.service';
 import PresentationDto from 'src/slides/presentation.dto';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import PresentationModel from 'src/models/presentation.model';
 
 @Injectable()
 export class PresentationEntity {
@@ -15,20 +15,15 @@ export class PresentationEntity {
     id: string,
     s3FileName: string,
   ) {
-    const command = new PutCommand({
-      TableName: this.tableName,
-      Item: {
-        id: id,
-        name: pres.titleEn,
-        projectId: pres.projectId,
-        userId,
-        s3_file: s3FileName,
-        s3_meta_file: '',
-        updatedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      },
-    });
+    const presentation = new PresentationModel(
+      id,
+      userId,
+      pres.name,
+      pres.projectId,
+      s3FileName,
+      '',
+    );
 
-    return this.db.send(command);
+    return this.db.send(presentation.toDynamoDbPutCommand());
   }
 }

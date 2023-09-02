@@ -26,12 +26,13 @@ export class UserModel implements IUserWithProjectTypes {
   email: string;
   userId: string;
   name: string;
-  updated_at: Date;
+  updatedAt: Date;
+  createdAt?: Date;
   [ProjectTypes.slideProjects]: Array<ProjectModel> = [];
 
-  constructor(email: string, updated_at: Date, userId: string, name?: string) {
+  constructor(email: string, updatedAt: Date, userId: string, name?: string) {
     this.email = email;
-    this.updated_at = updated_at;
+    this.updatedAt = updatedAt;
     this.userId = userId;
     this.name = name;
   }
@@ -46,7 +47,8 @@ export class UserModel implements IUserWithProjectTypes {
       Item: {
         email: this.email,
         userId: this.userId,
-        updated_at: this.updated_at.toISOString(),
+        updatedAt: this.updatedAt.toISOString(),
+        createdAt: this.createdAt?.toISOString() || '',
         name: this.name || '',
         [ProjectTypes.slideProjects]: this[ProjectTypes.slideProjects].map(
           (p) => p.toJson(),

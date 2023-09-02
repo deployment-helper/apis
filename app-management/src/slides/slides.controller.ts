@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
+
 import { AuthGuard } from 'src/auth/auth.guard';
-import { UserEntity } from 'src/dynamodb/user.entity';
 import PresentationDto from './presentation.dto';
 import { PresentationEntity } from 'src/dynamodb/presentation.entity';
 import { S3Service } from 'src/dynamodb/s3.service';
@@ -8,22 +9,23 @@ import { S3Service } from 'src/dynamodb/s3.service';
 @Controller('slides')
 @UseGuards(AuthGuard)
 export class SlidesController {
-  constructor(
-    private user: UserEntity,
-    private pres: PresentationEntity,
-    private s3: S3Service,
-  ) {}
+  constructor(private pres: PresentationEntity, private s3: S3Service) {}
 
   @Post('createPresentation')
-  async addProject(@Body() presentation: PresentationDto, @Req() req: any) {
-    const id = Buffer.from(
-      `${presentation.projectId}${new Date().toISOString()}`,
-    ).toString('base64');
-
+  async createPresentation(@Body() data: PresentationDto, @Req() req: any) {
+    const id = uuid();
     const s3Folder = this.s3.generateFolder(id);
 
-    await this.s3.create(presentation, s3Folder.folder);
+    // create S3 file
+    await this.s3.create(data.file, s3Folder.folder);
+    // create entry in database
+    const dbData = await this.pres.create(
+      data,
+      req.user.sub,
+      id,
+      s3Folder.s3Loc,
+    );
 
-    return this.pres.create(presentation, req.user.sub, id, s3Folder.s3Loc);
+    return dbData;
   }
 }
