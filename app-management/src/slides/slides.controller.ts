@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -12,6 +19,7 @@ export class SlidesController {
   constructor(private pres: PresentationEntity, private s3: S3Service) {}
 
   @Post('createPresentation')
+  @HttpCode(201)
   async createPresentation(@Body() data: PresentationDto, @Req() req: any) {
     const id = uuid();
     const s3Folder = this.s3.generateFolder(id);
@@ -26,6 +34,6 @@ export class SlidesController {
       s3Folder.s3Loc,
     );
 
-    return dbData;
+    return JSON.stringify(dbData);
   }
 }
