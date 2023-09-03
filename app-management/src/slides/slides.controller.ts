@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
+  Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -35,5 +38,11 @@ export class SlidesController {
     );
 
     return JSON.stringify(dbData);
+  }
+
+  @Get('getPresentations')
+  async getPresentations(@Query('projectId') projectId: string) {
+    const data = await this.pres.list(projectId);
+    return data;
   }
 }

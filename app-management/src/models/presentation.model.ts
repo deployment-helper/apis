@@ -1,4 +1,4 @@
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 import { IPresentation } from 'src/types';
 import { PRESENTATION_TABLE_NAME } from 'src/constants';
@@ -33,6 +33,18 @@ export class PresentationModel implements IPresentation {
         projectId: this.projectId,
         s3File: this.s3File,
         s3MetaFile: this.s3MetaFile,
+      },
+    });
+
+    return command;
+  }
+
+  public static toQuery(projectId: string, limit = 10): any {
+    const command = new QueryCommand({
+      TableName: PresentationModel.tableName,
+      KeyConditionExpression: 'projectId = :projectId',
+      ExpressionAttributeValues: {
+        ':projectId': projectId,
       },
     });
 

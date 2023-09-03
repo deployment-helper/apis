@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './client.service';
 import PresentationDto from 'src/slides/presentation.dto';
 import PresentationModel from 'src/models/presentation.model';
+import { QueryCommand } from '@aws-sdk/client-dynamodb';
 
 @Injectable()
 export class PresentationEntity {
@@ -25,5 +26,10 @@ export class PresentationEntity {
     );
 
     return this.db.send(presentation.toDynamoDbPutCommand());
+  }
+
+  list(projectId: string) {
+    const query = PresentationModel.toQuery(projectId);
+    return this.db.send(query);
   }
 }
