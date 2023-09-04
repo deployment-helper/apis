@@ -21,9 +21,9 @@ import { S3Service } from 'src/dynamodb/s3.service';
 export class SlidesController {
   constructor(private pres: PresentationEntity, private s3: S3Service) {}
 
-  @Post('createPresentation')
+  @Post('create')
   @HttpCode(201)
-  async createPresentation(@Body() data: PresentationDto, @Req() req: any) {
+  async create(@Body() data: PresentationDto, @Req() req: any) {
     const id = uuid();
     const s3Folder = this.s3.generateFolder(id);
 
@@ -40,9 +40,9 @@ export class SlidesController {
     return JSON.stringify(dbData);
   }
 
-  @Get('getPresentations')
-  async getPresentations(@Query('projectId') projectId: string) {
+  @Get('list')
+  async list(@Query('projectId') projectId: string) {
     const data = await this.pres.list(projectId);
-    return data;
+    return JSON.stringify(data);
   }
 }
