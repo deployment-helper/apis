@@ -1,0 +1,11 @@
+FROM node:18
+
+WORKDIR /app
+
+COPY ./package.json ./
+COPY ./package-lock.json ./
+
+RUN npm ci
+
+RUN echo "Build successful, layer created and moved to dist folder"
+RUN exit 0

@@ -1,0 +1,34 @@
+{
+  "totalDur": "",
+  "desc": {
+    "file": "<name>",
+    "dur": "<number>"
+  },
+
+  "slides": [
+    {
+      "questionLang": {
+        "file": "<question><index><lang>",
+        "dur": ""
+      },
+      "questionLang2": {
+        "file": "<question><index><lang1>",
+        "dur": ""
+      },
+      "options": [
+        {
+          "file": "<question><index><option><index>",
+          "dur": ""
+        }
+      ],
+      "rightAnswer": {
+        "file": "<question><index><right-answer>",
+        "dur": ""
+      },
+      "explanationEn": {
+        "file": "<question><index><explanation>",
+        "dur": ""
+      }
+    }
+  ]
+}
