@@ -1,6 +1,6 @@
 # APIs
 
-This is memo repo reposiroty to backend services. 
+This is a mono repo repository for backend services. 
 
 **Architecture** 
 ![Arhitecture Design](./Architecture%20Design.jpg)
