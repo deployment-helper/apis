@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DynamodbClientService } from './client.service';
+import { DynamodbClientService } from './dynamodb.service';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { UserModel } from 'src/models/user.model';
 

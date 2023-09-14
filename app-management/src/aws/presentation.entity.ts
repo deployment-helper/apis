@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DynamodbClientService } from './client.service';
+import { DynamodbClientService } from './dynamodb.service';
 import PresentationDto from 'src/slides/presentation.dto';
 import PresentationModel from 'src/models/presentation.model';
 import { QueryCommand } from '@aws-sdk/client-dynamodb';

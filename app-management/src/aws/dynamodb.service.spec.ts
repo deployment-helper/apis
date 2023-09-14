@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DynamodbClientService } from './client.service';
+import { DynamodbClientService } from './dynamodb.service';
 
 describe('ClientService', () => {
   let service: DynamodbClientService;

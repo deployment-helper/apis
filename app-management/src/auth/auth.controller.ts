@@ -10,7 +10,7 @@ import {
 import { AuthService } from './auth.service';
 import { HttpExceptionFilter } from 'src/http-exception.filter';
 import { AuthGuard } from './auth.guard';
-import { UserEntity } from 'src/dynamodb/user.entity';
+import { UserEntity } from 'src/aws/user.entity';
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)

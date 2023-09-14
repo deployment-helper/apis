@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { YoutubeModule } from './youtube/youtube.module';
 import { SlidesModule } from './slides/slides.module';
-import { DynamodbModule } from './dynamodb/dynamodb.module';
+import { AwsModule } from './aws/aws.module';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { DynamodbModule } from './dynamodb/dynamodb.module';
     AuthModule,
     YoutubeModule,
     SlidesModule,
-    DynamodbModule,
+    AwsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
