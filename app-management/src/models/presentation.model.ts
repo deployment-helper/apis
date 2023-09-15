@@ -1,4 +1,6 @@
 import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
+import { GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 
 import { IPresentation } from 'src/types';
 import { PRESENTATION_TABLE_NAME } from 'src/constants';
@@ -46,6 +48,36 @@ export class PresentationModel implements IPresentation {
       ExpressionAttributeValues: {
         ':projectId': projectId,
       },
+    });
+
+    return command;
+  }
+
+  public static toUpdateAudioGenerated(pres: IPresentation) {
+    const command = new UpdateItemCommand({
+      TableName: PresentationModel.tableName,
+      Key: marshall({
+        projectId: pres.projectId,
+        updatedAt: pres.updatedAt,
+      }),
+      UpdateExpression: 'SET s3MetaFile = :val1, isAudioGenerate = :val2',
+      ExpressionAttributeValues: marshall({
+        ':val1': pres.s3MetaFile,
+        ':val2': pres.isAudioGenerate,
+      }),
+      ReturnValues: 'ALL_NEW',
+    });
+
+    return command;
+  }
+
+  public static getItem(pres: IPresentation) {
+    const command = new GetItemCommand({
+      TableName: PresentationModel.tableName,
+      Key: marshall({
+        projectId: pres.projectId,
+        updatedAt: pres.updatedAt,
+      }),
     });
 
     return command;

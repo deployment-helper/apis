@@ -29,6 +29,8 @@ export type IUserWithProjectTypes = {
 
 export interface IPresentation {
   id: string;
+  isAudioGenerate?: boolean;
+  isVideoGenerate?: boolean;
   userId: string;
   name: string;
   projectId: string;

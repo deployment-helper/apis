@@ -3,13 +3,14 @@ import {
   Controller,
   Get,
   HttpCode,
-  Param,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { AuthGuard } from 'src/auth/auth.guard';
 import PresentationCreateDto, { PresentationUpdateDto } from './slides.dto';
@@ -58,8 +59,10 @@ export class SlidesController {
     return data;
   }
 
-  @Post('audioStaus')
-  async audioStatus() {
-    return 'pending';
+  @Put('update')
+  @HttpCode(201)
+  async update(@Body() pres: PresentationUpdateDto) {
+    const data = await this.pres.updateAuidoStatus(pres);
+    return unmarshall(data.Attributes);
   }
 }

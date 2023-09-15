@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './dynamodb.service';
 import PresentationCreateDto from 'src/slides/slides.dto';
 import PresentationModel from 'src/models/presentation.model';
-import { QueryCommand } from '@aws-sdk/client-dynamodb';
+import { IPresentation } from 'src/types';
 
 @Injectable()
 export class PresentationEntity {
@@ -31,5 +31,13 @@ export class PresentationEntity {
   list(projectId: string) {
     const query = PresentationModel.toQuery(projectId);
     return this.db.send(query);
+  }
+
+  updateAuidoStatus(pres: IPresentation): Promise<any> {
+    const command = PresentationModel.toUpdateAudioGenerated(pres);
+    return this.db.send(command);
+  }
+  getItem(pres: IPresentation) {
+    return this.db.send(PresentationModel.getItem(pres));
   }
 }
