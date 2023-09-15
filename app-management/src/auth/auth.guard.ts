@@ -32,6 +32,13 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest<Request>();
+
+    const key = req?.query?.key;
+
+    if (key === process.env.SERVICE_KEY) {
+      return true;
+    }
+
     const accessToken = req.headers.authorization;
     const token =
       accessToken && accessToken.split(' ').length >= 2
