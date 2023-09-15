@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './dynamodb.service';
-import PresentationDto from 'src/slides/presentation.dto';
+import PresentationCreateDto from 'src/slides/slides.dto';
 import PresentationModel from 'src/models/presentation.model';
 import { QueryCommand } from '@aws-sdk/client-dynamodb';
 
@@ -11,7 +11,7 @@ export class PresentationEntity {
   constructor(private db: DynamodbClientService) {}
 
   create(
-    pres: PresentationDto,
+    pres: PresentationCreateDto,
     userId: string,
     id: string,
     s3FileName: string,
