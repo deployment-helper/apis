@@ -23,7 +23,9 @@ export class AuthController {
   }
 
   @Get('refreshToken')
-  createTokenByRefreshToken(@Body('refresh_token') refreshToken): Promise<any> {
+  createTokenByRefreshToken(
+    @Query('refresh_token') refreshToken,
+  ): Promise<any> {
     return this.serv.refreshToken(refreshToken);
   }
 
