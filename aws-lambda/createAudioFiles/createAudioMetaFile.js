@@ -5,13 +5,24 @@ import {
 } from "@aws-sdk/client-s3";
 import ky from "ky";
 import { config } from "dotenv";
+import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
 
 config();
 
 const client = new S3Client({ region: "ap-south-1" });
+const dbClient = DynamoDBDocumentClient.from(
+  new DynamoDBClient({
+    region: "ap-south-1",
+  })
+);
 const GCP_API_ENDPOINT = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GCP_API_KEY}`;
 const bucket = "vm-presentations";
 const metaFileName = "audioMetaData.json";
+const bucketPrefix = `s3://${bucket}/`;
+const tableName = "presentations";
 
 //TODO: unit testing is pending
 
@@ -172,17 +183,51 @@ async function createAuidoAndMetaFile(data, folderLocation) {
   }
 
   metadata.totalDur = totalDur;
+  const metaFile = `${folderLocation}/${metaFileName}`;
+  await writeS3File(metadata, metaFile);
+  console.log(`Writing metaFile = ${metaFile} to S3`);
+  return metaFile;
+}
 
-  await writeS3File(metadata, `${folderLocation}/${metaFileName}`);
+function getFolder(message) {
+  const metaFile = message.s3File?.replace(bucketPrefix, "");
+  const folder = metaFile.split("/")[0];
+  console.log("Folder=", folder);
+  return folder;
+}
+
+async function updatePresentation(message) {
+  const command = new UpdateItemCommand({
+    TableName: tableName,
+    Key: marshall({
+      projectId: message.projectId,
+      updatedAt: message.updatedAt,
+    }),
+    UpdateExpression: "SET s3MetaFile = :val1, isAudioGenerate = :val2",
+    ExpressionAttributeValues: marshall({
+      ":val1": message.s3MetaFile,
+      ":val2": true,
+    }),
+  });
+  await dbClient.send(command);
 }
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/command/GetObjectCommand/
 export const handler = async (event) => {
-  const folderLocation = "54fc9236-5577-4dcb-b918-30c4cca19829";
+  const record = event.Records[0];
+  const message = JSON.parse(record.Sns.Message);
+  const folderLocation = getFolder(message);
   const presentationStr = await readS3File(
     `${folderLocation}/presentation.json`
   );
-  await createAuidoAndMetaFile(JSON.parse(presentationStr), folderLocation);
+  const metaFile = await createAuidoAndMetaFile(
+    JSON.parse(presentationStr),
+    folderLocation
+  );
+
+  message.s3MetaFile = metaFile;
+
+  await updatePresentation(message);
   console.log("Audio and meta file generation done");
 };
 

@@ -10,7 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.408.0",
-    "ky": "^1.0.1"
+    "ky": "^1.0.1",
+    "@aws-sdk/client-dynamodb": "^3.398.0",
+    "@aws-sdk/lib-dynamodb": "^3.398.0",
+    "dotenv": "^16.3.1"
   },
   "type": "module"
 }
