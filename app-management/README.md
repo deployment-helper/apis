@@ -21,4 +21,4 @@ run docker compose file
 ### Run
 
 `docker build -t app-management .`
-`docker run -p 8080:8080 -e "PORT=8080" app-management`
+`docker run -p 9000:9000  --env-file ./.env app-management`

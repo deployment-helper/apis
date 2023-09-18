@@ -214,6 +214,7 @@ async function updatePresentation(message) {
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/command/GetObjectCommand/
 export const handler = async (event) => {
+  console.log("PROCESSING STARTED");
   const record = event.Records[0];
   const message = JSON.parse(record.Sns.Message);
   const folderLocation = getFolder(message);
@@ -229,6 +230,7 @@ export const handler = async (event) => {
 
   await updatePresentation(message);
   console.log("Audio and meta file generation done");
+  console.log("PROCESSING END");
 };
 
 export default handler;
