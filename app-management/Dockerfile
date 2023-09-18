@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:18 AS base
 
 WORKDIR /app
 
@@ -7,14 +7,25 @@ COPY nest-cli.json ./
 COPY package*.json ./
 COPY tsconfig*.json ./
 
-LABEL org.opencontainers.image.source=https://github.com/deployment-helper/apis
-
 RUN npm install
 RUN npm run build
+
+
+# ---- Release ----
+FROM node:18-alpine AS release
+# Create app directory
+WORKDIR /app
+# Install production dependencies
+COPY --from=BASE /app/package*.json ./
+RUN npm install --only=production
+# Copy built app files
+COPY --from=base /app/dist ./dist
+
+# Expose port and define CMD
 
 ARG PORT=3000
 ENV PORT=${PORT}
 
 EXPOSE ${PORT}
-
-CMD ["npm", "run", "start:prod"]
+ENTRYPOINT ["npm", "run"]
+CMD ["start:prod"]
