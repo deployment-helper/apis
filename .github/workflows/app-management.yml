@@ -13,7 +13,7 @@ env:
   PROJECT_ID: chat-gpt-videos
   REGION: asia-south1
   REPOSITORY_NAME: app-management
-  IMAGE_NAME: app-management
+  IMAGE_NAME: nest-server
 
 # Set default wokring directory to app-management
 defaults:
