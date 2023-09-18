@@ -71,7 +71,7 @@ jobs:
         run: gcloud --quiet auth configure-docker
 
       - name: Build Docker image
-        run: docker build -t asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}/server:${{ github.sha }} .
+        run: docker build -t asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
       - name: Push Docker image to GCP
-        run: docker push asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}/server:${{ github.sha }}
+        run: docker push asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
