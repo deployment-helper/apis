@@ -11,7 +11,9 @@ on:
       - main
 env:
   PROJECT_ID: chat-gpt-videos
-  IMAGE_NAME: server
+  REGION: asia-south1
+  REPOSITORY_NAME: app-management
+  IMAGE_NAME: app-management
 
 # Set default wokring directory to app-management
 defaults:
@@ -67,11 +69,11 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Configure Docker
-        run: gcloud --quiet auth configure-docker
+      - name: Configure Docker for Artifact Registry
+        run: gcloud --quiet auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
       - name: Build Docker image
-        run: docker build -t asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
-      - name: Push Docker image to GCP
-        run: docker push asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Push Docker image to Artifact Registry
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
