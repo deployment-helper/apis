@@ -139,11 +139,14 @@ async function createAuidoAndMetaFile(data, folderLocation) {
 
   for (let slide of slides) {
     const slideMetaData = {};
-
+    let allQuesDur = 0;
+    let allOptDur = 0;
+    let explanationDur = 0;
     // Question in english
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-questionEn.json`;
     audioInfo = await createAudioAndWriteS3(slide.questionEn, s3FileName);
     totalDur += audioInfo.dur;
+    allQuesDur += audioInfo.dur;
     slideMetaData.questionEn = audioInfo;
 
     // Question in hindi
@@ -151,6 +154,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
       s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-questionHi.json`;
       audioInfo = await createAudioAndWriteS3(slide.questionHi, s3FileName);
       totalDur += audioInfo.dur;
+      allQuesDur += audioInfo.dur;
       slideMetaData.questionHi = audioInfo;
     }
 
@@ -162,6 +166,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
       s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-o-${optionIndex++}-en.json`;
       audioInfo = await createAudioAndWriteS3(option.en, s3FileName);
       totalDur += audioInfo.dur;
+      allOptDur += audioInfo.dur;
       slideMetaData.options.push(audioInfo);
     }
 
@@ -169,13 +174,19 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-rightAns.json`;
     audioInfo = await createAudioAndWriteS3(slide.rightAnswer.en, s3FileName);
     totalDur += audioInfo.dur;
+    allOptDur += audioInfo.dur;
     slideMetaData.rightAnswer = audioInfo;
 
     // explanation
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-explanationEn.json`;
     audioInfo = await createAudioAndWriteS3(slide.explanationEn, s3FileName);
     totalDur += audioInfo.dur;
+    explanationDur += audioInfo.dur;
+
     slideMetaData.explanationEn = audioInfo;
+    slideMetaData.allQuesDur = allQuesDur;
+    slideMetaData.allOptDur = allOptDur;
+    slideMetaData.explanationDur = explanationDur;
 
     metadata.slides.push(slideMetaData);
     console.log(`Slide ${slideIndex} completed`);
