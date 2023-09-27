@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
   Put,
   Query,
@@ -64,5 +65,23 @@ export class SlidesController {
   async update(@Body() pres: PresentationUpdateDto) {
     const data = await this.pres.updateAuidoStatus(pres);
     return unmarshall(data.Attributes);
+  }
+
+  @Get(':pid')
+  @HttpCode(200)
+  async slide(
+    @Param('pid') pid: string,
+    @Query('updatedAt') updatedAt: number,
+  ) {
+    const data = await this.pres.getItem(pid, updatedAt);
+    const item = unmarshall(data.Item);
+    const s3File = await this.s3.get(item.s3File);
+    const s3MetaFile = await this.s3.get(item.s3MetaFile);
+
+    return {
+      item,
+      s3File,
+      s3MetaFile,
+    };
   }
 }

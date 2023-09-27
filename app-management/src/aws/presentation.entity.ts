@@ -37,7 +37,8 @@ export class PresentationEntity {
     const command = PresentationModel.toUpdateAudioGenerated(pres);
     return this.db.send(command);
   }
-  getItem(pres: IPresentation) {
-    return this.db.send(PresentationModel.getItem(pres));
+
+  getItem(pid: string, updateAt: number): Promise<any> {
+    return this.db.send(PresentationModel.getItem(pid, updateAt));
   }
 }

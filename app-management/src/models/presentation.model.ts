@@ -71,12 +71,12 @@ export class PresentationModel implements IPresentation {
     return command;
   }
 
-  public static getItem(pres: IPresentation) {
+  public static getItem(pid: string, updatedAt: number) {
     const command = new GetItemCommand({
       TableName: PresentationModel.tableName,
       Key: marshall({
-        projectId: pres.projectId,
-        updatedAt: pres.updatedAt,
+        projectId: pid,
+        updatedAt: Number(updatedAt),
       }),
     });
 
