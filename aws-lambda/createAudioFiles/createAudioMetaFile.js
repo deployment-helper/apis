@@ -214,7 +214,7 @@ async function updatePresentation(message) {
       projectId: message.projectId,
       updatedAt: message.updatedAt,
     }),
-    UpdateExpression: "SET s3MetaFile = :val1, isAudioGenerate = :val2",
+    UpdateExpression: "SET s3MetaFile = :val1, isAudioGenerated = :val2",
     ExpressionAttributeValues: marshall({
       ":val1": message.s3MetaFile,
       ":val2": true,
