@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './dynamodb.service';
-import PresentationCreateDto from 'src/slides/slides.dto';
-import PresentationModel from 'src/models/presentation.model';
-import { IPresentation } from 'src/types';
+import PresentationCreateDto from '@apps/app-management/slides/slides.dto';
+import PresentationModel from '@apps/app-management/models/presentation.model';
+import { IPresentation } from '@apps/app-management/types';
 
 @Injectable()
 export class PresentationEntity {

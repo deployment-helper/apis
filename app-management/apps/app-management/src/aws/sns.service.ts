@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
-import { PresentationUpdateDto } from 'src/slides/slides.dto';
 
 @Injectable()
 export class SnsService {

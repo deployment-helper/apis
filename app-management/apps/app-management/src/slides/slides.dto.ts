@@ -1,4 +1,4 @@
-import { IPresentation } from 'src/types';
+import { IPresentation } from '@apps/app-management/types';
 
 export class PresentationCreateDto {
   file: any;

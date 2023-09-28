@@ -2,8 +2,8 @@ import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 
-import { IPresentation } from 'src/types';
-import { PRESENTATION_TABLE_NAME } from 'src/constants';
+import { IPresentation } from '@apps/app-management/types';
+import { PRESENTATION_TABLE_NAME } from '@apps/app-management/constants';
 
 export class PresentationModel implements IPresentation {
   public static readonly tableName: string = PRESENTATION_TABLE_NAME;

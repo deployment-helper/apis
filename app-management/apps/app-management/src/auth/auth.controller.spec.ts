@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { HttpModule } from '@nestjs/axios';
+import { AwsModule } from '../aws/aws.module';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -11,7 +12,11 @@ describe('AuthController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [AuthService],
-      imports: [ConfigModule.forRoot({ isGlobal: true }), HttpModule],
+      imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
+        HttpModule,
+        AwsModule,
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);

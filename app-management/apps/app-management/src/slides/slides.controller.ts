@@ -13,11 +13,11 @@ import {
 import { v4 as uuid } from 'uuid';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import PresentationCreateDto, { PresentationUpdateDto } from './slides.dto';
-import { PresentationEntity } from 'src/aws/presentation.entity';
-import { S3Service } from 'src/aws/s3.service';
-import { SnsService } from 'src/aws/sns.service';
+import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
+import { S3Service } from '@apps/app-management/aws/s3.service';
+import { SnsService } from '@apps/app-management/aws/sns.service';
 
 @Controller('slides')
 @UseGuards(AuthGuard)

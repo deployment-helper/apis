@@ -1,7 +1,11 @@
 import { v4 as uuid } from 'uuid';
-import { IProject, IUserWithProjectTypes, ProjectTypes } from 'src/types';
+import {
+  IProject,
+  IUserWithProjectTypes,
+  ProjectTypes,
+} from '@apps/app-management/types';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { USER_TABLE_NAME } from 'src/constants';
+import { USER_TABLE_NAME } from '@apps/app-management/constants';
 
 export class ProjectModel implements IProject {
   projectId: string;

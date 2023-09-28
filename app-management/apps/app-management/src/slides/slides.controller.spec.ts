@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SlidesController } from './slides.controller';
 import { ConfigModule } from '@nestjs/config';
-import { AwsModule } from 'src/aws/aws.module';
+import { AwsModule } from '@apps/app-management/aws/aws.module';
 
 describe('SlidesController', () => {
   let controller: SlidesController;

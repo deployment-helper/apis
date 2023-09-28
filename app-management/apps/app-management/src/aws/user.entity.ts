@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DynamodbClientService } from './dynamodb.service';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
-import { UserModel } from 'src/models/user.model';
+import { UserModel } from '@apps/app-management/models/user.model';
 
 @Injectable()
 export class UserEntity {

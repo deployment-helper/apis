@@ -8,9 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { HttpExceptionFilter } from 'src/http-exception.filter';
+import { HttpExceptionFilter } from '@apps/app-management/http-exception.filter';
 import { AuthGuard } from './auth.guard';
-import { UserEntity } from 'src/aws/user.entity';
+import { UserEntity } from '@apps/app-management/aws/user.entity';
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
