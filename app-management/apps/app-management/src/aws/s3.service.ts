@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { readFile } from 'fs/promises';
 
 @Injectable()
 export class S3Service {
@@ -55,5 +56,22 @@ export class S3Service {
 
     const data = await resp.Body.transformToString();
     return data;
+  }
+
+  set(key: string, data: any) {
+    const putCommand = new PutObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: key,
+      Body: data,
+    });
+
+    return this.client.send(putCommand);
+  }
+
+  async readAndUpload(filePath, key) {
+    const fileContent = await readFile(filePath).catch((error) => {
+      console.error(error);
+    });
+    return this.set(key, fileContent);
   }
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
+import { ConfigModule } from '@nestjs/config';
 
 import { BatchServerController } from './batch-server.controller';
 import { BatchServerService } from './batch-server.service';
@@ -8,6 +9,7 @@ import { VideoRecorderModule } from './video-recorder/video-recorder.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     BullModule.forRoot({
       redis: {
         host: 'localhost',

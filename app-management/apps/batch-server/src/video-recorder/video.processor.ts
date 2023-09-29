@@ -1,11 +1,15 @@
+import { existsSync, mkdirSync, unlinkSync } from 'fs';
+import { join } from 'path';
 import { Process, Processor } from '@nestjs/bull';
 import puppeteer from 'puppeteer';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 
 import { REDIS_QUEUE } from '../constants';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { IPresentationDto } from '../types';
+import { ConfigService } from '@nestjs/config';
+import { S3Service } from '@apps/app-management/aws/s3.service';
 
 const RecorderConfig = {
   followNewTab: true,
@@ -26,45 +30,99 @@ const RecorderConfig = {
 
 const LOGGING_INTERVAL = 2;
 
-function delay(dur: number): Promise<string> {
-  return new Promise((res, rej) => {
-    setTimeout(() => {
-      res('done');
-    }, dur * 1000);
-  });
-}
-
-const STORE_LOC =
-  '/Users/vinaymavi/github/deployment-helper/apis/app-management';
+@Injectable()
 @Processor(REDIS_QUEUE)
 export class VideoProcessor {
   private readonly logger = new Logger(VideoProcessor.name);
+  private readonly storageDir: string;
+
+  constructor(
+    private readonly config: ConfigService,
+    private readonly s3: S3Service,
+  ) {
+    this.storageDir = this.config.get('STORAGE_DIR');
+  }
 
   @Process()
   async record(job: Job<IPresentationDto>) {
     this.logger.log('Recording started');
     this.logger.log(job.data);
+
     const browser = await puppeteer.launch({
       headless: 'new',
       args: ['--enable-gpu', '--use-angle'],
     });
+
     const page = await browser.newPage();
     const recorder = new PuppeteerScreenRecorder(page, RecorderConfig);
-    const videoPath = `${STORE_LOC}/${job.data.projectId}.mp4`;
-    // Navigate the page to a URL
+    this.logger.log(`Storage DIR - ${this.storageDir}`);
+    const dirPath = this.checkAndCreateDir(job.data.pid);
+    const videoPath = join(dirPath, 'recording.mp4');
+    this.checkAndDelete(videoPath);
+
+    this.logger.log('Start recording');
+    // Start recorder
     await recorder.start(videoPath);
+
     const pageUrl = `${job.data.url}&apiKey=THISISLOCALDEVELOPMENTKEY`;
     this.logger.log(`PageURL = ${pageUrl}`);
+
     await page.goto(pageUrl);
     // Set screen size in 16:9 aspect ratio
     // { width: 1600, height: 900 }
     // { width: 1280, height: 720 }
     await page.setViewport({ width: 1280, height: 720 });
-    const status = await delay(job.data.totalDur);
+    const status = await this.delay(job.data.totalDur);
     this.logger.log(`Status = ${status}`);
     await Promise.all([recorder.stop(), browser.close()]).catch((e) => {
       this.logger.debug(e);
     });
     this.logger.log('Recording ended');
+    this.logger.log('S3 uploading start');
+    await this.s3.readAndUpload(videoPath, `${job.data.pid}/recording.mp4`);
+    this.logger.log('S3 uploading end');
+  }
+
+  delay(dur: number): Promise<string> {
+    let timespent = 0;
+    const interval = setInterval(() => {
+      this.logger.log(`Time remaining ${dur - timespent} seconds`);
+      timespent += LOGGING_INTERVAL;
+    }, LOGGING_INTERVAL * 1000);
+
+    return new Promise((res, rej) => {
+      setTimeout(() => {
+        clearInterval(interval);
+        res('done');
+      }, dur * 1000);
+    });
+  }
+
+  // TODO: can be a seprate library function
+  checkAndCreateDir(dir: string) {
+    try {
+      this.logger.log(`checkAndCreateDir start dir=${dir}`);
+      const fullPath = join(this.storageDir, dir);
+      this.logger.log(`Fullpath = ${fullPath}`);
+      if (!existsSync(fullPath)) {
+        this.logger.log('Create directory');
+        mkdirSync(fullPath);
+      }
+      this.logger.log('checkAndCreateDir end');
+      return fullPath;
+    } catch (error) {
+      this.logger.error(error);
+    }
+  }
+
+  checkAndDelete(filePath: string) {
+    this.logger.log(`checkAndDelete start filePath =${filePath}`);
+    // Check if the file exists
+    if (existsSync(filePath)) {
+      // Delete the file if it exists
+      unlinkSync(filePath);
+      this.logger.log(`File ${filePath} has been deleted.`);
+    }
+    this.logger.log('checkAndDelete end');
   }
 }

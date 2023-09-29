@@ -3,6 +3,7 @@ import { VideoController } from './video.controller';
 import { BullModule } from '@nestjs/bull';
 import { REDIS_QUEUE } from '../constants';
 import { VideoProcessor } from './video.processor';
+import { S3Service } from '@apps/app-management/aws/s3.service';
 
 @Module({
   imports: [
@@ -11,6 +12,6 @@ import { VideoProcessor } from './video.processor';
     }),
   ],
   controllers: [VideoController],
-  providers: [VideoProcessor],
+  providers: [VideoProcessor, S3Service],
 })
 export class VideoRecorderModule {}
