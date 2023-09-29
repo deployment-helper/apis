@@ -27,15 +27,8 @@ const RecorderConfig = {
 const LOGGING_INTERVAL = 2;
 
 function delay(dur: number): Promise<string> {
-  let timespent = 0;
-  const interval = setInterval(() => {
-    console.log(`Time remaining ${dur - timespent} seconds`);
-    timespent += LOGGING_INTERVAL;
-  }, LOGGING_INTERVAL * 1000);
-
   return new Promise((res, rej) => {
     setTimeout(() => {
-      clearInterval(interval);
       res('done');
     }, dur * 1000);
   });
@@ -51,7 +44,10 @@ export class VideoProcessor {
   async record(job: Job<IPresentationDto>) {
     this.logger.log('Recording started');
     this.logger.log(job.data);
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--enable-gpu', '--use-angle'],
+    });
     const page = await browser.newPage();
     const recorder = new PuppeteerScreenRecorder(page, RecorderConfig);
     const videoPath = `${STORE_LOC}/${job.data.projectId}.mp4`;
