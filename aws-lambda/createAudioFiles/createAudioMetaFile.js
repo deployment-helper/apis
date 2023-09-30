@@ -92,8 +92,8 @@ async function createAudio(text) {
  * @param {number} size in Kb
  */
 function calculateDur(size) {
-  // This calculation is ~2% more than duration of the audio.
-  return Math.ceil(size / 5.5);
+  // This calculation is ~1% more than duration of the audio.
+  return Math.ceil(size / 6);
 }
 
 /**
