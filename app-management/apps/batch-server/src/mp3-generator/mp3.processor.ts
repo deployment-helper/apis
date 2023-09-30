@@ -50,7 +50,7 @@ export class Mp3Processor {
 
       // Slide questions hindi
       if (s.questionHi) {
-        fileName = s.questionEn.file;
+        fileName = s.questionHi.file;
         mp3Base64 = await this.getMp3File(fileName);
         fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
         mp3Files.push(fullPath);
