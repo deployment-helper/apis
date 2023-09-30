@@ -4,7 +4,7 @@ import { Process, Processor } from '@nestjs/bull';
 import puppeteer from 'puppeteer';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 
-import { REDIS_QUEUE } from '../constants';
+import { REDIS_QUEUE_VIDEO_RECORDER } from '../constants';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { IPresentationDto } from '../types';
@@ -31,7 +31,7 @@ const RecorderConfig = {
 const LOGGING_INTERVAL = 2;
 
 @Injectable()
-@Processor(REDIS_QUEUE)
+@Processor(REDIS_QUEUE_VIDEO_RECORDER)
 export class VideoProcessor {
   private readonly logger = new Logger(VideoProcessor.name);
   private readonly storageDir: string;
@@ -40,7 +40,7 @@ export class VideoProcessor {
     private readonly config: ConfigService,
     private readonly s3: S3Service,
   ) {
-    this.storageDir = this.config.get('STORAGE_DIR');
+    this.storageDir = this.config.getOrThrow('STORAGE_DIR');
   }
 
   @Process()

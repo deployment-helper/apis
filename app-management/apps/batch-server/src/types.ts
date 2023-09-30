@@ -1,8 +1,13 @@
-export interface IPresentationDto {
-  url: string;
+export interface IBasePresentation {
   projectId: string;
-  // presentation id
   pid: string;
   updatedAt: string;
+}
+export interface IPresentationDto extends IBasePresentation {
+  url: string;
   totalDur: number;
+}
+
+export interface IMp3GeneratorDto extends IBasePresentation {
+  s3File: string;
 }
