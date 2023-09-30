@@ -41,4 +41,36 @@ export class PresentationEntity {
   getItem(pid: string, updateAt: number): Promise<any> {
     return this.db.send(PresentationModel.getItem(pid, updateAt));
   }
+
+  updateAudioMergeStatus(
+    projectId: string,
+    updatedAt: number,
+    s3File: string,
+    isMerged?: boolean,
+  ) {
+    const command = PresentationModel.toUpdateAudioMerge({
+      projectId,
+      updatedAt,
+      s3AudioMergedFile: s3File,
+      isAudioMerged: isMerged,
+    });
+
+    return this.db.send(command);
+  }
+
+  updateVideoGeneratedStatus(
+    projectId: string,
+    updatedAt: number,
+    s3File: string,
+    isGenerated?: boolean,
+  ) {
+    const command = PresentationModel.toUpdateVideoGenerated({
+      projectId,
+      updatedAt,
+      s3VideoFile: s3File,
+      isVideoGenerated: isGenerated,
+    });
+
+    return this.db.send(command);
+  }
 }

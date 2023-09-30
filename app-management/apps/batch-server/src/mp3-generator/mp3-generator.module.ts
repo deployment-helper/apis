@@ -5,6 +5,7 @@ import { REDIS_QUEUE_MP3_GENERATOR } from '../constants';
 import { Mp3Processor } from './mp3.processor';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { SharedModule } from '@app/shared';
+import { AwsModule } from '@apps/app-management/aws/aws.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { SharedModule } from '@app/shared';
       name: REDIS_QUEUE_MP3_GENERATOR,
     }),
     SharedModule,
+    AwsModule,
   ],
   controllers: [Mp3Controller],
   providers: [Mp3Processor, S3Service],

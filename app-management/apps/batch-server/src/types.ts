@@ -1,7 +1,7 @@
 export interface IBasePresentation {
   projectId: string;
   pid: string;
-  updatedAt: string;
+  updatedAt: number;
 }
 export interface IPresentationDto extends IBasePresentation {
   url: string;

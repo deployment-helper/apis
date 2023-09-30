@@ -10,6 +10,7 @@ import { Job } from 'bull';
 import { IPresentationDto } from '../types';
 import { ConfigService } from '@nestjs/config';
 import { S3Service } from '@apps/app-management/aws/s3.service';
+import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 
 const RecorderConfig = {
   followNewTab: true,
@@ -39,6 +40,7 @@ export class VideoProcessor {
   constructor(
     private readonly config: ConfigService,
     private readonly s3: S3Service,
+    private readonly pres: PresentationEntity,
   ) {
     this.storageDir = this.config.getOrThrow('STORAGE_DIR');
   }
@@ -78,9 +80,19 @@ export class VideoProcessor {
       this.logger.debug(e);
     });
     this.logger.log('Recording ended');
+
     this.logger.log('S3 uploading start');
     await this.s3.readAndUpload(videoPath, `${job.data.pid}/recording.mp4`);
     this.logger.log('S3 uploading end');
+
+    this.logger.log('DB update started');
+    await this.pres.updateVideoGeneratedStatus(
+      job.data.projectId,
+      job.data.updatedAt,
+      `${job.data.pid}/recording.mp4`,
+      true,
+    );
+    this.logger.log('DB update ended');
   }
 
   delay(dur: number): Promise<string> {

@@ -29,14 +29,19 @@ export type IUserWithProjectTypes = {
 
 export interface IPresentation {
   id: string;
-  isAudioGenerate?: boolean;
-  isVideoGenerate?: boolean;
+  isAudioGenerated?: boolean;
+  isVideoGenerated?: boolean;
+  isVideoProcessed?: boolean;
+  isAudioMerged?: boolean;
+  s3AudioMergedFile?: string;
+  s3VideoFile?: string;
+  s3ProcessedFile?: string;
   userId: string;
   name: string;
   projectId: string;
   s3File: string;
   s3MetaFile: string;
-  updatedAt: Date;
+  updatedAt?: number;
   createdAt: Date;
 }
 

@@ -7,7 +7,7 @@ import { PRESENTATION_TABLE_NAME } from '@apps/app-management/constants';
 
 export class PresentationModel implements IPresentation {
   public static readonly tableName: string = PRESENTATION_TABLE_NAME;
-  updatedAt: Date;
+  updatedAt: number;
   createdAt: Date;
 
   constructor(
@@ -19,16 +19,16 @@ export class PresentationModel implements IPresentation {
     public s3MetaFile: string,
   ) {
     this.createdAt = new Date();
-    this.updatedAt = new Date();
   }
 
   toDynamoDbPutCommand() {
+    const updateDate = new Date();
     const command = new PutCommand({
       TableName: PresentationModel.tableName,
       Item: {
         id: this.id,
-        updatedAt: this.updatedAt.getTime(),
-        updatedAtstr: this.updatedAt.toISOString(),
+        updatedAt: updateDate.getTime(),
+        updatedAtstr: updateDate.toISOString(),
         createdAt: this.createdAt.toISOString(),
         useId: this.userId,
         name: this.name,
@@ -60,10 +60,46 @@ export class PresentationModel implements IPresentation {
         projectId: pres.projectId,
         updatedAt: pres.updatedAt,
       }),
-      UpdateExpression: 'SET s3MetaFile = :val1, isAudioGenerate = :val2',
+      UpdateExpression: 'SET s3MetaFile = :val1, isAudioGenerated = :val2',
       ExpressionAttributeValues: marshall({
         ':val1': pres.s3MetaFile,
-        ':val2': pres.isAudioGenerate,
+        ':val2': pres.isAudioGenerated,
+      }),
+      ReturnValues: 'ALL_NEW',
+    });
+
+    return command;
+  }
+
+  public static toUpdateVideoGenerated(pres: Partial<IPresentation>) {
+    const command = new UpdateItemCommand({
+      TableName: PresentationModel.tableName,
+      Key: marshall({
+        projectId: pres.projectId,
+        updatedAt: pres.updatedAt,
+      }),
+      UpdateExpression: 'SET s3VideoFile = :val1, isVideoGenerated = :val2',
+      ExpressionAttributeValues: marshall({
+        ':val1': pres.s3VideoFile,
+        ':val2': pres.isVideoGenerated,
+      }),
+      ReturnValues: 'ALL_NEW',
+    });
+
+    return command;
+  }
+
+  public static toUpdateAudioMerge(pres: Partial<IPresentation>) {
+    const command = new UpdateItemCommand({
+      TableName: PresentationModel.tableName,
+      Key: marshall({
+        projectId: pres.projectId,
+        updatedAt: pres.updatedAt,
+      }),
+      UpdateExpression: 'SET s3AudioMergedFile = :val1, isAudioMerged = :val2',
+      ExpressionAttributeValues: marshall({
+        ':val1': pres.s3AudioMergedFile,
+        ':val2': pres.isAudioMerged,
       }),
       ReturnValues: 'ALL_NEW',
     });

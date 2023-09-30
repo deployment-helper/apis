@@ -13,7 +13,7 @@ export class PresentationUpdateDto implements IPresentation {
   projectId: string;
   s3File: string;
   s3MetaFile: string;
-  updatedAt: Date;
+  updatedAt: number;
   userId: string;
 }
 

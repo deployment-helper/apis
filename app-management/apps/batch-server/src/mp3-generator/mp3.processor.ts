@@ -1,7 +1,6 @@
 import { Process, Processor } from '@nestjs/bull';
 import { join } from 'path';
 import { Job } from 'bull';
-import { ConfigService } from '@nestjs/config';
 import { REDIS_QUEUE_MP3_GENERATOR } from '../constants';
 import { IMp3GeneratorDto } from '../types';
 import { S3Service } from '@apps/app-management/aws/s3.service';
@@ -9,18 +8,20 @@ import { FsService } from '@app/shared/fs/fs.service';
 
 import { Logger } from '@nestjs/common';
 import { exec } from 'child_process';
+import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 
 @Processor(REDIS_QUEUE_MP3_GENERATOR)
 export class Mp3Processor {
   private readonly logger = new Logger(Mp3Processor.name);
   constructor(
     private readonly s3: S3Service,
-    private readonly config: ConfigService,
+    private readonly pres: PresentationEntity,
     private readonly fs: FsService,
   ) {}
 
   @Process()
   async record(job: Job<IMp3GeneratorDto>) {
+    const mergeFileName = 'merge.mp3';
     const mp3Files: Array<string> = [];
     const dirPath = `${job.data.pid}/mp3files`;
     this.logger.log('MP3 file processing started');
@@ -82,15 +83,27 @@ export class Mp3Processor {
       this.logger.log(`File ${fullPath} done`);
     }
 
+    // MP3 merge
     this.logger.log('Merge started');
-    const outputFile = this.fs.getFullPath(join(dirPath, 'merge.mp3'));
+    const outputFile = this.fs.getFullPath(join(dirPath, mergeFileName));
     await this.fs.deleteFile(outputFile);
     await this.mergeAllMp3Files(mp3Files, outputFile);
     this.logger.log('Merge end');
+
+    // S3 upload
     this.logger.log('S3 uploading started');
-    await this.s3.readAndUpload(outputFile, join(job.data.pid, 'merge.mp3'));
+    await this.s3.readAndUpload(outputFile, join(job.data.pid, mergeFileName));
     this.logger.log('S3 uploading ended');
 
+    // DB update
+    this.logger.log('DB update started');
+    await this.pres.updateAudioMergeStatus(
+      job.data.projectId,
+      job.data.updatedAt,
+      join(job.data.pid, mergeFileName),
+      true,
+    );
+    this.logger.log('DB updated ended');
     this.logger.log('MP3 file processing ended');
   }
 
