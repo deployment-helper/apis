@@ -87,6 +87,10 @@ export class Mp3Processor {
     await this.fs.deleteFile(outputFile);
     await this.mergeAllMp3Files(mp3Files, outputFile);
     this.logger.log('Merge end');
+    this.logger.log('S3 uploading started');
+    await this.s3.readAndUpload(outputFile, join(job.data.pid, 'merge.mp3'));
+    this.logger.log('S3 uploading ended');
+
     this.logger.log('MP3 file processing ended');
   }
 
