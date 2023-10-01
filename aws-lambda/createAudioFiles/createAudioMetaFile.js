@@ -67,12 +67,14 @@ async function createAudio(text) {
       text,
     },
     voice: {
-      languageCode: "en-gb",
-      name: "en-GB-Standard-A",
-      ssmlGender: "FEMALE",
+      languageCode: "hi-IN",
+      name: "hi-IN-Neural2-C",
     },
     audioConfig: {
       audioEncoding: "MP3",
+      effectsProfileId: ["headphone-class-device"],
+      pitch: 0,
+      speakingRate: 1,
     },
   };
 
@@ -144,7 +146,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     let explanationDur = 0;
     // Question in english
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-questionEn.json`;
-    audioInfo = await createAudioAndWriteS3(slide.questionEn, s3FileName);
+    audioInfo = await createAudioAndWriteS3(slide.questionEnSpeak, s3FileName);
     totalDur += audioInfo.dur;
     allQuesDur += audioInfo.dur;
     slideMetaData.questionEn = audioInfo;
@@ -152,7 +154,10 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     // Question in hindi
     if (slide.questionHi) {
       s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-questionHi.json`;
-      audioInfo = await createAudioAndWriteS3(slide.questionHi, s3FileName);
+      audioInfo = await createAudioAndWriteS3(
+        slide.questionHiSpeak,
+        s3FileName
+      );
       totalDur += audioInfo.dur;
       allQuesDur += audioInfo.dur;
       slideMetaData.questionHi = audioInfo;
@@ -172,14 +177,20 @@ async function createAuidoAndMetaFile(data, folderLocation) {
 
     // right answer
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-rightAns.json`;
-    audioInfo = await createAudioAndWriteS3(slide.rightAnswer.en, s3FileName);
+    audioInfo = await createAudioAndWriteS3(
+      slide.rightAnswer.speaking,
+      s3FileName
+    );
     totalDur += audioInfo.dur;
     allOptDur += audioInfo.dur;
     slideMetaData.rightAnswer = audioInfo;
 
     // explanation
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-explanationEn.json`;
-    audioInfo = await createAudioAndWriteS3(slide.explanationEn, s3FileName);
+    audioInfo = await createAudioAndWriteS3(
+      slide.explanationEnSpeak,
+      s3FileName
+    );
     totalDur += audioInfo.dur;
     explanationDur += audioInfo.dur;
 
