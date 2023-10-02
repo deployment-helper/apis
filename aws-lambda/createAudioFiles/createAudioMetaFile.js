@@ -26,7 +26,7 @@ const metaFileName = "audioMetaData.json";
 const bucketPrefix = `s3://${bucket}/`;
 const tableName = "presentations";
 const fragementAnimationTime = 0.1;
-const slideAnimationTime = 0.4;
+const slideAnimationTime = 0.35;
 //TODO: unit testing is pending
 
 async function readS3File(key) {
