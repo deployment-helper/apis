@@ -9,6 +9,8 @@ import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
+import { Buffer } from "buffer";
+import * as mm from "music-metadata";
 
 config();
 
@@ -23,7 +25,8 @@ const bucket = "vm-presentations";
 const metaFileName = "audioMetaData.json";
 const bucketPrefix = `s3://${bucket}/`;
 const tableName = "presentations";
-
+const fragementAnimationTime = 0.1;
+const slideAnimationTime = 0.4;
 //TODO: unit testing is pending
 
 async function readS3File(key) {
@@ -93,9 +96,28 @@ async function createAudio(text) {
  * We are doing rough calculation of duration base on provided Kbs.
  * @param {number} size in Kb
  */
-function calculateDur(size) {
-  // This calculation is ~1% more than duration of the audio.
-  return Math.ceil(size / 6);
+function calculateDur(mp3Base64, gap = 0) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Decode the Base64 content to a binary buffer
+      const buffer = Buffer.from(mp3Base64, "base64");
+
+      // Parse the metadata of the MP3 file
+      const metadata = await mm.parseBuffer(buffer, "audio/mpeg", {
+        duration: true,
+      });
+
+      // Extract the duration
+      const duration = metadata.format.duration;
+      if (duration !== undefined) {
+        resolve(duration - gap);
+      } else {
+        reject(new Error("Duration could not be determined."));
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 /**
@@ -104,9 +126,10 @@ function calculateDur(size) {
  * @param {string} s3FileName
  * @returns {number} audio duration in sec
  */
-async function createAudioAndWriteS3(audioText, s3FileName) {
+async function createAudioAndWriteS3(audioText, s3FileName, gap = 0) {
   let audio = await createAudio(audioText);
-  let dur = calculateDur(audio.size);
+  let dur = await calculateDur(audio.data.audioContent, gap);
+  console.log(dur);
   await writeS3File(audio.data, s3FileName);
 
   return {
@@ -146,7 +169,11 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     let explanationDur = 0;
     // Question in english
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-questionEn.json`;
-    audioInfo = await createAudioAndWriteS3(slide.questionEnSpeak, s3FileName);
+    audioInfo = await createAudioAndWriteS3(
+      slide.questionEnSpeak,
+      s3FileName,
+      slideAnimationTime
+    );
     totalDur += audioInfo.dur;
     allQuesDur += audioInfo.dur;
     slideMetaData.questionEn = audioInfo;
@@ -169,7 +196,11 @@ async function createAuidoAndMetaFile(data, folderLocation) {
 
     for (let option of slide.options) {
       s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-o-${optionIndex++}-en.json`;
-      audioInfo = await createAudioAndWriteS3(option.en, s3FileName);
+      audioInfo = await createAudioAndWriteS3(
+        option.speaking,
+        s3FileName,
+        fragementAnimationTime
+      );
       totalDur += audioInfo.dur;
       allOptDur += audioInfo.dur;
       slideMetaData.options.push(audioInfo);
@@ -179,7 +210,8 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-rightAns.json`;
     audioInfo = await createAudioAndWriteS3(
       slide.rightAnswer.speaking,
-      s3FileName
+      s3FileName,
+      slideAnimationTime
     );
     totalDur += audioInfo.dur;
     allOptDur += audioInfo.dur;
@@ -189,7 +221,8 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-explanationEn.json`;
     audioInfo = await createAudioAndWriteS3(
       slide.explanationEnSpeak,
-      s3FileName
+      s3FileName,
+      slideAnimationTime
     );
     totalDur += audioInfo.dur;
     explanationDur += audioInfo.dur;

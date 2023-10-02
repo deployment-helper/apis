@@ -13,7 +13,7 @@ const event = {
         TopicArn: "arn:aws:sns:ap-south-1:168490963129:generateAudio",
         Subject: null,
         Message:
-          '{"projectId":"MWVlYzU4NWYtZDM5Ny00ZDJhLWI3OWMtMDNhOGMxYzdiYWJiLTIwMjMtMDktMDFUMTQ6NTM6NDUuMzMxWg==","updatedAt":1693626706468,"updatedAtstr":"2023-09-02T03:51:46.468Z","createdAt":"2023-09-02T03:51:46.468Z","useId":"1eec585f-d397-4d2a-b79c-03a8c1c7babb","id":"75332608-9024-48c4-9526-1664af6e2a7a","s3MetaFile":"","name":"Test1","s3File":"s3://vm-presentations/75332608-9024-48c4-9526-1664af6e2a7a/presentation.json"}',
+          '{"projectId":"MWVlYzU4NWYtZDM5Ny00ZDJhLWI3OWMtMDNhOGMxYzdiYWJiLTIwMjMtMDktMDFUMTQ6NTM6NDUuMzMxWg==","updatedAt":1696213310195,"updatedAtstr":"2023-09-02T03:51:46.468Z","createdAt":"2023-09-02T03:51:46.468Z","useId":"1eec585f-d397-4d2a-b79c-03a8c1c7babb","id":"b4ffa8f1-11ec-4412-bdca-2136b6541a6d","s3MetaFile":"","name":"Test1","s3File":"s3://vm-presentations/b4ffa8f1-11ec-4412-bdca-2136b6541a6d/presentation.json"}',
         Timestamp: "2023-09-18T20:23:01.914Z",
         SignatureVersion: "1",
         Signature:
