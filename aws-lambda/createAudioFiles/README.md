@@ -2,11 +2,15 @@
 
 ## How to create layer
 
-Build image `docker build . -t aws-layer`
+### Build image 
 
-Run image `docker run --name aws-layer aws-layer`
+`docker build . -t aws-layer`
 
-copy `node_modules` to `dist` ` docker cp aws-layer:/app/node_modules ./dist/nodejs/node_modules`
+### Run image 
+`docker run --name aws-layer aws-layer`
+
+### copy *node_modules* to *dist*
+`docker cp aws-layer:/app/node_modules ./dist/nodejs/node_modules`
 
 Goto dist fodler `cd ./dist`
 
