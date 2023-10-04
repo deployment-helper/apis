@@ -55,6 +55,22 @@ jobs:
           file: ./app-management/Dockerfile
           push: true
           tags: ghcr.io/deployment-helper/app-management:lastest
+  docker_build_gtihub_batch_server:
+    name: Github Container Registry build and push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.ACCESS_TOKEN }}
+      - uses: docker/build-push-action@v4
+        with:
+          context: ./app-management
+          file: ./app-management/Dockerfile.batch-service
+          push: true
+          tags: ghcr.io/deployment-helper/app-management-batch-server:lastest
   docker_build_gcp:
     name: GCP Container Registry build and push
     runs-on: ubuntu-latest
