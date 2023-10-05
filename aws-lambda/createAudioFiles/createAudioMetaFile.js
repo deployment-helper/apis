@@ -25,8 +25,8 @@ const bucket = "vm-presentations";
 const metaFileName = "audioMetaData.json";
 const bucketPrefix = `s3://${bucket}/`;
 const tableName = "presentations";
-const fragementAnimationTime = 0.1;
-const slideAnimationTime = 0.345;
+const fragementAnimationTime = 0.21;
+const slideAnimationTime = 0.81;
 //TODO: unit testing is pending
 
 async function readS3File(key) {
@@ -110,7 +110,7 @@ function calculateDur(mp3Base64, gap = 0) {
       // Extract the duration
       const duration = metadata.format.duration;
       if (duration !== undefined) {
-        resolve(duration - gap);
+        resolve(duration + gap);
       } else {
         reject(new Error("Duration could not be determined."));
       }
