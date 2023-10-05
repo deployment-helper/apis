@@ -18,7 +18,13 @@ run docker compose file
 
 **TODO**
 
-### Run
+### Run App server
 
 `docker build -t app-management .`
 `docker run -p 9000:9000  --env-file ./.env app-management`
+
+
+### Run batch server
+
+`docker build -f Dockerfile.batch-service -t batch-server .`
+`docker run -p 9000:9000  --env-file ./.env batch-server`
