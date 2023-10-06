@@ -25,7 +25,7 @@ const bucket = "vm-presentations";
 const metaFileName = "audioMetaData.json";
 const bucketPrefix = `s3://${bucket}/`;
 const tableName = "presentations";
-const fragementAnimationTime = 0.21;
+const fragementAnimationTime = 0;
 const slideAnimationTime = 0.81;
 //TODO: unit testing is pending
 
@@ -110,7 +110,7 @@ function calculateDur(mp3Base64, gap = 0) {
       // Extract the duration
       const duration = metadata.format.duration;
       if (duration !== undefined) {
-        resolve(duration + gap);
+        resolve(parseFloat((duration + gap).toFixed(2)));
       } else {
         reject(new Error("Duration could not be determined."));
       }
@@ -196,11 +196,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
 
     for (let option of slide.options) {
       s3FileName = `${folderLocation}/audio/${count++}-q-${slideIndex}-o-${optionIndex++}-en.json`;
-      audioInfo = await createAudioAndWriteS3(
-        option.speaking,
-        s3FileName,
-        fragementAnimationTime
-      );
+      audioInfo = await createAudioAndWriteS3(option.speaking, s3FileName);
       totalDur += audioInfo.dur;
       allOptDur += audioInfo.dur;
       slideMetaData.options.push(audioInfo);
@@ -214,7 +210,6 @@ async function createAuidoAndMetaFile(data, folderLocation) {
       slideAnimationTime
     );
     totalDur += audioInfo.dur;
-    allOptDur += audioInfo.dur;
     slideMetaData.rightAnswer = audioInfo;
 
     // explanation
@@ -229,7 +224,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
 
     slideMetaData.explanationEn = audioInfo;
     slideMetaData.allQuesDur = allQuesDur;
-    slideMetaData.allOptDur = allOptDur;
+    slideMetaData.allOptDur = allOptDur + slideAnimationTime;
     slideMetaData.explanationDur = explanationDur;
 
     metadata.slides.push(slideMetaData);
@@ -240,6 +235,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
   metadata.totalDur = totalDur;
   const metaFile = `${folderLocation}/${metaFileName}`;
   await writeS3File(metadata, metaFile);
+  console.log(`Total duration =${metadata.totalDur}`);
   console.log(`Writing metaFile = ${metaFile} to S3`);
   return metaFile;
 }

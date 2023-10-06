@@ -22,6 +22,7 @@ export class Mp3Processor {
   @Process()
   async record(job: Job<IMp3GeneratorDto>) {
     const mergeFileName = 'merge.mp3';
+
     const mp3Files: Array<string> = [];
     const dirPath = `${job.data.pid}/mp3files`;
     this.logger.log('MP3 file processing started');
@@ -30,10 +31,32 @@ export class Mp3Processor {
     const metaFileTxt = await this.s3.get(job.data.s3File);
     const metaFileJson = JSON.parse(metaFileTxt);
 
-    // Desc
     let fileName = metaFileJson.desc?.file;
     let mp3Base64 = await this.getMp3File(fileName);
     let fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
+
+    // Generate emtpy file
+    const empty800msFile = this.fs.getFullPath(
+      join(dirPath, 'empty800msfile.mp3'),
+    );
+    const empty200msFile = this.fs.getFullPath(
+      join(dirPath, 'empty200msfile.mp3'),
+    );
+
+    await this.fs.deleteFile(empty200msFile);
+    await this.fs.deleteFile(empty800msFile);
+    this.logger.log('Start generating empty files');
+    const encoding: string = await this.getEncoding(fullPath);
+    this.logger.log(`Encoding type ${encoding}`);
+    // 0.81 + 0.015 buffer beause of JS event loop timing
+    await this.createEmtpyMp3File(encoding, 0.825, empty800msFile);
+    await this.createEmtpyMp3File(encoding, 0, empty200msFile);
+
+    // Desc
+    // mp3Files.push(empty800msFile);
+    fileName = metaFileJson.desc?.file;
+    mp3Base64 = await this.getMp3File(fileName);
+    fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
     mp3Files.push(fullPath);
     this.logger.log(`File ${fullPath} done`);
 
@@ -42,6 +65,7 @@ export class Mp3Processor {
 
     for (const s of slides) {
       // Slide questions english
+      mp3Files.push(empty800msFile);
       fileName = s.questionEn.file;
       mp3Base64 = await this.getMp3File(fileName);
       fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
@@ -59,7 +83,7 @@ export class Mp3Processor {
 
       // options
       const options = s.options;
-
+      mp3Files.push(empty800msFile);
       for (const o of options) {
         fileName = o.file;
         mp3Base64 = await this.getMp3File(fileName);
@@ -69,6 +93,7 @@ export class Mp3Processor {
       }
 
       // Right answer
+      mp3Files.push(empty800msFile);
       fileName = s.rightAnswer.file;
       mp3Base64 = await this.getMp3File(fileName);
       fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
@@ -76,6 +101,7 @@ export class Mp3Processor {
       this.logger.log(`File ${fullPath} done`);
 
       // Explantion
+      mp3Files.push(empty800msFile);
       fileName = s.explanationEn.file;
       mp3Base64 = await this.getMp3File(fileName);
       fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
@@ -145,6 +171,57 @@ export class Mp3Processor {
         console.log(`stderr: ${stderr}`);
         resolve('done');
       });
+    });
+  }
+
+  createEmtpyMp3File(encoding: string, durSec: number, outputFile) {
+    return new Promise((resolve, reject) => {
+      // Parse the extracted encoding parameters
+      const match = encoding.match(/(\w+), (\d+) Hz, (\w+), (\w+)/);
+      if (!match) {
+        reject(new Error('Invalid encoding parameters.'));
+        return;
+      }
+      const codec = match[1];
+      const sampleRate = match[2];
+      const channels = match[3] === 'mono' ? '1' : '2';
+
+      // Create the ffmpeg command
+      const command = `ffmpeg -f lavfi -i anullsrc=r=${sampleRate}:cl=stereo -t ${durSec} -acodec ${codec} -ar ${sampleRate} -ac ${channels} ${outputFile}`;
+      console.log(`Executing command: ${command}`);
+
+      // Execute the command
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing command: ${error}`);
+          reject(error);
+          return;
+        }
+        console.log(`stdout: ${stdout}`);
+        console.error(`stderr: ${stderr}`);
+        resolve(outputFile);
+      });
+    });
+  }
+
+  getEncoding(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      exec(
+        `ffmpeg -i ${filePath} -hide_banner -f null /dev/null`,
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          // Extract relevant encoding parameters from stderr
+          const match = stderr.match(/Audio: (.+),/);
+          if (match && match[1]) {
+            resolve(match[1]);
+          } else {
+            reject(new Error('Unable to extract encoding parameters.'));
+          }
+        },
+      );
     });
   }
 }
