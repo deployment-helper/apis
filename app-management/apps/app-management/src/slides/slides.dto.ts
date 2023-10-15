@@ -17,4 +17,9 @@ export class PresentationUpdateDto implements IPresentation {
   userId: string;
 }
 
+export interface IVideoMetaData {
+  data: any;
+  id: string;
+}
+
 export default PresentationCreateDto;

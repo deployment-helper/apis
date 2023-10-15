@@ -26,7 +26,7 @@ const metaFileName = "audioMetaData.json";
 const bucketPrefix = `s3://${bucket}/`;
 const tableName = "presentations";
 const fragementAnimationTime = 0;
-const slideAnimationTime = 0.81;
+const slideAnimationTime = 0.8;
 //TODO: unit testing is pending
 
 async function readS3File(key) {
@@ -163,7 +163,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
   let slideIndex = 1;
 
   for (let slide of slides) {
-    const slideMetaData = {};
+    const slideMetaData = { id: slide?.id };
     let allQuesDur = 0;
     let allOptDur = 0;
     let explanationDur = 0;

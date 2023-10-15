@@ -49,7 +49,7 @@ export class Mp3Processor {
     const encoding: string = await this.getEncoding(fullPath);
     this.logger.log(`Encoding type ${encoding}`);
     // 0.81 + 0.015 buffer beause of JS event loop timing
-    await this.createEmtpyMp3File(encoding, 0.825, empty800msFile);
+    await this.createEmtpyMp3File(encoding, 0, empty800msFile);
     await this.createEmtpyMp3File(encoding, 0, empty200msFile);
 
     // Desc
