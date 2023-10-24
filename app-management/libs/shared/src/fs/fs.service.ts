@@ -11,20 +11,26 @@ export class FsService {
     this.storageDir = this.config.getOrThrow('STORAGE_DIR');
   }
 
-  createFile(filePath: string, data: any, isBase64?: boolean): Promise<any> {
+  async createFile(
+    filePath: string,
+    data: any,
+    isBase64?: boolean,
+  ): Promise<string> {
     const fileFullPath = join(this.storageDir, filePath);
     if (isBase64) {
-      return writeFile(fileFullPath, Buffer.from(data, 'base64'));
+      await writeFile(fileFullPath, Buffer.from(data, 'base64'));
     }
 
-    return writeFile(fileFullPath, data);
+    await writeFile(fileFullPath, data);
+
+    return fileFullPath;
   }
 
   getFullPath(fileName: string) {
     return join(this.storageDir, fileName);
   }
 
-  createDir(dir: string) {
+  checkAndCreateDir(dir: string) {
     const fullPath = join(this.storageDir, dir);
 
     if (!existsSync(fullPath)) {

@@ -10,4 +10,5 @@ export interface IPresentationDto extends IBasePresentation {
 
 export interface IMp3GeneratorDto extends IBasePresentation {
   s3File: string;
+  s3VideoMetaData: string;
 }

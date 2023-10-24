@@ -26,12 +26,15 @@ export class Mp3Processor {
     const mp3Files: Array<string> = [];
     const dirPath = `${job.data.pid}/mp3files`;
     this.logger.log('MP3 file processing started');
-    this.fs.createDir(dirPath);
+    this.fs.checkAndCreateDir(dirPath);
 
-    const metaFileTxt = await this.s3.get(job.data.s3File);
-    const metaFileJson = JSON.parse(metaFileTxt);
+    const audioMetaFileTxt = await this.s3.get(job.data.s3File);
+    const audioMetaFileJson = JSON.parse(audioMetaFileTxt);
 
-    let fileName = metaFileJson.desc?.file;
+    const videoMetaFileTxt = await this.s3.get(job.data.s3VideoMetaData);
+    const videoMetaFileJson = JSON.parse(videoMetaFileTxt);
+
+    let fileName = audioMetaFileJson.desc?.file;
     let mp3Base64 = await this.getMp3File(fileName);
     let fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
 
@@ -45,6 +48,7 @@ export class Mp3Processor {
 
     await this.fs.deleteFile(empty200msFile);
     await this.fs.deleteFile(empty800msFile);
+
     this.logger.log('Start generating empty files');
     const encoding: string = await this.getEncoding(fullPath);
     this.logger.log(`Encoding type ${encoding}`);
@@ -54,18 +58,36 @@ export class Mp3Processor {
 
     // Desc
     // mp3Files.push(empty800msFile);
-    fileName = metaFileJson.desc?.file;
+    fileName = audioMetaFileJson.desc?.file;
     mp3Base64 = await this.getMp3File(fileName);
     fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
     mp3Files.push(fullPath);
     this.logger.log(`File ${fullPath} done`);
 
     // Slides
-    const slides = metaFileJson.slides;
+    const slides = audioMetaFileJson.slides;
 
     for (const s of slides) {
       // Slide questions english
-      mp3Files.push(empty800msFile);
+      const slideId = s.id;
+      let videoSlideId = `${slideId}-question`;
+      let videoDur = videoMetaFileJson[videoSlideId]?.dur;
+      let mp3Durtaion = s.questionEn.dur + s.questionHi?.dur || 0;
+      let emptyFileDur = videoDur - mp3Durtaion;
+
+      this.logger.log(
+        `Video Dur = ${videoDur}, MP3 Dur =${mp3Durtaion}, EmptyMP3 Dur = ${emptyFileDur}`,
+      );
+
+      let emptyFileName = this.fs.getFullPath(
+        join(dirPath, `${videoSlideId}-empty.mp3`),
+      );
+
+      this.logger.log(`Empty file = ${emptyFileName}`);
+      await this.fs.deleteFile(emptyFileName);
+      await this.createEmtpyMp3File(encoding, emptyFileDur, emptyFileName);
+
+      mp3Files.push(emptyFileName);
       fileName = s.questionEn.file;
       mp3Base64 = await this.getMp3File(fileName);
       fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
@@ -83,7 +105,24 @@ export class Mp3Processor {
 
       // options
       const options = s.options;
-      mp3Files.push(empty800msFile);
+      videoSlideId = `${slideId}-option-list`;
+      videoDur = videoMetaFileJson[videoSlideId]?.dur;
+      mp3Durtaion = s.allOptDur;
+      emptyFileDur = videoDur - mp3Durtaion;
+
+      this.logger.log(
+        `Video Dur = ${videoDur}, MP3 Dur =${mp3Durtaion}, EmptyMP3 Dur = ${emptyFileDur}`,
+      );
+
+      emptyFileName = this.fs.getFullPath(
+        join(dirPath, `${videoSlideId}-empty.mp3`),
+      );
+
+      this.logger.log(`Empty file = ${emptyFileName}`);
+      await this.fs.deleteFile(emptyFileName);
+      await this.createEmtpyMp3File(encoding, emptyFileDur, emptyFileName);
+      mp3Files.push(emptyFileName);
+
       for (const o of options) {
         fileName = o.file;
         mp3Base64 = await this.getMp3File(fileName);
@@ -93,7 +132,25 @@ export class Mp3Processor {
       }
 
       // Right answer
-      mp3Files.push(empty800msFile);
+
+      videoSlideId = `${slideId}-right-answer`;
+      videoDur = videoMetaFileJson[videoSlideId]?.dur;
+      mp3Durtaion = s.rightAnswer?.dur;
+      emptyFileDur = videoDur - mp3Durtaion;
+
+      this.logger.log(
+        `Video Dur = ${videoDur}, MP3 Dur =${mp3Durtaion}, EmptyMP3 Dur = ${emptyFileDur}`,
+      );
+
+      emptyFileName = this.fs.getFullPath(
+        join(dirPath, `${videoSlideId}-empty.mp3`),
+      );
+
+      this.logger.log(`Empty file = ${emptyFileName}`);
+      await this.fs.deleteFile(emptyFileName);
+      await this.createEmtpyMp3File(encoding, emptyFileDur, emptyFileName);
+      mp3Files.push(emptyFileName);
+
       fileName = s.rightAnswer.file;
       mp3Base64 = await this.getMp3File(fileName);
       fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
@@ -101,7 +158,24 @@ export class Mp3Processor {
       this.logger.log(`File ${fullPath} done`);
 
       // Explantion
-      mp3Files.push(empty800msFile);
+      videoSlideId = `${slideId}-explation`;
+      videoDur = videoMetaFileJson[videoSlideId]?.dur;
+      mp3Durtaion = s.explanationDur;
+      emptyFileDur = videoDur - mp3Durtaion;
+
+      this.logger.log(
+        `Video Dur = ${videoDur}, MP3 Dur =${mp3Durtaion}, EmptyMP3 Dur = ${emptyFileDur}`,
+      );
+
+      emptyFileName = this.fs.getFullPath(
+        join(dirPath, `${videoSlideId}-empty.mp3`),
+      );
+
+      this.logger.log(`Empty file = ${emptyFileName}`);
+      await this.fs.deleteFile(emptyFileName);
+      await this.createEmtpyMp3File(encoding, emptyFileDur, emptyFileName);
+      mp3Files.push(emptyFileName);
+
       fileName = s.explanationEn.file;
       mp3Base64 = await this.getMp3File(fileName);
       fullPath = await this.saveMp3File(dirPath, fileName, mp3Base64);
@@ -139,8 +213,8 @@ export class Mp3Processor {
     return fileJson.audioContent;
   }
 
-  mp3FileNameFromS3Key(s3Key: string) {
-    return `${s3Key.split('audio/')[1]}.mp3`;
+  mp3FileNameFromS3Key(s3Key: string, withExtension = true) {
+    return `${s3Key.split('audio/')[1]}${withExtension ? '.mp3' : ''}`;
   }
 
   async saveMp3File(dir: string, fileName: string, mp3Data: string) {
@@ -156,7 +230,7 @@ export class Mp3Processor {
       this.logger.log('Merging started');
       // Create a string of input files separated by a pipe '|'
       const inputFilesStr = inputFiles.join('|');
-
+      console.log(inputFiles);
       // Construct the FFmpeg command
       const ffmpegCommand = `ffmpeg -i "concat:${inputFilesStr}" -acodec copy ${outputFile}`;
 
@@ -205,6 +279,7 @@ export class Mp3Processor {
   }
 
   getEncoding(filePath: string): Promise<string> {
+    this.logger.log(`Get encoding for ${filePath}`);
     return new Promise((resolve, reject) => {
       exec(
         `ffmpeg -i ${filePath} -hide_banner -f null /dev/null`,

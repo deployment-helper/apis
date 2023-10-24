@@ -25,6 +25,7 @@ const bucket = "vm-presentations";
 const metaFileName = "audioMetaData.json";
 const bucketPrefix = `s3://${bucket}/`;
 const tableName = "presentations";
+// TODO: need to remvoe this animation times from should be handled on client side
 const fragementAnimationTime = 0;
 const slideAnimationTime = 0.8;
 //TODO: unit testing is pending
@@ -172,7 +173,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     audioInfo = await createAudioAndWriteS3(
       slide.questionEnSpeak,
       s3FileName,
-      slideAnimationTime
+      0
     );
     totalDur += audioInfo.dur;
     allQuesDur += audioInfo.dur;
@@ -207,7 +208,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     audioInfo = await createAudioAndWriteS3(
       slide.rightAnswer.speaking,
       s3FileName,
-      slideAnimationTime
+      0
     );
     totalDur += audioInfo.dur;
     slideMetaData.rightAnswer = audioInfo;
@@ -217,7 +218,7 @@ async function createAuidoAndMetaFile(data, folderLocation) {
     audioInfo = await createAudioAndWriteS3(
       slide.explanationEnSpeak,
       s3FileName,
-      slideAnimationTime
+      0
     );
     totalDur += audioInfo.dur;
     explanationDur += audioInfo.dur;
