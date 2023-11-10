@@ -1,7 +1,6 @@
 import { SharedService } from '@app/shared';
 import { Injectable } from '@nestjs/common';
 import { ServerNames } from '@app/shared/types';
-import { slides_v1 } from 'googleapis';
 import { SlidesRunner } from './slides.runner';
 import { Page } from 'puppeteer';
 import { SlidesAudioGenerator } from './slides-audio.generator';

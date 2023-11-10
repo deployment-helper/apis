@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { unlink, writeFile } from 'fs/promises';
@@ -7,6 +7,7 @@ import { accessSync, existsSync, mkdirSync } from 'fs';
 @Injectable()
 export class FsService {
   private storageDir: string;
+  private readonly logger = new Logger(FsService.name);
   constructor(private readonly config: ConfigService) {
     this.storageDir = this.config.getOrThrow('STORAGE_DIR');
   }
@@ -16,14 +17,19 @@ export class FsService {
     data: any,
     isBase64?: boolean,
   ): Promise<string> {
-    const fileFullPath = join(this.storageDir, filePath);
-    if (isBase64) {
-      await writeFile(fileFullPath, Buffer.from(data, 'base64'));
+    try {
+      const fileFullPath = join(this.storageDir, filePath);
+      this.logger.log(`Creating file ${fileFullPath}`);
+      if (isBase64) {
+        await writeFile(fileFullPath, Buffer.from(data, 'base64'));
+      } else {
+        await writeFile(fileFullPath, data);
+      }
+
+      return fileFullPath;
+    } catch (e) {
+      this.logger.error(e);
     }
-
-    await writeFile(fileFullPath, data);
-
-    return fileFullPath;
   }
 
   getFullPath(fileName: string) {
@@ -45,12 +51,12 @@ export class FsService {
 
       // Delete the file
       await unlink(filePath);
-      console.log(`File ${filePath} has been deleted.`);
+      this.logger.log(`File ${filePath} has been deleted.`);
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log(`File ${filePath} does not exist.`);
+        this.logger.log(`File ${filePath} does not exist.`);
       } else {
-        console.error(`An error occurred: ${error}`);
+        this.logger.error(`An error occurred: ${error}`);
       }
     }
   }

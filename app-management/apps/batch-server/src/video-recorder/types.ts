@@ -9,7 +9,7 @@ export interface IRunner extends IWorker {
   hasNext(): Promise<boolean>;
   takeScreenshot(): Promise<ArrayBuffer>;
   next(): Promise<void>;
-  getMeta(): Promise<any>;
+  getSlideMeta(): Promise<any>;
   hasNextAndClick(): Promise<boolean>;
 }
 

@@ -1,17 +1,40 @@
 import { Module } from '@nestjs/common';
 import { VideoController } from './video.controller';
 import { BullModule } from '@nestjs/bull';
-import { REDIS_QUEUE_VIDEO_RECORDER } from '../constants';
+import {
+  REDIS_QUEUE_VIDEO_GENERATOR,
+  REDIS_QUEUE_VIDEO_RECORDER,
+} from '../constants';
 import { VideoProcessor } from './video.processor';
 import { S3Service } from '@apps/app-management/aws/s3.service';
+import { VideoGeneratorProcessor } from './video-generator.processor';
+import { VideoWorker } from './video.worker';
+import { RunnerFactory } from './runner.factory';
+import { AudioVideoMerger } from './audio-video.merger';
+import { SharedService } from '@app/shared';
+import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { FsService } from '@app/shared/fs/fs.service';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: REDIS_QUEUE_VIDEO_RECORDER,
     }),
+    BullModule.registerQueue({
+      name: REDIS_QUEUE_VIDEO_GENERATOR,
+    }),
   ],
   controllers: [VideoController],
-  providers: [VideoProcessor, S3Service],
+  providers: [
+    VideoProcessor,
+    VideoGeneratorProcessor,
+    VideoWorker,
+    RunnerFactory,
+    AudioVideoMerger,
+    S3Service,
+    SharedService,
+    FfmpegService,
+    FsService,
+  ],
 })
 export class VideoRecorderModule {}
