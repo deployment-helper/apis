@@ -48,6 +48,7 @@ export class FfmpegService {
   ): Promise<void> {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Begin video merge');
 
     return new Promise((resolve, reject) => {
       const ffmpegInstance = ffmpeg();
@@ -61,9 +62,12 @@ export class FfmpegService {
       ffmpegInstance
         .mergeToFile(outputFilePath, '/tmp')
         .on('end', () => {
+          this.logger.log('End video merge');
           resolve();
         })
         .on('error', (err) => {
+          this.logger.log('End video merge with error');
+          this.logger.error(err);
           reject(new Error(`An error occurred: ${err.message}`));
         });
     });

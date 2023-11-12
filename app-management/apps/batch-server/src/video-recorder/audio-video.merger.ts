@@ -51,6 +51,7 @@ export class AudioVideoMerger {
       this.logger.log('Stop ffmpeg');
       videos.push(videoPath);
     }
+    return videos;
     this.logger.log('End Merge');
   }
 }

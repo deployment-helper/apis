@@ -4,6 +4,9 @@ import { IWorker, TSlideInfo } from './types';
 import { Injectable, Logger } from '@nestjs/common';
 import { RunnerFactory } from './runner.factory';
 import { AudioVideoMerger } from './audio-video.merger';
+import { FsService } from '@app/shared/fs/fs.service';
+import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { IPresentationDto } from '../types';
 
 @Injectable()
 export class VideoWorker implements IWorker {
@@ -11,8 +14,10 @@ export class VideoWorker implements IWorker {
   constructor(
     private runnerFactory: RunnerFactory,
     private avMerger: AudioVideoMerger,
+    private fs: FsService,
+    private ffmpeg: FfmpegService,
   ) {}
-  async start(url: string, data?: any): Promise<any> {
+  async start(url: string, data?: IPresentationDto): Promise<any> {
     this.logger.log('Begin Worker');
 
     this.logger.log('Star browser');
@@ -34,12 +39,13 @@ export class VideoWorker implements IWorker {
     const slidesAudios = await audioGenerator.start(slidesImages);
     this.logger.log(`Slides audio count ${slidesAudios.length}`);
     this.logger.log('Begin audio and image merge');
-    await this.avMerger.merge(slidesImages, slidesAudios);
+    const videoPaths = await this.avMerger.merge(slidesImages, slidesAudios);
     this.logger.log('End audio and image merge');
 
     this.logger.log('Stoping browser');
     await browser.close();
-
+    const preparedVideoPath = this.fs.getFullPath(`${data.pid}/output.mp4`);
+    await this.ffmpeg.mergeVideos(videoPaths, preparedVideoPath);
     this.logger.log('End worker');
   }
 }
