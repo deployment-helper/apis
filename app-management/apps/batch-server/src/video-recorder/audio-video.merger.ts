@@ -23,20 +23,6 @@ export class AudioVideoMerger {
       const filename = slideAudio.meta.filename;
       const pid = slideAudio.meta.pid;
 
-      this.fs.checkAndCreateDir(`${pid}/mp3-files`);
-      this.logger.log('Create mp3 file');
-      const audioFilePath = await this.fs.createFile(
-        `${pid}/mp3-files/${filename}.mp3`,
-        slideAudio.file,
-        true,
-      );
-      this.fs.checkAndCreateDir(`${pid}/image-files`);
-      this.logger.log('Create image file');
-      const imagePath = await this.fs.createFile(
-        `${pid}/image-files/${filename}.png`,
-        slideImage.file,
-      );
-
       this.logger.log('Create video file');
       this.fs.checkAndCreateDir(`${pid}/video-files`);
       const videoPath = this.fs.getFullPath(
@@ -44,7 +30,11 @@ export class AudioVideoMerger {
       );
       this.logger.log('Start ffmpeg');
       try {
-        await this.ffmpeg.mergeMp3AndImage(audioFilePath, imagePath, videoPath);
+        await this.ffmpeg.mergeMp3AndImage(
+          slideAudio.file,
+          slideImage.file,
+          videoPath,
+        );
       } catch (e) {
         this.logger.error(e);
       }

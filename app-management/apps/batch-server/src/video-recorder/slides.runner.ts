@@ -2,6 +2,8 @@ import { IRunner, TSlideInfo } from './types';
 import { Page } from 'puppeteer';
 import { SharedService } from '@app/shared';
 import { Logger } from '@nestjs/common';
+import { FsService } from '@app/shared/fs/fs.service';
+import { S3Service } from '@apps/app-management/aws/s3.service';
 
 /**
  * This Slide runner is desinged for Vinay's slides portal.
@@ -12,20 +14,31 @@ export class SlidesRunner implements IRunner {
   slideSelector = '.slides section.present';
   slides: Array<TSlideInfo> = [];
   private readonly logger = new Logger(SlidesRunner.name);
-  constructor(private page: Page, private sharedService: SharedService) {}
+
+  constructor(
+    private page: Page,
+    private sharedService: SharedService,
+    private fs: FsService,
+    private s3: S3Service,
+  ) {}
   async start(url: string, data?: any): Promise<any> {
     // TODO: should be utility function to create URL
     const pageUrl = `${url}&apiKey=THISISLOCALDEVELOPMENTKEY`;
     this.logger.log(`PageURL ${pageUrl}`);
     this.logger.log('Start page');
+    await this.page.setViewport({ width: 1920, height: 1080 });
     await this.page.goto(pageUrl);
     this.logger.log('Wait for 10 seconds');
     await this.sharedService.wait(10000);
-
+    // create image directory
+    this.fs.checkAndCreateDir(`${data.pid}/image-files`);
     do {
-      const screenshot: Buffer = await this.takeScreenshot();
       const meta: any = await this.getSlideMeta();
-      this.slides.push({ file: screenshot, meta });
+      const imagePath: string = await this.takeScreenshotAndSave(
+        meta,
+        data.pid,
+      );
+      this.slides.push({ file: imagePath, meta });
     } while (await this.hasNextAndClick());
     return this.slides;
   }
@@ -77,5 +90,16 @@ export class SlidesRunner implements IRunner {
 
   async takeScreenshot(): Promise<Buffer> {
     return await this.page.screenshot({ encoding: 'binary' });
+  }
+
+  async takeScreenshotAndSave(meta: any, pid: string) {
+    const image = await this.takeScreenshot();
+    const filename = await this.s3.mp3FileNameFromS3Key(meta.name, false);
+    const imagePath = await this.fs.createFile(
+      `${pid}/image-files/${filename}.png`,
+      image,
+    );
+
+    return imagePath;
   }
 }

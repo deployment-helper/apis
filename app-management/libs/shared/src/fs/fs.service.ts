@@ -38,7 +38,7 @@ export class FsService {
 
   checkAndCreateDir(dir: string) {
     const fullPath = join(this.storageDir, dir);
-
+    this.logger.log(`Creating directory ${fullPath}`);
     if (!existsSync(fullPath)) {
       mkdirSync(fullPath, { recursive: true });
     }

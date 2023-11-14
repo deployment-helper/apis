@@ -14,6 +14,6 @@ export interface IRunner extends IWorker {
 }
 
 export type TSlideInfo = {
-  file: Buffer;
+  file: string;
   meta?: any;
 };

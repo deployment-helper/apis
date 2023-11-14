@@ -74,4 +74,16 @@ export class S3Service {
     });
     return this.set(key, fileContent);
   }
+
+  mp3FileNameFromS3Key(s3Key: string, withExtension = true) {
+    if (s3Key.split('audio/').length >= 2) {
+      return `${s3Key.split('audio/')[1]}${withExtension ? '.mp3' : ''}`;
+    } else {
+      return s3Key;
+    }
+  }
+
+  presentationIdFromS3Key(s3Key: string, withExtension = true) {
+    return s3Key.split('audio/')[0];
+  }
 }

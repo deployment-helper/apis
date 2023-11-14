@@ -42,7 +42,7 @@ export class FfmpegService {
     });
   }
 
-  async mergeVideos(
+  async mergeToFile(
     inputFilePaths: string[],
     outputFilePath: string,
   ): Promise<void> {

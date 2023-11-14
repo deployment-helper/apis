@@ -30,13 +30,13 @@ export class VideoWorker implements IWorker {
     this.logger.log('Get browser runner for given URL');
     const runner = this.runnerFactory.getBrowserRunner(url, page);
     this.logger.log('Start runner');
-    const slidesImages: Array<TSlideInfo> = await runner.start(url);
+    const slidesImages: Array<TSlideInfo> = await runner.start(url, data);
     this.logger.log(`Slides count ${slidesImages.length}`);
     this.logger.log('Get Audio generator for given URL');
-    const audioGenerator = this.runnerFactory.getAudioGenerator(url);
+    const audioGenerator = this.runnerFactory.getAudioGenerator(url, data);
 
     this.logger.log('Start audio generator');
-    const slidesAudios = await audioGenerator.start(slidesImages);
+    const slidesAudios = await audioGenerator.start(slidesImages, data);
     this.logger.log(`Slides audio count ${slidesAudios.length}`);
     this.logger.log('Begin audio and image merge');
     const videoPaths = await this.avMerger.merge(slidesImages, slidesAudios);
@@ -45,7 +45,7 @@ export class VideoWorker implements IWorker {
     this.logger.log('Stoping browser');
     await browser.close();
     const preparedVideoPath = this.fs.getFullPath(`${data.pid}/output.mp4`);
-    await this.ffmpeg.mergeVideos(videoPaths, preparedVideoPath);
+    await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
     this.logger.log('End worker');
   }
 }
