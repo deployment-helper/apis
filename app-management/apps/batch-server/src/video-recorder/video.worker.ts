@@ -7,6 +7,8 @@ import { AudioVideoMerger } from './audio-video.merger';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { IPresentationDto } from '../types';
+import {S3Service} from "@apps/app-management/aws/s3.service";
+import {PresentationEntity} from "@apps/app-management/aws/presentation.entity";
 
 @Injectable()
 export class VideoWorker implements IWorker {
@@ -16,6 +18,8 @@ export class VideoWorker implements IWorker {
     private avMerger: AudioVideoMerger,
     private fs: FsService,
     private ffmpeg: FfmpegService,
+    private s3:S3Service,
+    private readonly  pres:PresentationEntity
   ) {}
   async start(url: string, data?: IPresentationDto): Promise<any> {
     this.logger.log('Begin Worker');
@@ -46,6 +50,17 @@ export class VideoWorker implements IWorker {
     await browser.close();
     const preparedVideoPath = this.fs.getFullPath(`${data.pid}/output.mp4`);
     await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
+    this.logger.log(`Begin S3 upload ${`${data.pid}/output.mp4`}`);
+    await this.s3.readAndUpload(preparedVideoPath,`${data.pid}/output.mp4`)
+    this.logger.log('End S3 upload');
+    this.logger.log('Begin DB update');
+    await this.pres.updateVideoGeneratedStatus(
+        data.projectId,
+        data.updatedAt,
+        `${data.pid}/output.mp4`,
+        true,
+    );
+    this.logger.log("End DB update");
     this.logger.log('End worker');
   }
 }

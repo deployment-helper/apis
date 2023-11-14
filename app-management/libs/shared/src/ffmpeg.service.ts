@@ -83,7 +83,7 @@ export class FfmpegService {
             reject(err);
           } else {
             // Parse the duration from the ffprobe data
-            const duration = parseFloat(data.format.duration);
+            const duration = data.format.duration
             resolve(duration);
           }
         });
