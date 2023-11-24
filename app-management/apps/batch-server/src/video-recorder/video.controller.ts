@@ -1,13 +1,15 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Body, Controller, Post } from '@nestjs/common';
+import {Body, Controller, Post, UseGuards} from '@nestjs/common';
 import {
   REDIS_QUEUE_VIDEO_GENERATOR,
   REDIS_QUEUE_VIDEO_RECORDER,
 } from '../constants';
 import { Queue } from 'bull';
 import { IPresentationDto } from '../types';
+import {AuthGuard} from "@apps/app-management/auth/auth.guard";
 
 @Controller('video')
+@UseGuards(AuthGuard)
 export class VideoController {
   constructor(
     @InjectQueue(REDIS_QUEUE_VIDEO_RECORDER)
