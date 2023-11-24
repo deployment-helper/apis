@@ -18,8 +18,8 @@ describe('BatchServerController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(batchServerController.getHello()).toBe('Hello World!');
+    it('should return "Health message"', () => {
+      expect(batchServerController.getHello()).toBe('I am healthy!');
     });
   });
 });

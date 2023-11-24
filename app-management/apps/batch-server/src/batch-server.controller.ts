@@ -5,8 +5,8 @@ import { Controller, Get } from '@nestjs/common';
 export class BatchServerController {
   constructor(private readonly service: AppService) {}
 
-  @Get()
+  @Get('/health')
   getHello(): string {
-    return this.service.getHello();
+    return this.service.getHealth()
   }
 }

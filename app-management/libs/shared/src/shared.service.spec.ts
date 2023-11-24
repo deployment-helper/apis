@@ -18,18 +18,18 @@ describe('SharedService', () => {
   });
 
   it('should getServerName Google', () => {
-    const serverName = SharedService.getServerName(
+    const serverName = service.getServerName(
       'https://docs.google.com/document/d/1CCdGJ972m4idwctQGAmXvxttyNtRQINPnamlptCJ8lU/edit',
     );
 
     expect(serverName).toBe(ServerNames['docs.google.com']);
   });
   it('should getServerName Slides', () => {
-    let serverName = SharedService.getServerName('http://localhost:3000/xyz');
+    let serverName = service.getServerName('http://localhost:3000/xyz');
 
     expect(serverName).toBe(ServerNames['localhost:3000']);
 
-    serverName = SharedService.getServerName(
+    serverName = service.getServerName(
       'https://webapps-psi.vercel.app/auth',
     );
 
