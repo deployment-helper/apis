@@ -22,25 +22,30 @@ export class SlidesRunner implements IRunner {
     private s3: S3Service,
   ) {}
   async start(url: string, data?: any): Promise<any> {
-    // TODO: should be utility function to create URL
-    const pageUrl = `${url}&apiKey=THISISLOCALDEVELOPMENTKEY`;
-    this.logger.log(`PageURL ${pageUrl}`);
-    this.logger.log('Start page');
-    await this.page.setViewport({ width: 1920, height: 1080 });
-    await this.page.goto(pageUrl);
-    this.logger.log('Wait for 10 seconds');
-    await this.sharedService.wait(10000);
-    // create image directory
-    this.fs.checkAndCreateDir(`${data.pid}/image-files`);
-    do {
-      const meta: any = await this.getSlideMeta();
-      const imagePath: string = await this.takeScreenshotAndSave(
-        meta,
-        data.pid,
-      );
-      this.slides.push({ file: imagePath, meta });
-    } while (await this.hasNextAndClick());
-    return this.slides;
+    try{
+      // TODO: should be utility function to create URL
+      const pageUrl = `${url}&apiKey=THISISLOCALDEVELOPMENTKEY`;
+      this.logger.log(`PageURL ${pageUrl}`);
+      this.logger.log('Start page');
+      await this.page.setViewport({ width: 1920, height: 1080 });
+      await this.page.goto(pageUrl);
+      this.logger.log('Wait for 10 seconds');
+      await this.sharedService.wait(10000);
+      // create image directory
+      this.fs.checkAndCreateDir(`${data.pid}/image-files`);
+      do {
+        const meta: any = await this.getSlideMeta();
+        const imagePath: string = await this.takeScreenshotAndSave(
+            meta,
+            data.pid,
+        );
+        this.slides.push({ file: imagePath, meta });
+      } while (await this.hasNextAndClick());
+      return this.slides;
+    }catch (e){
+      this.logger.error(e)
+    }
+
   }
 
   async stop(): Promise<any> {
