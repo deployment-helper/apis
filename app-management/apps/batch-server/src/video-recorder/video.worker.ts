@@ -35,7 +35,11 @@ export class VideoWorker implements IWorker {
         headless: 'new',
         executablePath: '/usr/bin/chromium-browser',
         args: ['--no-sandbox', '--disable-dev-shm-usage'],
-      });
+      }).catch(e => console.error('Error launching Chrome:', e));;
+
+      if(!browser){
+        throw new Error('Browser not created')
+      }
 
       const page = await browser.newPage();
       this.logger.log('Get browser runner for given URL');
