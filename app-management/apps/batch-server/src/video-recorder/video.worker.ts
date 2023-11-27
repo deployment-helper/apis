@@ -43,7 +43,7 @@ export class VideoWorker implements IWorker {
       const slidesImages: Array<TSlideInfo> = await runner.start(url, data);
       this.logger.log(`Slides count ${slidesImages.length}`);
       this.logger.log('Get Audio generator for given URL');
-      const audioGenerator = this.runnerFactory.getAudioGenerator(url, data);
+      const audioGenerator = this.runnerFactory.getAudioGenerator(url);
 
       this.logger.log('Start audio generator');
       const slidesAudios = await audioGenerator.start(slidesImages, data);
