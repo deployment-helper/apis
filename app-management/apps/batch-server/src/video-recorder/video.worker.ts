@@ -33,7 +33,8 @@ export class VideoWorker implements IWorker {
       this.logger.log('Star browser');
       const browser = await puppeteer.launch({
         headless: 'new',
-        args: ['--enable-gpu', '--use-angle'],
+        executablePath: '/usr/bin/chromium-browser',
+        args: ['--no-sandbox', '--disable-dev-shm-usage'],
       });
 
       const page = await browser.newPage();

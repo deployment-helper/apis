@@ -18,6 +18,16 @@ FROM node:18-alpine AS release
 # Install ffmpeg
 RUN apk add --no-cache ffmpeg
 
+# Install Chromium and its dependencies
+RUN apk add --no-cache \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    chromium \
+    chromium-chromedriver
+
 # Create app directory
 WORKDIR /app
 # Install production dependencies
