@@ -41,7 +41,7 @@ export class PresentationModel implements IPresentation {
     return command;
   }
 
-  public static toQuery(projectId: string, limit = 10): any {
+  public static toQuery(projectId: string): any {
     const command = new QueryCommand({
       TableName: PresentationModel.tableName,
       KeyConditionExpression: 'projectId = :projectId',

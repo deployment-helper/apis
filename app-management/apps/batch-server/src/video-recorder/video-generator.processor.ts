@@ -4,7 +4,6 @@ import { REDIS_QUEUE_VIDEO_GENERATOR } from '../constants';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { IPresentationDto } from '../types';
-import { ConfigService } from '@nestjs/config';
 import { VideoWorker } from './video.worker';
 
 @Injectable()

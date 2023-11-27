@@ -102,7 +102,7 @@ export class VideoProcessor {
       timespent += LOGGING_INTERVAL;
     }, LOGGING_INTERVAL * 1000);
 
-    return new Promise((res, rej) => {
+    return new Promise((res) => {
       setTimeout(() => {
         clearInterval(interval);
         res('done');

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FsService } from './fs.service';
-import {ConfigService} from "@nestjs/config";
+import { ConfigService } from '@nestjs/config';
 
 describe('FsService', () => {
   let service: FsService;
@@ -11,10 +11,13 @@ describe('FsService', () => {
     } as unknown as ConfigService;
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [FsService,{
-        provide:ConfigService,
-        useValue:configServiceMock
-      }],
+      providers: [
+        FsService,
+        {
+          provide: ConfigService,
+          useValue: configServiceMock,
+        },
+      ],
     }).compile();
 
     service = module.get<FsService>(FsService);

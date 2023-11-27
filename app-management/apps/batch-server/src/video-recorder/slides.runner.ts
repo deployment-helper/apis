@@ -22,7 +22,7 @@ export class SlidesRunner implements IRunner {
     private s3: S3Service,
   ) {}
   async start(url: string, data?: any): Promise<any> {
-    try{
+    try {
       const pageUrl = this.sharedService.getServiceKeyUrl(url);
       this.logger.log('Start page');
       await this.page.setViewport({ width: 1920, height: 1080 });
@@ -34,16 +34,15 @@ export class SlidesRunner implements IRunner {
       do {
         const meta: any = await this.getSlideMeta();
         const imagePath: string = await this.takeScreenshotAndSave(
-            meta,
-            data.pid,
+          meta,
+          data.pid,
         );
         this.slides.push({ file: imagePath, meta });
       } while (await this.hasNextAndClick());
       return this.slides;
-    }catch (e){
-      this.logger.error(e)
+    } catch (e) {
+      this.logger.error(e);
     }
-
   }
 
   async stop(): Promise<any> {
@@ -97,7 +96,7 @@ export class SlidesRunner implements IRunner {
 
   async takeScreenshotAndSave(meta: any, pid: string) {
     const image = await this.takeScreenshot();
-    const filename =  this.s3.mp3FileNameFromS3Key(meta.name, false);
+    const filename = this.s3.mp3FileNameFromS3Key(meta.name, false);
     const imagePath = await this.fs.createFile(
       `${pid}/image-files/${filename}.png`,
       image,

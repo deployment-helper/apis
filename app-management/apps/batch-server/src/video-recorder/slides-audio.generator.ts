@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { IWorker, TSlideInfo } from './types';
+import { TSlideInfo } from './types';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';

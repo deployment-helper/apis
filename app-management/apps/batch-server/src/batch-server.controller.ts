@@ -7,6 +7,6 @@ export class BatchServerController {
 
   @Get('/health')
   getHello(): string {
-    return this.service.getHealth()
+    return this.service.getHealth();
   }
 }

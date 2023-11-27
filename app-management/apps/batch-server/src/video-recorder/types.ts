@@ -1,5 +1,3 @@
-import { Page } from 'puppeteer';
-
 export interface IWorker {
   start(url: string, data?: any): Promise<any>;
   stop?(): Promise<any>;

@@ -83,7 +83,7 @@ export class S3Service {
     }
   }
 
-  presentationIdFromS3Key(s3Key: string, withExtension = true) {
+  presentationIdFromS3Key(s3Key: string) {
     return s3Key.split('audio/')[0];
   }
 }

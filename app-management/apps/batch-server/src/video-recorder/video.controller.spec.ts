@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { VideoController } from './video.controller';
-import { REDIS_QUEUE_VIDEO_RECORDER, REDIS_QUEUE_VIDEO_GENERATOR } from '../constants';
+import {
+  REDIS_QUEUE_VIDEO_RECORDER,
+  REDIS_QUEUE_VIDEO_GENERATOR,
+} from '../constants';
 import { Queue } from 'bull';
-import {ConfigService} from "@nestjs/config";
-import {BullModule} from "@nestjs/bull";
+import { ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bull';
 
 describe('VideoController', () => {
   let controller: VideoController;
@@ -25,10 +28,11 @@ describe('VideoController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [VideoController],
-      providers: [ConfigService,
+      providers: [
+        ConfigService,
         {
-          provide:ConfigService,
-          useValue:configServiceMock
+          provide: ConfigService,
+          useValue: configServiceMock,
         },
         {
           provide: REDIS_QUEUE_VIDEO_RECORDER,

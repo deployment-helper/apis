@@ -61,7 +61,7 @@ export class FsService {
     }
   }
 
-  async deleteDir(dir:string){
+  async deleteDir(dir: string) {
     try {
       await rm(dir, { recursive: true });
       this.logger.log(`Directory ${dir} has been deleted recursively`);
