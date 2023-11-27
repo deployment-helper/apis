@@ -113,7 +113,7 @@ jobs:
         run: gcloud --quiet auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
       - name: Build Docker image
-        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -f Dockerfile.batch-service -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }} .
 
       - name: Push Docker image to Artifact Registry
         run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }}
