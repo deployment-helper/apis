@@ -67,6 +67,10 @@ RUN apt-get clean \
 # Set working directory for the application
 WORKDIR /app
 
+# Set Puppeteer environment variables
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome
+
 # Install production dependencies
 COPY --from=base /app/package*.json ./
 RUN npm install --only=production
