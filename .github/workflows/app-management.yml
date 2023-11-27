@@ -14,6 +14,7 @@ env:
   REGION: asia-south1
   REPOSITORY_NAME: app-management
   IMAGE_NAME: nest-server
+  BS_IMAGE_NAME: batch-nest-server
 
 # Set default wokring directory to app-management
 defaults:
@@ -72,7 +73,7 @@ jobs:
           push: true
           tags: ghcr.io/deployment-helper/app-management-batch-server:lastest
   docker_build_gcp:
-    name: GCP Container Registry build and push
+    name: GCP Server build and push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -93,3 +94,26 @@ jobs:
 
       - name: Push Docker image to Artifact Registry
         run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  docker_build_bs_gcp:
+    name: GCP Server build and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud --quiet auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build Docker image
+        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Push Docker image to Artifact Registry
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }}
