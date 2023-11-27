@@ -35,7 +35,6 @@ export class VideoWorker implements IWorker {
         headless: 'new',
         timeout: 60000,
         dumpio: true,
-        executablePath: '/usr/bin/chromium-browser',
         args: ['--no-sandbox', '--disable-dev-shm-usage'],
       }).catch(e => console.error('Error launching Chrome:', e));;
 
