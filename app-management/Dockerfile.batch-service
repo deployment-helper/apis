@@ -14,6 +14,10 @@ RUN npm run build:bs
 
 # ---- Release ----
 FROM node:18-alpine AS release
+
+# Install ffmpeg
+RUN apk add --no-cache ffmpeg
+
 # Create app directory
 WORKDIR /app
 # Install production dependencies
