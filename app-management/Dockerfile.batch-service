@@ -15,7 +15,7 @@ RUN npm run build:bs
 # ---- Release ----
 FROM node:18-buster-slim AS release
 
-# Install ffmpeg and necessary dependencies for Chromium
+# Update package lists and install dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     ca-certificates \
@@ -54,24 +54,32 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     wget \
     xdg-utils \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+    --no-install-recommends
 
+# Download and install Google Chrome
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
 
-# Set working directory
+# Clean up to reduce image size
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/* google-chrome-stable_current_amd64.deb
+
+# Set working directory for the application
 WORKDIR /app
 
 # Install production dependencies
 COPY --from=base /app/package*.json ./
 RUN npm install --only=production
 
-# Copy built app files
+# Copy built application files
 COPY --from=base /app/dist ./dist
 
-# Expose port and define CMD
+# Expose the application port
 ARG PORT=3000
 ENV PORT=${PORT}
 
 EXPOSE ${PORT}
+
+# Define the command to run the application
 ENTRYPOINT ["npm", "run"]
 CMD ["start:bs:prod"]
