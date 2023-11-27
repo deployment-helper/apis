@@ -1,13 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SharedService } from './shared.service';
 import { ServerNames } from '@app/shared/types';
+import {ConfigService} from "@nestjs/config";
 
 describe('SharedService', () => {
   let service: SharedService;
 
   beforeEach(async () => {
+    const configServiceMock = {
+      getOrThrow: jest.fn(()=>'devkey'), // Mock the get method
+    } as unknown as ConfigService;
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SharedService],
+      providers: [SharedService,{
+        provide:ConfigService,
+        useValue: configServiceMock
+      }],
     }).compile();
 
     service = module.get<SharedService>(SharedService);
@@ -35,4 +42,13 @@ describe('SharedService', () => {
 
     expect(serverName).toBe(ServerNames['webapps-psi.vercel.app']);
   });
+  it('Should getServiceKeyUrl',()=>{
+    let url = service.getServiceKeyUrl('http://example.com');
+
+    expect(url).toBe(`http://example.com/?apiKey=devkey`)
+
+     url = service.getServiceKeyUrl('http://example.com?a=b');
+
+    expect(url).toBe(`http://example.com/?a=b&apiKey=devkey`)
+  })
 });

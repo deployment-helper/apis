@@ -6,8 +6,8 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 
 /**
- * This Slide runner is desinged for Vinay's slides portal.
- * Runner take screenshot and get meta informatoin for provided URLs slides
+ * This Slide runner is designed for Vinay's slides portal.
+ * Runner take screenshot and get meta information for provided URLs slides
  */
 export class SlidesRunner implements IRunner {
   nextArrowSelector = 'aside .navigate-right.enabled .controls-arrow';
@@ -23,9 +23,7 @@ export class SlidesRunner implements IRunner {
   ) {}
   async start(url: string, data?: any): Promise<any> {
     try{
-      // TODO: should be utility function to create URL
-      const pageUrl = `${url}&apiKey=THISISLOCALDEVELOPMENTKEY`;
-      this.logger.log(`PageURL ${pageUrl}`);
+      const pageUrl = this.sharedService.getServiceKeyUrl(url);
       this.logger.log('Start page');
       await this.page.setViewport({ width: 1920, height: 1080 });
       await this.page.goto(pageUrl);
@@ -99,7 +97,7 @@ export class SlidesRunner implements IRunner {
 
   async takeScreenshotAndSave(meta: any, pid: string) {
     const image = await this.takeScreenshot();
-    const filename = await this.s3.mp3FileNameFromS3Key(meta.name, false);
+    const filename =  this.s3.mp3FileNameFromS3Key(meta.name, false);
     const imagePath = await this.fs.createFile(
       `${pid}/image-files/${filename}.png`,
       image,
