@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
-import { unlink, writeFile } from 'fs/promises';
+import { rm, unlink, writeFile } from 'fs/promises';
 import { accessSync, existsSync, mkdirSync } from 'fs';
 
 @Injectable()
@@ -58,6 +58,15 @@ export class FsService {
       } else {
         this.logger.error(`An error occurred: ${error}`);
       }
+    }
+  }
+
+  async deleteDir(dir:string){
+    try {
+      await rm(dir, { recursive: true });
+      this.logger.log(`Directory ${dir} has been deleted recursively`);
+    } catch (err) {
+      this.logger.error(`Error while deleting directory: ${err}`);
     }
   }
 }

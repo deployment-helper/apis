@@ -9,18 +9,23 @@ import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { IPresentationDto } from '../types';
 import {S3Service} from "@apps/app-management/aws/s3.service";
 import {PresentationEntity} from "@apps/app-management/aws/presentation.entity";
+import {ConfigService} from "@nestjs/config";
 
 @Injectable()
 export class VideoWorker implements IWorker {
   private readonly logger = new Logger(VideoWorker.name);
+  private  nodeEnv;
   constructor(
     private runnerFactory: RunnerFactory,
     private avMerger: AudioVideoMerger,
     private fs: FsService,
     private ffmpeg: FfmpegService,
     private s3:S3Service,
-    private readonly  pres:PresentationEntity
-  ) {}
+    private readonly  pres:PresentationEntity,
+    private config:ConfigService
+  ) {
+    this.nodeEnv = config.getOrThrow('NODE_ENV');
+  }
   async start(url: string, data?: IPresentationDto): Promise<any> {
     try{
       this.logger.log('Begin Worker');
@@ -63,6 +68,12 @@ export class VideoWorker implements IWorker {
       );
       this.logger.log("End DB update");
       this.logger.log('End worker');
+
+      if(this.nodeEnv !== 'development'){
+        this.logger.log('Start cleanup');
+        await this.fs.deleteDir(this.fs.getFullPath(data.pid));
+        this.logger.log('End cleanup');
+      }
     }catch (e){
       this.logger.error(e);
     }
