@@ -27,8 +27,8 @@ export class SlidesRunner implements IRunner {
       this.logger.log('Start page');
       await this.page.setViewport({ width: 1920, height: 1080 });
       await this.page.goto(pageUrl);
-      this.logger.log('Wait for 10 seconds');
-      await this.sharedService.wait(10000);
+      // this.logger.log('Wait for 10 seconds');
+      // await this.sharedService.wait(10000);
       // create image directory
       this.fs.checkAndCreateDir(`${data.pid}/image-files`);
       do {
