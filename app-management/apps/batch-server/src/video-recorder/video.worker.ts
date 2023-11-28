@@ -34,7 +34,6 @@ export class VideoWorker implements IWorker {
       const browser = await puppeteer.launch({
         headless: 'new',
         timeout: 60000,
-        dumpio: true,
         args: ['--no-sandbox', '--disable-dev-shm-usage'],
       }).catch(e => console.error('Error launching Chrome:', e));;
 

@@ -12,9 +12,11 @@ import { Request } from 'express';
 @Injectable()
 export class AuthGuard implements CanActivate {
   private jwksIns: jwks.JwksClient;
+  private serviceKey:string;
   logger = new Logger(AuthGuard.name)
 
   constructor(private readonly configServ: ConfigService) {
+    this.serviceKey = configServ.getOrThrow('SERVICE_KEY');
     this.jwksIns = new jwks.JwksClient({
       jwksUri: configServ.getOrThrow('AWS_COGNITO_JWKS_URL'),
     });
@@ -39,8 +41,8 @@ export class AuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
 
     const key = req?.query?.key;
-
-    if (key === process.env.SERVICE_KEY) {
+    if (key === this.serviceKey) {
+      this.logger.log('LOGIN WITH DEVELOPMENT KEY');
       return true;
     }
 
