@@ -32,9 +32,9 @@ export class VideoWorker implements IWorker {
 
       this.logger.log('Star browser');
       const browser = await puppeteer.launch({
-        headless: 'new',
-        timeout: 0,
-        args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        headless: true,
+        timeout: 60000,
+        args: ['--no-sandbox','--enable-gpu','--disable-setuid-sandbox'],
       }).catch(e => console.error('Error launching Chrome:', e));;
 
       if(!browser){
