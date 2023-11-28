@@ -21,7 +21,11 @@ export class SharedService {
   }
 
   wait(ms: number): Promise<boolean> {
-    return new Promise((res) => setTimeout(() => res(true), ms));
+    SharedService.logger.log('Start Waiting');
+    return new Promise((res) => setTimeout(() => {
+      SharedService.logger.log("End Waiting")
+      res(true);
+    }, ms));
   }
 
   getServiceKeyUrl(urlStr: string): string {
