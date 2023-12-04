@@ -4,6 +4,9 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import {
+  getSignedUrl,
+} from "@aws-sdk/s3-request-presigner";
 import { readFile } from 'fs/promises';
 
 @Injectable()
@@ -86,4 +89,26 @@ export class S3Service {
   presentationIdFromS3Key(s3Key: string) {
     return s3Key.split('audio/')[0];
   }
+
+  // create S3 signed URL
+    async getSignedUrl(key: string): Promise<string> {
+        const command =  new PutObjectCommand({
+            Bucket: this.s3Bucket,
+            Key: key,
+        });
+
+        const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
+        return url;
+    }
+
+    // create a S3 signed URL to download the file
+    async getSignedUrlForDownload(key: string): Promise<string> {
+        const command =  new GetObjectCommand({
+            Bucket: this.s3Bucket,
+            Key: key,
+        });
+
+        const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
+        return url;
+    }
 }

@@ -11,11 +11,12 @@ import { AuthService } from './auth.service';
 import { HttpExceptionFilter } from '@apps/app-management/http-exception.filter';
 import { AuthGuard } from './auth.guard';
 import { UserEntity } from '@apps/app-management/aws/user.entity';
+import {S3Service} from "@apps/app-management/aws/s3.service";
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
 export class AuthController {
-  constructor(private serv: AuthService, private userEntity: UserEntity) {}
+  constructor(private serv: AuthService, private userEntity: UserEntity, private s3:S3Service) {}
 
   @Get('createToken')
   createTokenByCode(@Query('code') code): Promise<any> {
@@ -49,4 +50,10 @@ export class AuthController {
   validateToken(@Headers('Authorization') accessToken): Promise<any> {
     return this.serv.validateToken(accessToken);
   }
+
+    @Get('downloadS3ObjUrl')
+    @UseGuards(AuthGuard)
+    downloadS3ObjUrl(@Query('key') key: string): Promise<any> {
+      return this.s3.getSignedUrlForDownload(key);
+    }
 }
