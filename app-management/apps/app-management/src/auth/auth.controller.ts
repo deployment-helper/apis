@@ -53,7 +53,7 @@ export class AuthController {
 
     @Get('downloadS3ObjUrl')
     @UseGuards(AuthGuard)
-    downloadS3ObjUrl(@Query('key') key: string): Promise<any> {
-      return this.s3.getSignedUrlForDownload(key);
+    async downloadS3ObjUrl(@Query('key') key: string): Promise<{url: string}> {
+      return {url: await this.s3.getSignedUrlForDownload(key)};
     }
 }
