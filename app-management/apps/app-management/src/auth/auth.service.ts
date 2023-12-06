@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import {
   HttpException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -19,6 +20,7 @@ export class AuthService {
   private CLIENT_ID: string;
 
   private jwksIns: jwks.JwksClient;
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     private readonly httpserv: HttpService,
@@ -36,6 +38,8 @@ export class AuthService {
 
   async createToken(code: string, isDevReq = false): Promise<any> {
     const url = new URL('/oauth2/token', this.AWS_COGNITO_POOL_URL);
+    this.logger.log(`isDevReq: ${isDevReq}`);
+    this.logger.log(isDevReq ? this.LOCAL_REDIRECT_API : this.REDIRECT_URI);
     const { data } = await firstValueFrom(
       this.httpserv
         .post(url.href, undefined, {
