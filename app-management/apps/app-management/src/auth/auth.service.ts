@@ -15,7 +15,6 @@ export class AuthService {
   private AWS_COGNITO_POOL_URL: string;
   private GRANT_TYPE: string;
   private REDIRECT_URI: string;
-  private LOCAL_REDIRECT_API: string;
   private CLIENT_ID: string;
 
   private jwksIns: jwks.JwksClient;
@@ -27,14 +26,13 @@ export class AuthService {
     this.AWS_COGNITO_POOL_URL = configServ.getOrThrow('AWS_COGNITO_POOL_URL');
     this.CLIENT_ID = configServ.getOrThrow('CLIENT_ID');
     this.REDIRECT_URI = configServ.getOrThrow('REDIRECT_URI');
-    this.LOCAL_REDIRECT_API = configServ.getOrThrow('LOCAL_REDIRECT_API');
     this.GRANT_TYPE = configServ.getOrThrow('GRANT_TYPE');
     this.jwksIns = new jwks.JwksClient({
       jwksUri: configServ.getOrThrow('AWS_COGNITO_JWKS_URL'),
     });
   }
 
-  async createToken(code: string, isDevReq = false): Promise<any> {
+  async createToken(code: string): Promise<any> {
     const url = new URL('/oauth2/token', this.AWS_COGNITO_POOL_URL);
     const { data } = await firstValueFrom(
       this.httpserv
@@ -45,9 +43,7 @@ export class AuthService {
           params: {
             grant_type: this.GRANT_TYPE,
             client_id: this.CLIENT_ID,
-            redirect_uri: isDevReq
-              ? this.LOCAL_REDIRECT_API
-              : this.REDIRECT_URI,
+            redirect_uri: this.REDIRECT_URI,
             code,
           },
         })
