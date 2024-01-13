@@ -4,6 +4,7 @@ import { UserEntity } from './user.entity';
 import { PresentationEntity } from './presentation.entity';
 import { S3Service } from './s3.service';
 import { SnsService } from './sns.service';
+import {AwsController} from "@apps/app-management/aws/aws.controller";
 
 @Global()
 @Module({
@@ -14,6 +15,7 @@ import { SnsService } from './sns.service';
     S3Service,
     SnsService,
   ],
+  controllers: [AwsController],
   exports: [UserEntity, PresentationEntity, S3Service, SnsService],
 })
 export class AwsModule {}

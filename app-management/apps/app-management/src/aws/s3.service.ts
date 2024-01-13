@@ -95,6 +95,13 @@ export class S3Service {
         const command =  new PutObjectCommand({
             Bucket: this.s3Bucket,
             Key: key,
+            ACL: 'public-read',
+            ContentType: 'image/jpeg',
+            Metadata: {
+              ContentType: 'image/jpeg',
+              ContentDisposition: 'inline',
+              Tagging: 'public-image=yes',
+            }
         });
 
         const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
@@ -110,5 +117,9 @@ export class S3Service {
 
         const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
         return url;
+    }
+
+    getPublicUrl(key: string): string {
+    return `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/${key}`
     }
 }
