@@ -1,7 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
-  Injectable, Logger,
+  Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as jwks from 'jwks-rsa';
@@ -12,8 +13,8 @@ import { Request } from 'express';
 @Injectable()
 export class AuthGuard implements CanActivate {
   private jwksIns: jwks.JwksClient;
-  private serviceKey:string;
-  logger = new Logger(AuthGuard.name)
+  private serviceKey: string;
+  logger = new Logger(AuthGuard.name);
 
   constructor(private readonly configServ: ConfigService) {
     this.serviceKey = configServ.getOrThrow('SERVICE_KEY');
@@ -24,7 +25,7 @@ export class AuthGuard implements CanActivate {
 
   getKey(header, callback) {
     this.jwksIns.getSigningKey(header.kid, (err, key) => {
-      if(err){
+      if (err) {
         this.logger.error(err);
         throw new Error(err.toString());
       }
