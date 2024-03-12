@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { YoutubeModule } from './youtube/youtube.module';
 import { SlidesModule } from './slides/slides.module';
 import { AwsModule } from './aws/aws.module';
+import { VideoModule } from './video/video.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AwsModule } from './aws/aws.module';
     YoutubeModule,
     SlidesModule,
     AwsModule,
+    VideoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
