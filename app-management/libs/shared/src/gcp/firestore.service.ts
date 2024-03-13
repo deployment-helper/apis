@@ -37,6 +37,7 @@ export class FirestoreService {
   // get a document by id
   async get(collection: string, id: string) {
     const doc = await this.db.collection(collection).doc(id).get();
-    return { ...doc.data(), id: doc.id };
+    const data = doc.data();
+    return !!data ? { ...data, id: doc.id } : null;
   }
 }
