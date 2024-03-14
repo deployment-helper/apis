@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 
@@ -8,8 +16,8 @@ export class VideoController {
   constructor(private readonly fireStore: FirestoreService) {}
 
   @Post('/')
-  createVideo() {
-    return this.fireStore.add('video', { name: 'test' });
+  createVideo(@Body() data: any) {
+    return this.fireStore.add('video', data);
   }
 
   @Get('/')
@@ -24,7 +32,7 @@ export class VideoController {
   }
 
   // Update video by id
-  @Post('/:id')
+  @Put('/:id')
   updateVideo(@Param('id') id: string, @Body() data: any) {
     return this.fireStore.update('video', id, data);
   }
