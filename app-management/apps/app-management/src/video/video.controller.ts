@@ -36,4 +36,32 @@ export class VideoController {
   updateVideo(@Param('id') id: string, @Body() data: any) {
     return this.fireStore.update('video', id, data);
   }
+
+  // Create scene for a video
+  @Post('/:id/scenes')
+  createScene(@Param('id') id: string, @Body() data: any) {
+    return this.fireStore.add(`video/${id}/scenes`, data);
+  }
+
+  // Update scene for a video
+  @Put('/:id/scenes/:sceneId')
+  updateScene(
+    @Param('id') id: string,
+    @Param('sceneId') sceneId: string,
+    @Body() data: any,
+  ) {
+    return this.fireStore.update(`video/${id}/scenes`, sceneId, data);
+  }
+
+  // Get scenes for a video
+  @Get('/:id/scenes')
+  getScenes(@Param('id') id: string) {
+    return this.fireStore.list(`video/${id}/scenes`);
+  }
+
+  // Get scene by id
+  @Get('/:id/scenes/:sceneId')
+  getScene(@Param('id') id: string, @Param('sceneId') sceneId: string) {
+    return this.fireStore.get(`video/${id}/scenes`, sceneId);
+  }
 }
