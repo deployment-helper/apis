@@ -8,6 +8,7 @@ import { YoutubeModule } from './youtube/youtube.module';
 import { SlidesModule } from './slides/slides.module';
 import { AwsModule } from './aws/aws.module';
 import { VideoModule } from './video/video.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { VideoModule } from './video/video.module';
     SlidesModule,
     AwsModule,
     VideoModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
