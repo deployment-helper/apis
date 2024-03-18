@@ -18,6 +18,7 @@ export class SynthesisService {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const [response] = await this.client.synthesizeSpeech(request);
+    // convert Unit8Array to buffer
     const buffer = Buffer.from(response.audioContent);
     // return base64 encoded audio
     return { type: 'base64', data: buffer.toString('base64') };
