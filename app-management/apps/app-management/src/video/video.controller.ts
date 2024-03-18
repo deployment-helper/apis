@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
@@ -16,13 +17,13 @@ export class VideoController {
   constructor(private readonly fireStore: FirestoreService) {}
 
   @Post('/')
-  createVideo(@Body() data: any) {
-    return this.fireStore.add('video', data);
+  createVideo(@Body() data: any, @Req() req: any) {
+    return this.fireStore.add('video', { ...data, userId: req.user.sub });
   }
 
   @Get('/')
-  getVideos() {
-    return this.fireStore.list('video');
+  getVideos(@Req() req: any) {
+    return this.fireStore.listByField('video', 'userId', req.user.sub);
   }
 
   // Get video by id

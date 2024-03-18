@@ -12,7 +12,7 @@ export class FirestoreService {
 
   async add(collection: string, data: any) {
     const docRef = this.db.collection(collection).doc();
-    await docRef.set(data);
+    await docRef.set({ ...data, createdAt: new Date(), updatedAt: new Date() });
     // read value from this docRef
     const doc = await docRef.get();
     return { ...doc.data(), id: docRef.id };
@@ -20,7 +20,7 @@ export class FirestoreService {
 
   async update(collection: string, id: string, data: any) {
     const docRef = this.db.collection(collection).doc(id);
-    await docRef.update(data);
+    await docRef.update({ ...data, updatedAt: new Date() });
     // read value from this docRef
     const doc = await docRef.get();
     return { ...doc.data(), id: docRef.id };
@@ -46,6 +46,7 @@ export class FirestoreService {
     const snapshot = await this.db
       .collection(collection)
       .where(field, '==', value)
+      .orderBy('createdAt')
       .get();
     return snapshot.docs.map((doc) => {
       return { ...doc.data(), id: doc.id };
