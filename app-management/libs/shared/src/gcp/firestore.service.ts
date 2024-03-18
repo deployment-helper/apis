@@ -40,4 +40,15 @@ export class FirestoreService {
     const data = doc.data();
     return !!data ? { ...data, id: doc.id } : null;
   }
+
+  // get all documents in a collection by a field
+  async listByField(collection: string, field: string, value: any) {
+    const snapshot = await this.db
+      .collection(collection)
+      .where(field, '==', value)
+      .get();
+    return snapshot.docs.map((doc) => {
+      return { ...doc.data(), id: doc.id };
+    });
+  }
 }
