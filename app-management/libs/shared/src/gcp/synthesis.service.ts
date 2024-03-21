@@ -11,9 +11,12 @@ export class SynthesisService {
 
   async synthesize(
     text: string[],
-    merge?: true,
+    audioLanguage = 'en-US',
+    merge = true,
   ): Promise<{ type: string; data: string }[]> {
-    const audios = await Promise.all(text.map((t) => this.synthesizeText(t)));
+    const audios = await Promise.all(
+      text.map((t) => this.synthesizeText(t, audioLanguage)),
+    );
     if (!merge) {
       return [
         {
@@ -30,10 +33,11 @@ export class SynthesisService {
   }
   private async synthesizeText(
     text: string,
+    audioLanguage: string,
   ): Promise<{ type: string; data: Uint8Array }> {
     const request = {
       input: { text },
-      voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
+      voice: { languageCode: audioLanguage || 'en-US' },
       audioConfig: { audioEncoding: 'MP3' },
     };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
