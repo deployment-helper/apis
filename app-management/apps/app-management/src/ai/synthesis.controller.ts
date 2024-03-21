@@ -8,7 +8,7 @@ export class SynthesisController {
   constructor(private readonly synthesisService: SynthesisService) {}
 
   @Post()
-  async synthesize(@Body() body: { text: string }) {
+  async synthesize(@Body() body: { text: string[] }) {
     return this.synthesisService.synthesize(body.text);
   }
 }
