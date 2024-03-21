@@ -17,7 +17,7 @@ export class SynthesisService {
     const audios = await Promise.all(
       text.map((t) => this.synthesizeText(t, audioLanguage)),
     );
-    if (!merge) {
+    if (merge) {
       return [
         {
           type: 'base64',
