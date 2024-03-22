@@ -17,8 +17,19 @@ export class VideoController {
   constructor(private readonly fireStore: FirestoreService) {}
 
   @Post('/')
-  createVideo(@Body() data: any, @Req() req: any) {
-    return this.fireStore.add('video', { ...data, userId: req.user.sub });
+  async createVideo(@Body() data: any, @Req() req: any) {
+    const video = await this.fireStore.add('video', {
+      ...data,
+      userId: req.user.sub,
+    });
+
+    // Create a scenes sub collection for the video
+    const scenes = await this.fireStore.add(`video/${video.id}/scenes`, {
+      videoId: video.id,
+      scenes: [],
+    });
+
+    return this.fireStore.update('video', video.id, { scenesId: scenes.id });
   }
 
   @Get('/')
@@ -45,13 +56,19 @@ export class VideoController {
   }
 
   // Update scene for a video
-  @Put('/:id/scenes/:sceneId')
+  @Put('/:id/scenes/:sceneId/:sceneArrayIndex?')
   updateScene(
     @Param('id') id: string,
     @Param('sceneId') sceneId: string,
+    @Param('sceneArrayIndex') sceneArrayIndex: string,
     @Body() data: any,
   ) {
-    return this.fireStore.update(`video/${id}/scenes`, sceneId, data);
+    return this.fireStore.updateScene(
+      `video/${id}/scenes`,
+      sceneId,
+      data,
+      sceneArrayIndex,
+    );
   }
 
   // Get scenes for a video

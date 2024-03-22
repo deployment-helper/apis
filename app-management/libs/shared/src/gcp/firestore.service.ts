@@ -52,4 +52,36 @@ export class FirestoreService {
       return { ...doc.data(), id: doc.id };
     });
   }
+
+  async updateScene(
+    collection: string,
+    sceneDocId: string,
+    data: any,
+    sceneArrayIndex?: string,
+  ) {
+    const doc = await this.get(collection, sceneDocId);
+    if (!doc) {
+      throw new Error('Document not found');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const scenes = doc.scenes;
+
+    if (sceneArrayIndex) {
+      scenes[sceneArrayIndex] = {
+        ...scenes[sceneArrayIndex],
+        ...data,
+        updatedAt: new Date(),
+      };
+    } else {
+      scenes.push({
+        ...data,
+        updatedAt: new Date(),
+        createdAt: new Date(),
+      });
+    }
+
+    return this.update(collection, sceneDocId, { scenes });
+  }
 }
