@@ -71,6 +71,22 @@ export class VideoController {
     );
   }
 
+  // Change scene position
+  @Put('/:id/scenes/:sceneId/:sceneArrayIndex/position')
+  updateScenePosition(
+    @Param('id') id: string,
+    @Param('sceneId') sceneId: string,
+    @Param('sceneArrayIndex') sceneArrayIndex: number,
+    @Body() data: { newPosition: number },
+  ) {
+    return this.fireStore.changeScenePosition(
+      `video/${id}/scenes`,
+      sceneId,
+      sceneArrayIndex,
+      data.newPosition,
+    );
+  }
+
   // Get scenes for a video
   @Get('/:id/scenes')
   getScenes(@Param('id') id: string) {

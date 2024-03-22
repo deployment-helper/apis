@@ -84,4 +84,25 @@ export class FirestoreService {
 
     return this.update(collection, sceneDocId, { scenes });
   }
+
+  async changeScenePosition(
+    collection: string,
+    sceneDocId: string,
+    sceneArrayIndex: number,
+    newPosition: number,
+  ) {
+    const doc = await this.get(collection, sceneDocId);
+    if (!doc) {
+      throw new Error('Document not found');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const scenes = doc.scenes;
+
+    const scene = scenes.splice(sceneArrayIndex, 1)[0];
+    scenes.splice(newPosition, 0, scene);
+
+    return this.update(collection, sceneDocId, { scenes });
+  }
 }
