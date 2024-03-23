@@ -72,7 +72,7 @@ export class VideoController {
   }
 
   // Change scene position
-  @Put('/:id/scenes/:sceneId/:sceneArrayIndex/position')
+  @Put('/:id/scenes/:sceneId/:sceneArrayIndex/reorder')
   updateScenePosition(
     @Param('id') id: string,
     @Param('sceneId') sceneId: string,
