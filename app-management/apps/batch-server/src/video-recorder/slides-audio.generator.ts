@@ -3,6 +3,8 @@ import { TSlideInfo } from './types';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { SynthesisService } from '@app/shared/gcp/synthesis.service';
+import { IGenerateVideoDto } from '../types';
 
 /**
  * This file create a arrary of MP3 info from S3 file
@@ -44,6 +46,35 @@ export class SlidesAudioGenerator {
     this.logger.log('End audio generator');
     return audioFiles;
   }
+  async startV2(slides: Array<TSlideInfo>, data?: IGenerateVideoDto) {
+    try {
+      const audioFiles: Array<TSlideInfo> = [];
+      this.logger.log('Begin audio generator');
+      this.fs.checkAndCreateDir(`${data.videoId}/mp3-files`);
+      for (const slide of slides) {
+        const description = slide.description || 'hello world';
+
+        // TODO: run this in parallel
+        const audioFilePath = await this.getAudioFromTextAndSave(
+          description,
+          data.videoId,
+          slide.meta.name,
+        );
+        audioFiles.push({
+          file: audioFilePath,
+          meta: {
+            filename: `${slide.meta.name}.mp3`,
+            pid: data.videoId,
+          },
+        });
+      }
+
+      this.logger.log('End audio generator');
+      return audioFiles;
+    } catch (e) {
+      this.logger.error(e);
+    }
+  }
 
   async getFileFromAudioUrl(audiourl: string, pid) {
     let audioFilePath;
@@ -62,6 +93,18 @@ export class SlidesAudioGenerator {
       audioFilePath = mp3MergeFullPath;
     }
 
+    return audioFilePath;
+  }
+
+  async getAudioFromTextAndSave(text, pid, name) {
+    const synthesisService = new SynthesisService();
+    const audio = await synthesisService.synthesize([text]);
+    const filename = `${pid}/mp3-files/${name}.mp3`;
+    const audioFilePath = await this.fs.createFile(
+      filename,
+      audio[0].data,
+      true,
+    );
     return audioFilePath;
   }
 

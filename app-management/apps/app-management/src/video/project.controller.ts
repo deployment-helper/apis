@@ -9,8 +9,6 @@ export class ProjectController {
   @Post()
   // project_name: string
   createProject(@Body() data: { projectName: string }, @Req() req: any) {
-    console.log(req.user.sub);
-    console.log(req.user);
     return this.firestoreService.add('project', {
       ...data,
       userId: req.user.sub,

@@ -6,7 +6,7 @@ import { RunnerFactory } from './runner.factory';
 import { AudioVideoMerger } from './audio-video.merger';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
-import { IPresentationDto } from '../types';
+import { IGenerateVideoDto, IPresentationDto } from '../types';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 import { ConfigService } from '@nestjs/config';
@@ -31,14 +31,16 @@ export class VideoWorker implements IWorker {
       this.logger.log('Begin Worker');
 
       this.logger.log('Star browser');
-      const browser = await puppeteer.launch({
-        headless: true,
-        timeout: 0,
-        args: ['--no-sandbox','--enable-gpu','--disable-setuid-sandbox'],
-      }).catch(e => console.error('Error launching Chrome:', e));;
+      const browser = await puppeteer
+        .launch({
+          headless: true,
+          timeout: 0,
+          args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
+        })
+        .catch((e) => console.error('Error launching Chrome:', e));
 
-      if(!browser){
-        throw new Error('Browser not created')
+      if (!browser) {
+        throw new Error('Browser not created');
       }
 
       const page = await browser.newPage();
@@ -47,6 +49,7 @@ export class VideoWorker implements IWorker {
       this.logger.log('Start runner');
       const slidesImages: Array<TSlideInfo> = await runner.start(url, data);
       this.logger.log(`Slides count ${slidesImages.length}`);
+
       this.logger.log('Get Audio generator for given URL');
       const audioGenerator = this.runnerFactory.getAudioGenerator(url);
 
@@ -82,5 +85,77 @@ export class VideoWorker implements IWorker {
     } catch (e) {
       this.logger.error(e);
     }
+  }
+  async startV2(url: string, data?: IGenerateVideoDto): Promise<any> {
+    this.logger.log('Begin Worker');
+    const scenesImages = await this.generateImages(url, data);
+    this.logger.log('scenesImages count', scenesImages.length);
+
+    const scenesAudios = await this.generateAudios(scenesImages, data);
+    this.logger.log('scenesAudios count', scenesAudios.length);
+
+    this.logger.log('Begin audio and image merge');
+    const videoPaths = await this.avMerger.merge(scenesImages, scenesAudios);
+    this.logger.log('End audio and image merge');
+
+    this.logger.log('Merge all videos');
+    const preparedVideoPath = this.fs.getFullPath(`${data.videoId}/output.mp4`);
+    await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
+    this.logger.log('End merge all videos');
+
+    this.logger.log('Begin S3 upload');
+    await this.s3.readAndUpload(
+      preparedVideoPath,
+      `${data.videoId}/output.mp4`,
+    );
+    this.logger.log('End S3 upload');
+
+    this.logger.log('Begin DB update');
+    this.logger.log('TODO: update DB');
+    this.logger.log('End DB update');
+
+    if (this.nodeEnv !== 'development') {
+      this.logger.log('Start cleanup');
+      await this.fs.deleteDir(this.fs.getFullPath(data.videoId));
+      this.logger.log('End cleanup');
+    }
+  }
+  async generateAudios(
+    scenesImages: Array<TSlideInfo>,
+    data: IGenerateVideoDto,
+  ) {
+    this.logger.log('Get Audio generator for given URL');
+    const audioGenerator = this.runnerFactory.getAudioGenerator(data.url);
+    this.logger.log('Start audio generator');
+    const slidesAudios = await audioGenerator.startV2(scenesImages, data);
+    return slidesAudios;
+  }
+
+  async generateImages(url: string, data: IGenerateVideoDto): Promise<any> {
+    this.logger.log('Star browser');
+    const browser = await puppeteer
+      .launch({
+        headless: true,
+        timeout: 0,
+        args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
+      })
+      .catch((e) => console.error('Error launching Chrome:', e));
+
+    if (!browser) {
+      throw new Error('Browser not created');
+    }
+
+    const page = await browser.newPage();
+    this.logger.log('Get browser runner for given URL');
+    const runner = this.runnerFactory.getBrowserRunner(url, page);
+    this.logger.log('Start runner');
+    const slidesImages: Array<TSlideInfo> = await runner.start(url, {
+      pid: data.videoId,
+    });
+    this.logger.log('Stopping runner');
+    await runner.stop();
+    this.logger.log('Stopping browser');
+    await browser.close();
+    return slidesImages;
   }
 }

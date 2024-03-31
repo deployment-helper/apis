@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SharedService {
-  public  readonly logger = new Logger(SharedService.name);
+  public readonly logger = new Logger(SharedService.name);
   serviceKey: string;
   constructor(private readonly config: ConfigService) {
     this.serviceKey = config.getOrThrow('SERVICE_KEY');
@@ -22,10 +22,12 @@ export class SharedService {
 
   wait(ms: number): Promise<boolean> {
     this.logger.log('Start Waiting');
-    return new Promise((res) => setTimeout(() => {
-      this.logger.log("End Waiting");
-      res(true);
-    }, ms));
+    return new Promise((res) =>
+      setTimeout(() => {
+        this.logger.log('End Waiting');
+        res(true);
+      }, ms),
+    );
   }
 
   getServiceKeyUrl(urlStr: string): string {

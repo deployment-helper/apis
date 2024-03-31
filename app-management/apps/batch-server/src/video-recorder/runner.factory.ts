@@ -24,7 +24,7 @@ export class RunnerFactory {
     if (server === ServerNames['localhost:3000']) {
       return new SlidesRunner(page, this.sharedService, this.fs, this.s3);
     } else {
-      this.logger.warn(`${server} not supported.`);
+      this.logger.error(`${server} not supported.`);
     }
   }
 
