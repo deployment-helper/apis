@@ -14,6 +14,7 @@ import { AudioVideoMerger } from './audio-video.merger';
 import { SharedService } from '@app/shared';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { FsService } from '@app/shared/fs/fs.service';
+import { FirestoreService } from '@app/shared/gcp/firestore.service';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { FsService } from '@app/shared/fs/fs.service';
     SharedService,
     FfmpegService,
     FsService,
+    FirestoreService,
   ],
 })
 export class VideoRecorderModule {}

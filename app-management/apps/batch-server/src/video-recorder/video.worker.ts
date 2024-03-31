@@ -10,6 +10,8 @@ import { IGenerateVideoDto, IPresentationDto } from '../types';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 import { ConfigService } from '@nestjs/config';
+import { FirestoreService } from '@app/shared/gcp/firestore.service';
+import { FieldValue } from '@google-cloud/firestore';
 
 @Injectable()
 export class VideoWorker implements IWorker {
@@ -23,6 +25,7 @@ export class VideoWorker implements IWorker {
     private s3: S3Service,
     private readonly pres: PresentationEntity,
     private config: ConfigService,
+    private fireStore: FirestoreService,
   ) {
     this.nodeEnv = config.getOrThrow('NODE_ENV');
   }
@@ -87,37 +90,52 @@ export class VideoWorker implements IWorker {
     }
   }
   async startV2(url: string, data?: IGenerateVideoDto): Promise<any> {
-    this.logger.log('Begin Worker');
-    const scenesImages = await this.generateImages(url, data);
-    this.logger.log('scenesImages count', scenesImages.length);
+    try {
+      this.logger.log('Begin Worker');
+      const scenesImages = await this.generateImages(url, data);
+      this.logger.log('scenesImages count', scenesImages.length);
 
-    const scenesAudios = await this.generateAudios(scenesImages, data);
-    this.logger.log('scenesAudios count', scenesAudios.length);
+      const scenesAudios = await this.generateAudios(scenesImages, data);
+      this.logger.log('scenesAudios count', scenesAudios.length);
 
-    this.logger.log('Begin audio and image merge');
-    const videoPaths = await this.avMerger.merge(scenesImages, scenesAudios);
-    this.logger.log('End audio and image merge');
+      this.logger.log('Begin audio and image merge');
+      const videoPaths = await this.avMerger.merge(scenesImages, scenesAudios);
+      this.logger.log('End audio and image merge');
 
-    this.logger.log('Merge all videos');
-    const preparedVideoPath = this.fs.getFullPath(`${data.videoId}/output.mp4`);
-    await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
-    this.logger.log('End merge all videos');
+      this.logger.log('Merge all videos');
+      const preparedVideoPath = this.fs.getFullPath(
+        `${data.videoId}/output.mp4`,
+      );
+      await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
+      this.logger.log('End merge all videos');
 
-    this.logger.log('Begin S3 upload');
-    await this.s3.readAndUpload(
-      preparedVideoPath,
-      `${data.videoId}/output.mp4`,
-    );
-    this.logger.log('End S3 upload');
+      this.logger.log('Begin S3 upload');
+      await this.s3.readAndUpload(
+        preparedVideoPath,
+        `${data.videoId}/output.mp4`,
+      );
+      this.logger.log('End S3 upload');
 
-    this.logger.log('Begin DB update');
-    this.logger.log('TODO: update DB');
-    this.logger.log('End DB update');
+      this.logger.log('Begin DB update');
 
-    if (this.nodeEnv !== 'development') {
-      this.logger.log('Start cleanup');
-      await this.fs.deleteDir(this.fs.getFullPath(data.videoId));
-      this.logger.log('End cleanup');
+      await this.fireStore.update('video', data.videoId, {
+        generatedVideoInfo: FieldValue.arrayUnion({
+          cloudFile: `${data.videoId}/output.mp4`,
+          version: data.version,
+          date: new Date().toISOString(),
+        }),
+      });
+
+      this.logger.log('End DB update');
+
+      if (this.nodeEnv !== 'development') {
+        this.logger.log('Start cleanup');
+        await this.fs.deleteDir(this.fs.getFullPath(data.videoId));
+        this.logger.log('End cleanup');
+      }
+      this.logger.log('End worker');
+    } catch (e) {
+      this.logger.error(e);
     }
   }
   async generateAudios(
