@@ -37,7 +37,11 @@ export class SlidesRunner implements IRunner {
           meta,
           data.pid,
         );
-        this.slides.push({ file: imagePath, meta });
+        this.slides.push({
+          file: imagePath,
+          description: meta.description,
+          meta,
+        });
       } while (await this.hasNextAndClick());
       return this.slides;
     } catch (e) {
