@@ -59,6 +59,7 @@ export class SlidesAudioGenerator {
           description,
           data.videoId,
           slide.meta.name,
+          slide.meta.language || 'en-US',
         );
         audioFiles.push({
           file: audioFilePath,
@@ -96,9 +97,9 @@ export class SlidesAudioGenerator {
     return audioFilePath;
   }
 
-  async getAudioFromTextAndSave(text, pid, name) {
+  async getAudioFromTextAndSave(text, pid, name, language = 'en-US') {
     const synthesisService = new SynthesisService();
-    const audio = await synthesisService.synthesize([text]);
+    const audio = await synthesisService.synthesize([text], language);
     const filename = `${pid}/mp3-files/${name}.mp3`;
     const audioFilePath = await this.fs.createFile(
       filename,
