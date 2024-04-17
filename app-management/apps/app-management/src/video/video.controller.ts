@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -13,11 +14,15 @@ import { v4 as uuid } from 'uuid';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { IVideo, IScene } from '@app/shared/types';
+import { TranslateService } from '@app/shared/gcp/translate.service';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
 export class VideoController {
-  constructor(private readonly fireStore: FirestoreService) {}
+  constructor(
+    private readonly fireStore: FirestoreService,
+    protected readonly translate: TranslateService,
+  ) {}
 
   // create a video
   @Post('/')
@@ -110,7 +115,12 @@ export class VideoController {
 
   // copy a video and its scenes
   @Post('/:id/copy')
-  async copyVideo(@Param('id') id: string, @Req() req: any) {
+  async copyVideo(
+    @Param('id') id: string,
+    @Query('langFrom') langFrom: string,
+    @Query('langTo') langTo: string,
+    @Req() req: any,
+  ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     const scenesDocs = await this.fireStore.list<IScene>(`video/${id}/scenes`);
 
@@ -121,7 +131,13 @@ export class VideoController {
       userId: req.user.sub,
     });
 
-    const scenes = scenesDocs[0].scenes;
+    const scenes = langTo
+      ? await this.translate.translateScenes(
+          scenesDocs[0].scenes,
+          langFrom,
+          langTo,
+        )
+      : scenesDocs[0].scenes;
     const newScenes = await this.fireStore.add(`video/${newVideo.id}/scenes`, {
       videoId: newVideo.id,
       scenes: scenes.map((scene: any) => ({ ...scene, id: uuid() })),
@@ -129,6 +145,7 @@ export class VideoController {
 
     return this.fireStore.update('video', newVideo.id, {
       scenesId: newScenes.id,
+      audioLanguage: langTo,
     });
   }
 }

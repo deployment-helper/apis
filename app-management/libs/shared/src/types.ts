@@ -28,5 +28,5 @@ export interface IVideo {
 
 export interface IScene {
   videoId: string;
-  scenes: object[];
+  scenes: any[];
 }

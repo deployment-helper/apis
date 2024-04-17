@@ -20,4 +20,25 @@ export class TranslateService {
     });
     return translation;
   }
+
+  // translate scenes array
+
+  async translateScenes(
+    scenes: any[],
+    sourceLanguage: string,
+    targetLanguage: string,
+  ): Promise<any[]> {
+    const translatedScenes = await Promise.all(
+      scenes.map(async (scene) => {
+        const translatedScene = await this.translateText(
+          scene.description || '',
+          sourceLanguage,
+          targetLanguage,
+        );
+        return { ...scene, description: translatedScene };
+      }),
+    );
+
+    return translatedScenes;
+  }
 }
