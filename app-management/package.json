@@ -34,6 +34,7 @@
     "@aws-sdk/s3-request-presigner": "^3.465.0",
     "@google-cloud/firestore": "^7.3.1",
     "@google-cloud/text-to-speech": "^5.1.0",
+    "@google-cloud/translate": "^8.2.0",
     "@googleapis/youtube": "^11.0.0",
     "@nestjs/axios": "^3.0.0",
     "@nestjs/bull": "^10.0.1",
