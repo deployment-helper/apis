@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -39,6 +40,13 @@ export class VideoController {
     });
 
     return this.fireStore.update('video', video.id, { scenesId: scenes.id });
+  }
+
+  // Inside your VideoController class
+
+  @Delete('/:id')
+  deleteVideo(@Param('id') id: string) {
+    return this.fireStore.update('video', id, { isDeleted: true });
   }
 
   // Get all videos
