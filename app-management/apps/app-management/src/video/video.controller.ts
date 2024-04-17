@@ -8,14 +8,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
+
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
+import { IVideo, IScene } from '@app/shared/types';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
 export class VideoController {
   constructor(private readonly fireStore: FirestoreService) {}
 
+  // create a video
   @Post('/')
   async createVideo(@Body() data: any, @Req() req: any) {
     const video = await this.fireStore.add('video', {
@@ -32,6 +36,7 @@ export class VideoController {
     return this.fireStore.update('video', video.id, { scenesId: scenes.id });
   }
 
+  // Get all videos
   @Get('/')
   getVideos(@Req() req: any) {
     return this.fireStore.listByField('video', 'userId', req.user.sub);
@@ -49,7 +54,11 @@ export class VideoController {
     return this.fireStore.update('video', id, data);
   }
 
-  // Create scene for a video
+  /**
+   * @Deprecated - Use updateScene instead
+   * @param id
+   * @param data
+   */
   @Post('/:id/scenes')
   createScene(@Param('id') id: string, @Body() data: any) {
     return this.fireStore.add(`video/${id}/scenes`, data);
@@ -97,5 +106,29 @@ export class VideoController {
   @Get('/:id/scenes/:sceneId')
   getScene(@Param('id') id: string, @Param('sceneId') sceneId: string) {
     return this.fireStore.get(`video/${id}/scenes`, sceneId);
+  }
+
+  // copy a video and its scenes
+  @Post('/:id/copy')
+  async copyVideo(@Param('id') id: string, @Req() req: any) {
+    const video = await this.fireStore.get<IVideo>('video', id);
+    const scenesDocs = await this.fireStore.list<IScene>(`video/${id}/scenes`);
+
+    const newVideo = await this.fireStore.add('video', {
+      ...video,
+      name: `${video.name} - Copy`,
+      generatedVideoInfo: [],
+      userId: req.user.sub,
+    });
+
+    const scenes = scenesDocs[0].scenes;
+    const newScenes = await this.fireStore.add(`video/${newVideo.id}/scenes`, {
+      videoId: newVideo.id,
+      scenes: scenes.map((scene: any) => ({ ...scene, id: uuid() })),
+    });
+
+    return this.fireStore.update('video', newVideo.id, {
+      scenesId: newScenes.id,
+    });
   }
 }

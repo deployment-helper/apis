@@ -27,18 +27,18 @@ export class FirestoreService {
   }
 
   // list all documents in a collection
-  async list(collection: string) {
+  async list<T>(collection: string): Promise<T[]> {
     const snapshot = await this.db.collection(collection).get();
     return snapshot.docs.map((doc) => {
       return { ...doc.data(), id: doc.id };
-    });
+    }) as T[];
   }
 
   // get a document by id
-  async get(collection: string, id: string) {
+  async get<T>(collection: string, id: string): Promise<T> {
     const doc = await this.db.collection(collection).doc(id).get();
     const data = doc.data();
-    return !!data ? { ...data, id: doc.id } : null;
+    return !!data ? ({ ...data, id: doc.id } as T) : null;
   }
 
   // get all documents in a collection by a field

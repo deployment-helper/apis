@@ -25,3 +25,8 @@ export interface IVideo {
   scenesId: string;
   generatedVideoInfo?: IGeneratedVideoInfo[];
 }
+
+export interface IScene {
+  videoId: string;
+  scenes: object[];
+}
