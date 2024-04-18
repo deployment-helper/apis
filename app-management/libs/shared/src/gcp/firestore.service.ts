@@ -48,9 +48,14 @@ export class FirestoreService {
       .where(field, '==', value)
       .orderBy('createdAt')
       .get();
-    return snapshot.docs.map((doc) => {
-      return { ...doc.data(), id: doc.id };
-    });
+
+    return snapshot.docs
+      .map((doc) => {
+        return { ...doc.data(), id: doc.id };
+      })
+      .filter(
+        (doc: any) => doc.isDeleted === false || doc.isDeleted === undefined,
+      );
   }
 
   async updateScene(
