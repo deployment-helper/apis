@@ -134,7 +134,7 @@ export class VideoController {
 
     const newVideo = await this.fireStore.add('video', {
       ...video,
-      name: `${video.name} - Copy`,
+      name: `${video.name} - ${langTo}- Copy`,
       generatedVideoInfo: [],
       userId: req.user.sub,
     });

@@ -23,6 +23,10 @@ export class TranslateService {
 
   // translate scenes array
 
+  clearLanguagePostFix(text = '') {
+    return text.replace(/-.*$/, '');
+  }
+
   async translateScenes(
     scenes: any[],
     sourceLanguage: string,
@@ -32,8 +36,8 @@ export class TranslateService {
       scenes.map(async (scene) => {
         const translatedScene = await this.translateText(
           scene.description || '',
-          sourceLanguage,
-          targetLanguage,
+          this.clearLanguagePostFix(sourceLanguage),
+          this.clearLanguagePostFix(targetLanguage),
         );
         return { ...scene, description: translatedScene };
       }),
