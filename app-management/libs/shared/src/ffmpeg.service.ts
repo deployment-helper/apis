@@ -89,4 +89,33 @@ export class FfmpegService {
         });
     });
   }
+
+  async trimVideo(
+    inputFilePath: string,
+    outputFilePath: string,
+    startTrim: number,
+    endTrim: number,
+  ): Promise<void> {
+    // Get the duration of the video
+    const duration = await new Promise<number>((resolve, reject) => {
+      ffmpeg.ffprobe(inputFilePath, (err, metadata) => {
+        if (err) reject(err);
+        else resolve(metadata.format.duration);
+      });
+    });
+
+    // Subtract 6 seconds from the duration
+    const newDuration = duration - (startTrim + endTrim);
+
+    // Trim the video
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputFilePath)
+        .setStartTime(startTrim) // Start from 3 seconds
+        .setDuration(newDuration) // Set the new duration
+        .output(outputFilePath)
+        .on('end', resolve)
+        .on('error', reject)
+        .run();
+    });
+  }
 }

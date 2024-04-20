@@ -30,6 +30,7 @@ export class VideoWorker implements IWorker {
   ) {
     this.nodeEnv = config.getOrThrow('NODE_ENV');
   }
+  //  This version of the start is designed to get generated mp3 files from s3 server
   async start(url: string, data?: IPresentationDto): Promise<any> {
     try {
       this.logger.log('Begin Worker');
@@ -90,6 +91,8 @@ export class VideoWorker implements IWorker {
       this.logger.error(e);
     }
   }
+
+  // This version of start method is designed to get generated mp3 files during the process
   async startV2(url: string, data?: IGenerateVideoDto): Promise<any> {
     try {
       this.logger.log('Begin Worker');
@@ -110,12 +113,33 @@ export class VideoWorker implements IWorker {
       );
       await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
       this.logger.log('End merge all videos');
+      // We are start and end slide in our application to have reveal.js layout work properly
+      // So we need to trim the video to remove start and end slide
+      this.logger.log('Start trimming');
+      this.logger.debug(
+        'duration before trim',
+        await this.ffmpeg.mp3Duration(preparedVideoPath),
+      );
+      const trimmedVideoPath = this.fs.getFullPath(
+        `${data.videoId}/${uniqueVideoName}-trimmed.mp4`,
+      );
+      await this.ffmpeg.trimVideo(
+        preparedVideoPath,
+        trimmedVideoPath,
+        1.2,
+        1.3,
+      );
+      this.logger.debug(
+        'duration after trim',
+        await this.ffmpeg.mp3Duration(trimmedVideoPath),
+      );
+      this.logger.log('End trimming');
 
       this.logger.log('Begin S3 upload');
 
       await this.s3.readAndUpload(
-        preparedVideoPath,
-        `${data.videoId}/${uniqueVideoName}.mp4`,
+        trimmedVideoPath,
+        `${data.videoId}/${trimmedVideoPath}.mp4`,
       );
       this.logger.log('End S3 upload');
 
@@ -123,7 +147,7 @@ export class VideoWorker implements IWorker {
 
       await this.fireStore.update('video', data.videoId, {
         generatedVideoInfo: FieldValue.arrayUnion({
-          cloudFile: `${data.videoId}/${uniqueVideoName}.mp4`,
+          cloudFile: `${data.videoId}/${trimmedVideoPath}.mp4`,
           version: data.version,
           date: new Date().toISOString(),
         }),
@@ -141,6 +165,7 @@ export class VideoWorker implements IWorker {
       this.logger.error(e);
     }
   }
+
   async generateAudios(
     scenesImages: Array<TSlideInfo>,
     data: IGenerateVideoDto,
