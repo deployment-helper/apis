@@ -12,6 +12,7 @@ import { PresentationEntity } from '@apps/app-management/aws/presentation.entity
 import { ConfigService } from '@nestjs/config';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FieldValue } from '@google-cloud/firestore';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class VideoWorker implements IWorker {
@@ -103,16 +104,18 @@ export class VideoWorker implements IWorker {
       this.logger.log('End audio and image merge');
 
       this.logger.log('Merge all videos');
+      const uniqueVideoName = uuid();
       const preparedVideoPath = this.fs.getFullPath(
-        `${data.videoId}/output.mp4`,
+        `${data.videoId}/${uniqueVideoName}.mp4`,
       );
       await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
       this.logger.log('End merge all videos');
 
       this.logger.log('Begin S3 upload');
+
       await this.s3.readAndUpload(
         preparedVideoPath,
-        `${data.videoId}/output.mp4`,
+        `${data.videoId}/${uniqueVideoName}.mp4`,
       );
       this.logger.log('End S3 upload');
 
@@ -120,7 +123,7 @@ export class VideoWorker implements IWorker {
 
       await this.fireStore.update('video', data.videoId, {
         generatedVideoInfo: FieldValue.arrayUnion({
-          cloudFile: `${data.videoId}/output.mp4`,
+          cloudFile: `${data.videoId}/${uniqueVideoName}.mp4`,
           version: data.version,
           date: new Date().toISOString(),
         }),
