@@ -8,7 +8,10 @@ export class ProjectController {
   constructor(private readonly firestoreService: FirestoreService) {}
   @Post()
   // project_name: string
-  createProject(@Body() data: { projectName: string }, @Req() req: any) {
+  createProject(
+    @Body() data: { projectName: string; projectDesc: string },
+    @Req() req: any,
+  ) {
     return this.firestoreService.add('project', {
       ...data,
       userId: req.user.sub,
