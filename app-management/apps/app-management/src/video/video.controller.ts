@@ -93,6 +93,20 @@ export class VideoController {
     );
   }
 
+  // Delete a scene
+  @Delete('/:id/scenes/:sceneId/:sceneArrayIndex')
+  deleteScene(
+    @Param('id') id: string,
+    @Param('sceneId') sceneId: string,
+    @Param('sceneArrayIndex') sceneArrayIndex: number,
+  ) {
+    return this.fireStore.deleteScene(
+      `video/${id}/scenes`,
+      sceneId,
+      sceneArrayIndex,
+    );
+  }
+
   // Change scene position
   @Put('/:id/scenes/:sceneId/:sceneArrayIndex/reorder')
   updateScenePosition(
