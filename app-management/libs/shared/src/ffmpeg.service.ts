@@ -118,4 +118,54 @@ export class FfmpegService {
         .run();
     });
   }
+
+  async cropVideo(
+    inputFilePath: string,
+    outputFilePath: string,
+    cropOptions: {
+      top: number;
+      bottom: number;
+      left: number;
+      right: number;
+    },
+  ): Promise<void> {
+    // Get the dimensions of the video
+    const dimensions = await new Promise<{ width: number; height: number }>(
+      (resolve, reject) => {
+        ffmpeg.ffprobe(inputFilePath, (err, metadata) => {
+          if (err) reject(err);
+          else
+            resolve({
+              width: metadata.streams[0].width,
+              height: metadata.streams[0].height,
+            });
+        });
+      },
+    );
+
+    // Calculate the new dimensions
+    const newWidth = dimensions.width - (cropOptions.left + cropOptions.right); // Subtract  pixels from both sides
+    const newHeight =
+      dimensions.height - (cropOptions.top + cropOptions.bottom); // Subtract  pixels from top and bottom
+
+    // Crop the video
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputFilePath)
+        .videoFilters([
+          {
+            filter: 'crop',
+            options: {
+              w: newWidth,
+              h: newHeight,
+              x: cropOptions.left,
+              y: cropOptions.top,
+            },
+          },
+        ])
+        .output(outputFilePath)
+        .on('end', resolve)
+        .on('error', reject)
+        .run();
+    });
+  }
 }

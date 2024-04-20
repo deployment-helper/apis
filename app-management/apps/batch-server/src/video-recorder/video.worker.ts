@@ -135,11 +135,24 @@ export class VideoWorker implements IWorker {
       );
       this.logger.log('End trimming');
 
+      this.logger.log('Start cropping');
+      const croppedVideoPath = this.fs.getFullPath(
+        `${data.videoId}/${uniqueVideoName}-cropped.mp4`,
+      );
+
+      await this.ffmpeg.cropVideo(trimmedVideoPath, croppedVideoPath, {
+        left: 132,
+        right: 132,
+        top: 68,
+        bottom: 80,
+      });
+
+      this.logger.log('End cropping');
       this.logger.log('Begin S3 upload');
 
       await this.s3.readAndUpload(
-        trimmedVideoPath,
-        `${data.videoId}/${trimmedVideoPath}.mp4`,
+        croppedVideoPath,
+        `${data.videoId}/${croppedVideoPath}.mp4`,
       );
       this.logger.log('End S3 upload');
 
@@ -147,7 +160,7 @@ export class VideoWorker implements IWorker {
 
       await this.fireStore.update('video', data.videoId, {
         generatedVideoInfo: FieldValue.arrayUnion({
-          cloudFile: `${data.videoId}/${trimmedVideoPath}.mp4`,
+          cloudFile: `${data.videoId}/${croppedVideoPath}.mp4`,
           version: data.version,
           date: new Date().toISOString(),
         }),
