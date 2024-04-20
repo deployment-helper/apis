@@ -30,6 +30,7 @@ export class VideoController {
   async createVideo(@Body() data: any, @Req() req: any) {
     const video = await this.fireStore.add('video', {
       ...data,
+      isDeleted: false,
       userId: req.user.sub,
     });
 
