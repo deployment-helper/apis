@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Firestore } from '@google-cloud/firestore';
+import { Firestore, Query } from '@google-cloud/firestore';
 @Injectable()
 export class FirestoreService {
   private readonly db: Firestore;
@@ -42,12 +42,17 @@ export class FirestoreService {
   }
 
   // get all documents in a collection by a field
-  async listByField(collection: string, field: string, value: any) {
-    const snapshot = await this.db
-      .collection(collection)
-      .where(field, '==', value)
-      .orderBy('createdAt')
-      .get();
+  async listByFields(
+    collection: string,
+    filters: { field: string; value: any }[],
+  ) {
+    let query: Query = this.db.collection(collection);
+
+    filters.forEach((filter) => {
+      query = query.where(filter.field, '==', filter.value);
+    });
+
+    const snapshot = await query.orderBy('createdAt', 'desc').get();
 
     return snapshot.docs
       .map((doc) => {

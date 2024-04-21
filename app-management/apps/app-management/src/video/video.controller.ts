@@ -53,7 +53,9 @@ export class VideoController {
   // Get all videos
   @Get('/')
   getVideos(@Req() req: any) {
-    return this.fireStore.listByField('video', 'userId', req.user.sub);
+    return this.fireStore.listByFields('video', [
+      { field: 'userId', value: req.user.sub },
+    ]);
   }
 
   // Get video by id
@@ -170,5 +172,17 @@ export class VideoController {
       scenesId: newScenes.id,
       audioLanguage: langTo,
     });
+  }
+
+  @Get('project/:projectId')
+  async getVideosForProject(
+    @Req() req: any,
+    @Param('projectId') projectId: string,
+  ) {
+    return this.fireStore.listByFields('video', [
+      { field: 'userId', value: req.user.sub },
+      { field: 'isDeleted', value: false },
+      { field: 'projectId', value: projectId },
+    ]);
   }
 }
