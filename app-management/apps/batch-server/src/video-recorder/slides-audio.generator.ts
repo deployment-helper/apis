@@ -89,7 +89,9 @@ export class SlidesAudioGenerator {
       }
       const mp3MergeFullPath = audioFilePath.split('.mp3').join('-merge.mp3');
 
-      await this.ffmpeg.mergeToFile(mp3Files, mp3MergeFullPath);
+      const totalDuration = await this.ffmpeg.getTotalDuration(mp3Files);
+      this.logger.debug('Total duration', totalDuration);
+      await this.ffmpeg.mergeToFile(mp3Files, mp3MergeFullPath, totalDuration);
 
       audioFilePath = mp3MergeFullPath;
     }

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as ffmpeg from 'fluent-ffmpeg';
 import { FsService } from '@app/shared/fs/fs.service';
 
+// Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
 export class FfmpegService {
   private readonly logger = new Logger(FfmpegService.name);
@@ -11,33 +12,65 @@ export class FfmpegService {
     imageFilePath: string,
     outputFilePath: string,
   ): Promise<void> {
+    // TODO: remove hardcoded path
+    const backgroundMusic =
+      '/Users/vinaymavi/quiz-project-content/kOSH0KB0GGtQgt1m9XFd/deep-meditation-192828.mp3';
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
     this.logger.log('Start Mp3AndImageMerge');
-
     const mp3Seconds = await this.mp3Duration(mp3FilePath);
     this.logger.log(`MP3 File duration ${mp3Seconds}`);
+    const _ffmpeg = ffmpeg();
     return new Promise((resolve, reject) => {
-      ffmpeg()
+      _ffmpeg
+        .on('sdtderr', (err: Error) => {
+          this.logger.error(err);
+        })
         // Add the MP3 audio file
         .input(mp3FilePath)
+        // Add the background music
+        // background file needs to be added at the end this order to match amix duration
+        .input(backgroundMusic)
         // Specify the audio codec
         .audioCodec('aac')
         // Add the image as the background
         .input(imageFilePath)
-        // Loop the image to match the length of the audio
-        .loop(mp3Seconds)
+        // amix the audio files
+        .complexFilter([
+          {
+            filter: 'amix',
+            options: {
+              inputs: 2,
+              duration: 'first',
+              weights: '1 0.25',
+            },
+          },
+        ])
+        .duration(mp3Seconds)
         // Set the video codec
         .videoCodec('libx264')
-        // Set the video format (MP4)
         .format('mp4')
         // Set the output file path
         .save(outputFilePath)
         // On successful processing
-        .on('end', resolve)
+        .on('start', (commandLine: string) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End Mp3AndImageMerge');
+          _ffmpeg.kill('0');
+          resolve();
+        })
         // On error
-        .on('error', (err: Error) => {
+        .on('error', (err: Error, stdout, stderr) => {
+          this.logger.error(err);
+          this.logger.error(stdout);
+          this.logger.error(stderr);
+          _ffmpeg.kill('1');
           reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .on('progress', (progress) => {
+          this.logger.log('Processing: ' + progress.percent + '% done');
         });
     });
   }
@@ -45,6 +78,7 @@ export class FfmpegService {
   async mergeToFile(
     inputFilePaths: string[],
     outputFilePath: string,
+    duration: number,
   ): Promise<void> {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -61,6 +95,11 @@ export class FfmpegService {
       // Merge and save the video files to the output path
       ffmpegInstance
         .mergeToFile(outputFilePath, '/tmp')
+        // Adding duration as this merging was increasing  duration of the video
+        .duration(duration)
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
         .on('end', () => {
           this.logger.log('End video merge');
           resolve();
@@ -88,6 +127,17 @@ export class FfmpegService {
           }
         });
     });
+  }
+
+  async getTotalDuration(filePaths: string[]): Promise<number> {
+    let totalDuration = 0;
+
+    for (const filePath of filePaths) {
+      const duration = await this.mp3Duration(filePath);
+      totalDuration += duration;
+    }
+
+    return totalDuration;
   }
 
   async trimVideo(

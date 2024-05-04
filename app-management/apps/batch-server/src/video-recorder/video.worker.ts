@@ -68,7 +68,13 @@ export class VideoWorker implements IWorker {
       this.logger.log('Stoping browser');
       await browser.close();
       const preparedVideoPath = this.fs.getFullPath(`${data.pid}/output.mp4`);
-      await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
+      const totalDuration = await this.ffmpeg.getTotalDuration(videoPaths);
+      this.logger.debug('Total duration', totalDuration);
+      await this.ffmpeg.mergeToFile(
+        videoPaths,
+        preparedVideoPath,
+        totalDuration,
+      );
       this.logger.log(`Begin S3 upload ${`${data.pid}/output.mp4`}`);
       await this.s3.readAndUpload(preparedVideoPath, `${data.pid}/output.mp4`);
       this.logger.log('End S3 upload');
@@ -111,7 +117,21 @@ export class VideoWorker implements IWorker {
       const preparedVideoPath = this.fs.getFullPath(
         `${data.videoId}/${uniqueVideoName}.mp4`,
       );
-      await this.ffmpeg.mergeToFile(videoPaths, preparedVideoPath);
+
+      const totalDuration = await this.ffmpeg.getTotalDuration(videoPaths);
+      this.logger.debug('Total duration', totalDuration);
+      await this.ffmpeg.mergeToFile(
+        videoPaths,
+        preparedVideoPath,
+        totalDuration,
+      );
+
+      const preapredVideoDuration = await this.ffmpeg.mp3Duration(
+        preparedVideoPath,
+      );
+
+      this.logger.debug('Prepared video duration', preapredVideoDuration);
+
       this.logger.log('End merge all videos');
       // We are start and end slide in our application to have reveal.js layout work properly
       // So we need to trim the video to remove start and end slide
@@ -127,7 +147,7 @@ export class VideoWorker implements IWorker {
         preparedVideoPath,
         trimmedVideoPath,
         1.2,
-        1.3,
+        1.4,
       );
       this.logger.debug(
         'duration after trim',

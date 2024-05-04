@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TSlideInfo } from './types';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { exit } from '@nestjs/cli/actions';
 
 @Injectable()
 export class AudioVideoMerger {
@@ -37,6 +38,7 @@ export class AudioVideoMerger {
         );
       } catch (e) {
         this.logger.error(e);
+        exit();
       }
       this.logger.log('Stop ffmpeg');
       videos.push(videoPath);
