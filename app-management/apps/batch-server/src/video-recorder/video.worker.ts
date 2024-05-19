@@ -36,9 +36,9 @@ export class VideoWorker implements IWorker {
       this.logger.log('Begin Worker');
 
       this.logger.log('Star browser');
+      // TODO: browser should be created in a separate service
       const browser = await puppeteer
         .launch({
-          headless: true,
           timeout: 0,
           args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
         })
@@ -49,6 +49,7 @@ export class VideoWorker implements IWorker {
       }
 
       const page = await browser.newPage();
+      page.setDefaultNavigationTimeout(60 * 1000);
       this.logger.log('Get browser runner for given URL');
       const runner = this.runnerFactory.getBrowserRunner(url, page);
       this.logger.log('Start runner');
