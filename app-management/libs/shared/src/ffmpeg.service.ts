@@ -35,6 +35,7 @@ export class FfmpegService {
         .audioCodec('aac')
         // Add the image as the background
         .input(imageFilePath)
+        .loop(1)
         // amix the audio files
         .complexFilter([
           {
@@ -49,6 +50,14 @@ export class FfmpegService {
         .duration(mp3Seconds)
         // Set the video codec
         .videoCodec('libx264')
+        // set output options
+        .outputOptions([
+          '-pix_fmt yuv420p',
+          '-profile:v baseline',
+          '-level 3.0',
+          '-movflags +faststart',
+          '-r 30',
+        ])
         .format('mp4')
         // Set the output file path
         .save(outputFilePath)
