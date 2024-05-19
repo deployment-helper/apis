@@ -1,6 +1,6 @@
 # App-management
 
-This is a collection of all APIs for `Deployment-Helper` project.
+This is a collection of all APIs for youtube video generation project` project.
 
 Domains will cover
 
@@ -11,7 +11,8 @@ Domains will cover
 **Run database**
 run docker compose file
 
-`docker compose up db`
+**TODO: Add docker compose setup to run this project**
+
 `npm run start:dev`
 
 ### Prerequisites
