@@ -21,6 +21,8 @@ This is a mono repo repository for backend services.
 - GCP text to speeach
 - Radis 
 
+**References**
+ - https://trac.ffmpeg.org/wiki
 
 In the current architecture, we deploy 
 
