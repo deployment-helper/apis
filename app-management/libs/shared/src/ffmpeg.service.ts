@@ -149,6 +149,7 @@ export class FfmpegService {
     return totalDuration;
   }
 
+  // TODO: Trimming should be part of the mergeToFile method
   async trimVideo(
     inputFilePath: string,
     outputFilePath: string,
@@ -178,6 +179,7 @@ export class FfmpegService {
     });
   }
 
+  // TODO: Cropping should be part of the mergeToFile method
   async cropVideo(
     inputFilePath: string,
     outputFilePath: string,
