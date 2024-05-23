@@ -85,8 +85,8 @@ export class FfmpegService {
     });
   }
 
-  filterDrawText(videoDuration: number, text: string, wordsPerSubtitle = 15) {
-    const maxLineLength = 50;
+  filterDrawText(videoDuration: number, text: string, wordsPerSubtitle = 10) {
+    const maxLineLength = 40;
     const charDur = videoDuration / text.length;
 
     const videoFilters: AudioVideoFilter[] = [];
@@ -121,8 +121,8 @@ export class FfmpegService {
             fontcolor: 'white',
             x: '(w-text_w)/2', // Center the text horizontally
             y: `h-250+${i * 70}`, // Adjust the vertical position for each line
-            box: 1,
-            boxcolor: 'black@0.5',
+            bordercolor: 'DimGray',
+            borderw: '2',
             enable: `between(t,${startTime},${endTime})`,
           },
         });
