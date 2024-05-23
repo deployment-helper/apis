@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as ffmpeg from 'fluent-ffmpeg';
 import { FsService } from '@app/shared/fs/fs.service';
+import { AudioVideoFilter } from 'fluent-ffmpeg';
 
 // Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
@@ -81,6 +82,84 @@ export class FfmpegService {
         .on('progress', (progress) => {
           this.logger.log('Processing: ' + progress.percent + '% done');
         });
+    });
+  }
+
+  filterDrawText(videoDuration: number, text: string, wordsPerSubtitle = 15) {
+    const maxLineLength = 50;
+    const charDur = videoDuration / text.length;
+
+    const videoFilters: AudioVideoFilter[] = [];
+    let startTime = 0;
+    let endTime = 0;
+    let subtitleDuration = 0;
+    // Create an array with wordsPerSubtitle words per subtitle
+
+    const words = text.split(' ');
+    for (let i = 0; i < words.length; i += wordsPerSubtitle) {
+      let subtitle = words.slice(i, i + wordsPerSubtitle).join(' ');
+      subtitleDuration = Math.round(subtitle.length * charDur);
+      endTime += subtitleDuration;
+      // Split the subtitle into multiple lines if it exceeds the max line length
+      const lines = [];
+      while (subtitle.length > maxLineLength) {
+        const lastSpace = subtitle.lastIndexOf(' ', maxLineLength);
+        const splitPos = lastSpace > 0 ? lastSpace : maxLineLength;
+        lines.push(subtitle.substring(0, splitPos));
+        subtitle = subtitle.substring(splitPos + 1);
+      }
+      lines.push(subtitle);
+
+      // Apply a separate drawtext filter for each line
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        videoFilters.push({
+          filter: 'drawtext',
+          options: {
+            text: line,
+            fontsize: '62',
+            fontcolor: 'white',
+            x: '(w-text_w)/2', // Center the text horizontally
+            y: `h-250+${i * 70}`, // Adjust the vertical position for each line
+            box: 1,
+            boxcolor: 'black@0.5',
+            enable: `between(t,${startTime},${endTime})`,
+          },
+        });
+      }
+      startTime = endTime;
+    }
+
+    return videoFilters;
+  }
+
+  async addCaptionToVideo(
+    inputFilePath: string,
+    outputFilePath: string,
+    text: string,
+  ) {
+    const videoDur = await this.mp3Duration(inputFilePath);
+    const videoFilters = this.filterDrawText(videoDur, text);
+
+    const _ffmpeg = ffmpeg();
+
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input(inputFilePath)
+        .videoFilters(videoFilters)
+        .output(outputFilePath)
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End adding caption to video');
+          resolve(1);
+        })
+        .on('error', (err) => {
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .run();
     });
   }
 

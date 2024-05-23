@@ -29,6 +29,9 @@ export class AudioVideoMerger {
       const videoPath = this.fs.getFullPath(
         `${pid}/video-files/${filename}.mp4`,
       );
+      const captionVideoPath = this.fs.getFullPath(
+        `${pid}/video-files/${filename}-caption.mp4`,
+      );
       this.logger.log('Start ffmpeg');
       try {
         await this.ffmpeg.mergeMp3AndImage(
@@ -36,12 +39,19 @@ export class AudioVideoMerger {
           slideImage.file,
           videoPath,
         );
+
+        await this.ffmpeg.addCaptionToVideo(
+          videoPath,
+          captionVideoPath,
+          slideImage.description || '',
+        );
       } catch (e) {
         this.logger.error(e);
         exit();
       }
+
       this.logger.log('Stop ffmpeg');
-      videos.push(videoPath);
+      videos.push(captionVideoPath);
     }
     return videos;
     this.logger.log('End Merge');
