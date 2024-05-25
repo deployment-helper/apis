@@ -1,13 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as ffmpeg from 'fluent-ffmpeg';
-import { FsService } from '@app/shared/fs/fs.service';
 import { AudioVideoFilter } from 'fluent-ffmpeg';
+import { FsService } from '@app/shared/fs/fs.service';
 
 // Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
 export class FfmpegService {
   private readonly logger = new Logger(FfmpegService.name);
+
   constructor(private fs: FsService) {}
+
   async mergeMp3AndImage(
     mp3FilePath: string,
     imageFilePath: string,
@@ -15,7 +17,7 @@ export class FfmpegService {
   ): Promise<void> {
     // TODO: remove hardcoded path
     const backgroundMusic =
-      '/Users/vinaymavi/quiz-project-content/kOSH0KB0GGtQgt1m9XFd/deep-meditation-192828.mp3';
+      '/Users/vinaymavi/quiz-project-content/deep-meditation-192828.mp3';
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
     this.logger.log('Start Mp3AndImageMerge');
@@ -85,6 +87,11 @@ export class FfmpegService {
     });
   }
 
+  escapeText(text: string): string {
+    // replace all commas with an empty string because the drawtext filter uses commas as a separator
+    return text.replace(/,/g, '').replace(/[:=,']/g, '\\$&');
+  }
+
   filterDrawText(videoDuration: number, text: string, wordsPerSubtitle = 10) {
     const maxLineLength = 40;
     const charDur = videoDuration / text.length;
@@ -116,13 +123,15 @@ export class FfmpegService {
         videoFilters.push({
           filter: 'drawtext',
           options: {
-            text: line,
+            text: this.escapeText(line),
+            fontfile:
+              '/Users/vinaymavi/quiz-project-content/Roboto-Regular.ttf',
             fontsize: '62',
             fontcolor: 'white',
             x: '(w-text_w)/2', // Center the text horizontally
             y: `h-250+${i * 70}`, // Adjust the vertical position for each line
-            bordercolor: 'DimGray',
-            borderw: '2',
+            bordercolor: 'black',
+            borderw: '4',
             enable: `between(t,${startTime},${endTime})`,
           },
         });
@@ -150,6 +159,9 @@ export class FfmpegService {
         .output(outputFilePath)
         .on('start', (commandLine) => {
           this.logger.log(commandLine);
+        })
+        .on('stderr', (err) => {
+          this.logger.error(err);
         })
         .on('end', () => {
           this.logger.log('End adding caption to video');

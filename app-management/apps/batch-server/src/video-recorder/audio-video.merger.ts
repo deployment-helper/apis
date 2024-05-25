@@ -2,12 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TSlideInfo } from './types';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
-import { exit } from '@nestjs/cli/actions';
 
 @Injectable()
 export class AudioVideoMerger {
   private readonly logger = new Logger(AudioVideoMerger.name);
+
   constructor(private fs: FsService, private ffmpeg: FfmpegService) {}
+
   async merge(slideImages: TSlideInfo[], slideAudios: TSlideInfo[]) {
     const videos: string[] = [];
     this.logger.log('Begin Merge');
@@ -39,7 +40,7 @@ export class AudioVideoMerger {
           slideImage.file,
           videoPath,
         );
-
+        this.logger.log('Add caption to video');
         await this.ffmpeg.addCaptionToVideo(
           videoPath,
           captionVideoPath,
@@ -47,7 +48,6 @@ export class AudioVideoMerger {
         );
       } catch (e) {
         this.logger.error(e);
-        exit();
       }
 
       this.logger.log('Stop ffmpeg');
