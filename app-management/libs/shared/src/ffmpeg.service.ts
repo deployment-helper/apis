@@ -2,13 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as ffmpeg from 'fluent-ffmpeg';
 import { AudioVideoFilter } from 'fluent-ffmpeg';
 import { FsService } from '@app/shared/fs/fs.service';
+import { ELanguage } from '@app/shared/types';
+import { FontsService } from '@app/shared/fonts.service';
 
 // Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
 export class FfmpegService {
   private readonly logger = new Logger(FfmpegService.name);
 
-  constructor(private fs: FsService) {}
+  constructor(private fs: FsService, private readonly fontServ: FontsService) {}
 
   async mergeMp3AndImage(
     mp3FilePath: string,
@@ -92,10 +94,15 @@ export class FfmpegService {
     return text.replace(/,/g, '').replace(/[:=,']/g, '\\$&');
   }
 
-  filterDrawText(videoDuration: number, text: string, wordsPerSubtitle = 10) {
+  filterDrawText(
+    videoDuration: number,
+    text: string,
+    lang: ELanguage,
+    wordsPerSubtitle = 10,
+  ) {
     const maxLineLength = 40;
     const charDur = videoDuration / text.length;
-
+    const fontFile = this.fontServ.getFontFilePath(lang);
     const videoFilters: AudioVideoFilter[] = [];
     let startTime = 0;
     let endTime = 0;
@@ -124,8 +131,7 @@ export class FfmpegService {
           filter: 'drawtext',
           options: {
             text: this.escapeText(line),
-            fontfile:
-              '/Users/vinaymavi/quiz-project-content/Roboto-Regular.ttf',
+            fontfile: fontFile,
             fontsize: '62',
             fontcolor: 'white',
             x: '(w-text_w)/2', // Center the text horizontally
@@ -146,9 +152,16 @@ export class FfmpegService {
     inputFilePath: string,
     outputFilePath: string,
     text: string,
+    lang: ELanguage,
+    wordsPerSubtitle: number,
   ) {
     const videoDur = await this.mp3Duration(inputFilePath);
-    const videoFilters = this.filterDrawText(videoDur, text);
+    const videoFilters = this.filterDrawText(
+      videoDur,
+      text,
+      lang,
+      wordsPerSubtitle,
+    );
 
     const _ffmpeg = ffmpeg();
 

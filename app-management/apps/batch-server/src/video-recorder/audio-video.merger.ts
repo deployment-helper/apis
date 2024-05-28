@@ -45,6 +45,9 @@ export class AudioVideoMerger {
           videoPath,
           captionVideoPath,
           slideImage.description || '',
+          slideImage.meta.language,
+          // TODO read wordsPerSubtitle form video
+          10,
         );
       } catch (e) {
         this.logger.error(e);
