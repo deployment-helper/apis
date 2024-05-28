@@ -134,35 +134,12 @@ export class VideoWorker implements IWorker {
       );
 
       this.logger.debug('Prepared video duration', preapredVideoDuration);
-
       this.logger.log('End merge all videos');
-      // We are start and end slide in our application to have reveal.js layout work properly
-      // So we need to trim the video to remove start and end slide
-      this.logger.log('Start trimming');
-      this.logger.debug(
-        'duration before trim',
-        await this.ffmpeg.mp3Duration(preparedVideoPath),
-      );
-      const trimmedVideoPath = this.fs.getFullPath(
-        `${data.videoId}/${uniqueVideoName}-trimmed.mp4`,
-      );
-      await this.ffmpeg.trimVideo(
-        preparedVideoPath,
-        trimmedVideoPath,
-        1.2,
-        1.4,
-      );
-      this.logger.debug(
-        'duration after trim',
-        await this.ffmpeg.mp3Duration(trimmedVideoPath),
-      );
-      this.logger.log('End trimming');
-
       this.logger.log('Begin S3 upload');
 
       await this.s3.readAndUpload(
-        trimmedVideoPath,
-        `${data.videoId}/${trimmedVideoPath}.mp4`,
+        preparedVideoPath,
+        `${data.videoId}/${preparedVideoPath}.mp4`,
       );
       this.logger.log('End S3 upload');
 
@@ -170,7 +147,7 @@ export class VideoWorker implements IWorker {
 
       await this.fireStore.update('video', data.videoId, {
         generatedVideoInfo: FieldValue.arrayUnion({
-          cloudFile: `${data.videoId}/${trimmedVideoPath}.mp4`,
+          cloudFile: `${data.videoId}/${preparedVideoPath}.mp4`,
           version: data.version,
           date: new Date().toISOString(),
         }),
