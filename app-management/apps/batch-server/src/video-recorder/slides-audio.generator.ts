@@ -11,11 +11,13 @@ import { IGenerateVideoDto } from '../types';
  */
 export class SlidesAudioGenerator {
   private readonly logger = new Logger(SlidesAudioGenerator.name);
+
   constructor(
     private s3: S3Service,
     private fs: FsService,
     private ffmpeg: FfmpegService,
   ) {}
+
   async start(slides: Array<TSlideInfo>, data?: any) {
     const audioFiles: Array<TSlideInfo> = [];
     this.logger.log('Begin audio generator');
@@ -46,13 +48,14 @@ export class SlidesAudioGenerator {
     this.logger.log('End audio generator');
     return audioFiles;
   }
+
   async startV2(slides: Array<TSlideInfo>, data?: IGenerateVideoDto) {
     try {
       const audioFiles: Array<TSlideInfo> = [];
       this.logger.log('Begin audio generator');
       this.fs.checkAndCreateDir(`${data.videoId}/mp3-files`);
       for (const slide of slides) {
-        const description = slide.description || 'hello world';
+        const description = slide.description?.trim() || 'hello world';
 
         // TODO: run this in parallel
         const audioFilePath = await this.getAudioFromTextAndSave(

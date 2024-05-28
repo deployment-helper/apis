@@ -130,7 +130,7 @@ export class FfmpegService {
         videoFilters.push({
           filter: 'drawtext',
           options: {
-            text: this.escapeText(line),
+            text: this.escapeText(line.trim()),
             fontfile: fontFile,
             fontsize: '62',
             fontcolor: 'white',
