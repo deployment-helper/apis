@@ -7,6 +7,7 @@ import { SlidesAudioGenerator } from './slides-audio.generator';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { ImageService } from '@app/shared/image.service';
 
 @Injectable()
 export class RunnerFactory {
@@ -15,14 +16,23 @@ export class RunnerFactory {
     private s3: S3Service,
     private fs: FsService,
     private ffmpeg: FfmpegService,
+    private imageService: ImageService,
   ) {}
+
   private readonly logger = new Logger(RunnerFactory.name);
+
   getBrowserRunner(url: string, page: Page) {
     this.logger.log(`URL = ${url}`);
     const server: ServerNames = this.sharedService.getServerName(url);
 
     if (server === ServerNames['localhost:3000']) {
-      return new SlidesRunner(page, this.sharedService, this.fs, this.s3);
+      return new SlidesRunner(
+        page,
+        this.sharedService,
+        this.fs,
+        this.s3,
+        this.imageService,
+      );
     } else {
       this.logger.error(`${server} not supported.`);
     }

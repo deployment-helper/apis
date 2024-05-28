@@ -4,6 +4,7 @@ import { SharedService } from '@app/shared';
 import { Logger } from '@nestjs/common';
 import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@apps/app-management/aws/s3.service';
+import { ImageService } from '@app/shared/image.service';
 
 /**
  * This Slide runner is designed for Vinay's slides portal.
@@ -20,7 +21,9 @@ export class SlidesRunner implements IRunner {
     private sharedService: SharedService,
     private fs: FsService,
     private s3: S3Service,
+    private imageService: ImageService,
   ) {}
+
   async start(url: string, data?: any): Promise<any> {
     try {
       const pageUrl = this.sharedService.getServiceKeyUrl(url);
@@ -57,6 +60,7 @@ export class SlidesRunner implements IRunner {
     const arrow = await this.page.$(this.nextArrowSelector);
     return !!arrow;
   }
+
   async hasNextAndClick(): Promise<boolean> {
     const hasNext = await this.hasNext();
     if (hasNext) {
@@ -66,6 +70,7 @@ export class SlidesRunner implements IRunner {
 
     return hasNext;
   }
+
   async getSlideMeta(): Promise<any> {
     const item = await this.page.$(this.slideSelector);
     try {
@@ -90,6 +95,7 @@ export class SlidesRunner implements IRunner {
       this.logger.error(e);
     }
   }
+
   async next(): Promise<void> {
     return await this.page.click(this.nextArrowSelector);
   }
@@ -99,7 +105,13 @@ export class SlidesRunner implements IRunner {
   }
 
   async takeScreenshotAndSave(meta: any, pid: string) {
-    const image = await this.takeScreenshot();
+    let image = await this.takeScreenshot();
+    image = await this.imageService.cropImage(image, {
+      left: 132,
+      right: 132,
+      top: 68,
+      bottom: 80,
+    });
     const filename = this.s3.mp3FileNameFromS3Key(meta.name, false);
     const imagePath = await this.fs.createFile(
       `${pid}/image-files/${filename}.png`,

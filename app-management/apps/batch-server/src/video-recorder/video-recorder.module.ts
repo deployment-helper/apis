@@ -16,6 +16,7 @@ import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FontsService } from '@app/shared/fonts.service';
+import { ImageService } from '@app/shared/image.service';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { FontsService } from '@app/shared/fonts.service';
     FsService,
     FirestoreService,
     FontsService,
+    ImageService,
   ],
 })
 export class VideoRecorderModule {}

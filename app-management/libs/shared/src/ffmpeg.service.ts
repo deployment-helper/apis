@@ -283,7 +283,10 @@ export class FfmpegService {
     });
   }
 
-  // TODO: Cropping should be part of the mergeToFile method
+  /**
+   * #Deprecated
+   * We are not using this method anymore as croping images instead of videos
+   */
   async cropVideo(
     inputFilePath: string,
     outputFilePath: string,
