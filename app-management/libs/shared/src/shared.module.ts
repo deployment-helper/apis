@@ -7,7 +7,7 @@ import { GcpModule } from './gcp/gcp.module';
 import { FontsService } from './fonts.service';
 import { ImageService } from './image.service';
 import { ChatgptService } from './openapi/chatgpt.service';
-import { GeminiService } from './gemini.service';
+import { GeminiService } from './gcp/gemini.service';
 
 @Module({
   providers: [
@@ -20,7 +20,13 @@ import { GeminiService } from './gemini.service';
     ChatgptService,
     GeminiService,
   ],
-  exports: [SharedService, FsService, FontsService, ImageService],
+  exports: [
+    SharedService,
+    FsService,
+    FontsService,
+    ImageService,
+    GeminiService,
+  ],
   imports: [GcpModule],
 })
 export class SharedModule {}
