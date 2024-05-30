@@ -14,15 +14,15 @@ import { v4 as uuid } from 'uuid';
 
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
-import { IVideo, IScene } from '@app/shared/types';
-import { TranslateService } from '@app/shared/gcp/translate.service';
+import { ELanguage, IScene, IVideo } from '@app/shared/types';
+import { GeminiService } from '@app/shared/gcp/gemini.service';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
 export class VideoController {
   constructor(
     private readonly fireStore: FirestoreService,
-    protected readonly translate: TranslateService,
+    private readonly gemini: GeminiService,
   ) {}
 
   // create a video
@@ -142,8 +142,8 @@ export class VideoController {
   @Post('/:id/copy')
   async copyVideo(
     @Param('id') id: string,
-    @Query('langFrom') langFrom: string,
-    @Query('langTo') langTo: string,
+    @Query('langFrom') langFrom: ELanguage,
+    @Query('langTo') langTo: ELanguage,
     @Req() req: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
@@ -157,7 +157,7 @@ export class VideoController {
     });
 
     const scenes = langTo
-      ? await this.translate.translateScenes(
+      ? await this.gemini.translateScenes(
           scenesDocs[0].scenes,
           langFrom,
           langTo,

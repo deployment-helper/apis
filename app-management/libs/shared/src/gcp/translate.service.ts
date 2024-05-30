@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { v2 } from '@google-cloud/translate';
+
 // https://cloud.google.com/translate/docs/basic/translate-text-basic?_gl=1*1uw5uln*_up*MQ..&gclid=8ee20d35921d162f0ffa6b15b460ad0c&gclsrc=3p.ds
+
+/**
+ * @Deprecated
+ * We are using Gemini based translation service
+ */
 @Injectable()
 export class TranslateService {
   private client: v2.Translate;
@@ -22,7 +28,6 @@ export class TranslateService {
   }
 
   // translate scenes array
-
   clearLanguagePostFix(text = '') {
     return text.replace(/-.*$/, '');
   }

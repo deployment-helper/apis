@@ -21,7 +21,7 @@ export class GeminiService {
     language: ELanguage,
     tagetLanguage: ELanguage,
   ): Promise<string> {
-    const prompt = `Translate the following ${language} text to ${tagetLanguage} language and use ${tagetLanguage} fonts, use common ${tagetLanguage} language words and professional tone, use english for common words in ${tagetLanguage} language, return only translated text "${text}"`;
+    const prompt = `Translate the following ${language} text to ${tagetLanguage} language and use ${tagetLanguage} fonts, use common ${tagetLanguage} language words and professional tone, use english for common words in ${tagetLanguage} language, Do not translate nouns, like name and persons etc. do not respond with Markdown format, return only translated text "${text}"`;
     return await this.prompt(prompt);
   }
 
@@ -29,5 +29,24 @@ export class GeminiService {
     const result = await this.model.generateContent(text);
     const response = result.response;
     return response.text();
+  }
+
+  async translateScenes(
+    scenes: any[],
+    language: ELanguage,
+    targetLanguage: ELanguage,
+  ): Promise<any[]> {
+    const translatedScenes = await Promise.all(
+      scenes.map(async (scene) => {
+        const translatedScene = await this.translateText(
+          scene.description || '',
+          language,
+          targetLanguage,
+        );
+        return { ...scene, description: translatedScene };
+      }),
+    );
+
+    return translatedScenes;
   }
 }
