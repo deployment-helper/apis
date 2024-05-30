@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 import { GcpModule } from './gcp/gcp.module';
 import { FontsService } from './fonts.service';
 import { ImageService } from './image.service';
+import { ChatgptService } from './openapi/chatgpt.service';
+import { GeminiService } from './gemini.service';
 
 @Module({
   providers: [
@@ -15,6 +17,8 @@ import { ImageService } from './image.service';
     ConfigService,
     FontsService,
     ImageService,
+    ChatgptService,
+    GeminiService,
   ],
   exports: [SharedService, FsService, FontsService, ImageService],
   imports: [GcpModule],

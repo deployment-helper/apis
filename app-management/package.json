@@ -50,6 +50,7 @@
     "googleapis": "^126.0.0",
     "jsonwebtoken": "^9.0.1",
     "jwks-rsa": "^3.0.1",
+    "openai": "^4.47.2",
     "pg": "^8.11.2",
     "puppeteer": "^21.3.6",
     "puppeteer-screen-recorder": "^2.1.2",
