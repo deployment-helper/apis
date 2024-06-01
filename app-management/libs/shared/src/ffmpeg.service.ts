@@ -5,6 +5,8 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { ELanguage } from '@app/shared/types';
 import { FontsService } from '@app/shared/fonts.service';
 
+const DEFAULT_FPS = 60;
+
 // Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
 export class FfmpegService {
@@ -28,16 +30,11 @@ export class FfmpegService {
     const _ffmpeg = ffmpeg();
     return new Promise((resolve, reject) => {
       _ffmpeg
-        .on('sdtderr', (err: Error) => {
-          this.logger.error(err);
-        })
         // Add the MP3 audio file
         .input(mp3FilePath)
         // Add the background music
         // background file needs to be added at the end this order to match amix duration
         .input(backgroundMusic)
-        // Specify the audio codec
-        .audioCodec('aac')
         // Add the image as the background
         .input(imageFilePath)
         .loop(1)
@@ -48,20 +45,28 @@ export class FfmpegService {
             options: {
               inputs: 2,
               duration: 'first',
+              dropout_transition: 3,
               weights: '1 0.25',
             },
+            outputs: 'audio',
           },
+          this.filterFps('2:v', 'fps'),
+          this.filterScaleZoompan('fps', 'scaled'),
+          this.filterZoomPan('scaled', 'output'),
         ])
-        .duration(mp3Seconds)
         // Set the video codec
         .videoCodec('libx264')
+        // Specify the audio codec
+        .audioCodec('aac')
         // set output options
         .outputOptions([
+          '-t ' + mp3Seconds,
+          '-map [output]',
+          '-map [audio]',
           '-pix_fmt yuv420p',
           '-profile:v baseline',
           '-level 3.0',
           '-movflags +faststart',
-          '-r 30',
         ])
         .format('mp4')
         // Set the output file path
@@ -78,13 +83,14 @@ export class FfmpegService {
         // On error
         .on('error', (err: Error, stdout, stderr) => {
           this.logger.error(err);
-          this.logger.error(stdout);
-          this.logger.error(stderr);
           _ffmpeg.kill('1');
           reject(new Error(`An error occurred: ${err.message}`));
         })
+        .on('stderr', (stderr) => {
+          this.logger.error(stderr);
+        })
         .on('progress', (progress) => {
-          this.logger.log('Processing: ' + progress.percent + '% done');
+          this.logger.log(`Timemark : ${progress.timemark}`);
         });
     });
   }
@@ -112,7 +118,7 @@ export class FfmpegService {
     const words = text.split(' ');
     for (let i = 0; i < words.length; i += wordsPerSubtitle) {
       let subtitle = words.slice(i, i + wordsPerSubtitle).join(' ');
-      subtitleDuration = Math.round(subtitle.length * charDur);
+      subtitleDuration = Math.ceil(subtitle.length * charDur);
       endTime += subtitleDuration;
       // Split the subtitle into multiple lines if it exceeds the max line length
       const lines = [];
@@ -144,8 +150,40 @@ export class FfmpegService {
       }
       startTime = endTime;
     }
-
     return videoFilters;
+  }
+
+  filterZoomPan(inputs: string, outputs: string) {
+    return {
+      filter: 'zoompan',
+      inputs: inputs,
+      options: {
+        z: 'min(max(zoom,pzoom)+0.0001,1.5)',
+        d: 500,
+        x: 'iw/2-(iw/zoom/2)',
+        y: 'ih/2-(ih/zoom/2)',
+        fps: DEFAULT_FPS,
+        s: '1920x1080',
+      },
+      outputs: outputs,
+    };
+  }
+
+  filterFps(input: string, output: string) {
+    return {
+      filter: `fps=${DEFAULT_FPS}`,
+      inputs: input,
+      outputs: output,
+    };
+  }
+
+  filterScaleZoompan(input: string, output: string) {
+    // Here we are using high resolution to avoid jittering/shaking of image during zoompan
+    return {
+      filter: 'scale=7680:4320',
+      inputs: input,
+      outputs: output,
+    };
   }
 
   async addCaptionToVideo(
@@ -173,9 +211,10 @@ export class FfmpegService {
         .on('start', (commandLine) => {
           this.logger.log(commandLine);
         })
-        .on('stderr', (err) => {
-          this.logger.error(err);
-        })
+        // TODO: Enable this line for debugging
+        // .on('stderr', (err) => {
+        //   this.logger.error(err);
+        // })
         .on('end', () => {
           this.logger.log('End adding caption to video');
           resolve(1);
@@ -253,7 +292,6 @@ export class FfmpegService {
     return totalDuration;
   }
 
-  // TODO: Trimming should be part of the mergeToFile method
   async trimVideo(
     inputFilePath: string,
     outputFilePath: string,
@@ -283,10 +321,6 @@ export class FfmpegService {
     });
   }
 
-  /**
-   * #Deprecated
-   * We are not using this method anymore as croping images instead of videos
-   */
   async cropVideo(
     inputFilePath: string,
     outputFilePath: string,
