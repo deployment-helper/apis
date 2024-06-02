@@ -52,7 +52,7 @@ export class FfmpegService {
           },
           this.filterFps('2:v', 'fps'),
           this.filterScaleZoompan('fps', 'scaled'),
-          this.filterZoomPan('scaled', 'output'),
+          this.filterZoomInOut('scaled', 'output', 'out'),
         ])
         // Set the video codec
         .videoCodec('libx264')
@@ -106,6 +106,7 @@ export class FfmpegService {
     lang: ELanguage,
     wordsPerSubtitle = 10,
   ) {
+    // TODO: need to improve this caption logic as some words are long and some are quite sort that making voice and caption out of sync
     const maxLineLength = 40;
     const charDur = videoDuration / text.length;
     const fontFile = this.fontServ.getFontFilePath(lang);
@@ -153,17 +154,73 @@ export class FfmpegService {
     return videoFilters;
   }
 
-  filterZoomPan(inputs: string, outputs: string) {
+  filterZoomInOut(inputs: string, outputs: string, dir: 'in' | 'out' = 'in') {
+    // TODO: zoom out(out) is not working as expected need to fix this
+    const z =
+      dir === 'in'
+        ? 'min(max(zoom,pzoom)+0.0001,1.5)'
+        : 'if(lte(on,1),1.3,max(zoom,pzoom)-0.0001)';
     return {
       filter: 'zoompan',
       inputs: inputs,
       options: {
-        z: 'min(max(zoom,pzoom)+0.0001,1.5)',
+        z: z,
         d: 500,
         x: 'iw/2-(iw/zoom/2)',
         y: 'ih/2-(ih/zoom/2)',
         fps: DEFAULT_FPS,
         s: '1920x1080',
+      },
+      outputs: outputs,
+    };
+  }
+
+  filterMoveUpDown(inputs: string, outputs: string, dir: 'up' | 'down' = 'up') {
+    const y =
+      dir === 'up' ? 'min(max(y,py)+0.0001,h-ih)' : 'max(min(y,py)-0.0001,0)';
+    return {
+      filter: 'zoompan',
+      inputs: inputs,
+      options: {
+        z: 'zoom',
+        d: 500,
+        x: 'iw/2-(iw/zoom/2)',
+        y: y,
+        fps: DEFAULT_FPS,
+        s: '1920x1080',
+      },
+      outputs: outputs,
+    };
+  }
+
+  filterMoveLeftRight(
+    inputs: string,
+    outputs: string,
+    dir: 'left' | 'right' = 'left',
+  ) {
+    const x =
+      dir === 'left' ? 'min(max(x,px)+0.0001,w-iw)' : 'max(min(x,px)-0.0001,0)';
+    return {
+      filter: 'zoompan',
+      inputs: inputs,
+      options: {
+        z: 'zoom',
+        d: 500,
+        x: x,
+        y: 'ih/2-(ih/zoom/2)',
+        fps: DEFAULT_FPS,
+        s: '1920x1080',
+      },
+      outputs: outputs,
+    };
+  }
+
+  filterRotate(inputs: string, outputs: string) {
+    return {
+      filter: 'rotate',
+      inputs: inputs,
+      options: {
+        a: 't*PI/180', // Rotate the image 1 degree per second
       },
       outputs: outputs,
     };
@@ -180,7 +237,29 @@ export class FfmpegService {
   filterScaleZoompan(input: string, output: string) {
     // Here we are using high resolution to avoid jittering/shaking of image during zoompan
     return {
-      filter: 'scale=7680:4320',
+      filter: 'scale=8000:-1',
+      inputs: input,
+      outputs: output,
+    };
+  }
+
+  filterSceneRandom(input: string, output: string) {
+    const randomFilters = [
+      'filterRotate',
+      'filterZoomInOut', // 'in' or 'out
+      'filterMoveUpDown',
+      'filterMoveLeftRight',
+    ];
+
+    const randomFilter =
+      randomFilters[Math.floor(Math.random() * randomFilters.length)];
+
+    return this[randomFilter](input, output);
+  }
+
+  filterScale(input: string, output: string) {
+    return {
+      filter: 'scale=1920:1080',
       inputs: input,
       outputs: output,
     };
