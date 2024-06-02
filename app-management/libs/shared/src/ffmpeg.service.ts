@@ -51,8 +51,10 @@ export class FfmpegService {
             outputs: 'audio',
           },
           this.filterFps('2:v', 'fps'),
-          this.filterScaleZoompan('fps', 'scaled'),
-          this.filterZoomInOut('scaled', 'output', 'out'),
+          this.filterScale('fps', 'scaled'),
+          // this.filterScaleZoompan('fps', 'scaled'),
+          // this.filterZoomInOut('scaled', 'output', 'out'),
+          ...this.filterRotate('scaled', 'output'),
         ])
         // Set the video codec
         .videoCodec('libx264')
@@ -216,11 +218,41 @@ export class FfmpegService {
   }
 
   filterRotate(inputs: string, outputs: string) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#rotate
+    return [
+      {
+        filter: 'rotate',
+        inputs: inputs,
+        options: {
+          a: 't*PI/1800', // Rotate the image 0.1 degree per second
+        },
+        outputs: '_rotated',
+      },
+      // Calculate crop options to keep the video in the frame
+      //and want to crop 40 px from all sides
+      this.filterCrop('_rotated', outputs, {
+        w: '1820',
+        h: '960',
+        x: '60',
+        y: '60',
+      }),
+    ];
+  }
+
+  filterCrop(
+    inputs: string,
+    outputs: string,
+    options: { w: string; h: string; x: string; y: string },
+  ) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#crop
     return {
-      filter: 'rotate',
+      filter: 'crop',
       inputs: inputs,
       options: {
-        a: 't*PI/180', // Rotate the image 1 degree per second
+        w: options.w,
+        h: options.h,
+        x: options.x,
+        y: options.y,
       },
       outputs: outputs,
     };
@@ -260,6 +292,15 @@ export class FfmpegService {
   filterScale(input: string, output: string) {
     return {
       filter: 'scale=1920:1080',
+      inputs: input,
+      outputs: output,
+    };
+  }
+
+  filterPad(input: string, output: string) {
+    // TODO: incomplete need to fix this
+    return {
+      filter: 'pad=iw*sqrt(2):ih*sqrt(2):(ow-iw)/2:(oh-ih)/2',
       inputs: input,
       outputs: output,
     };
