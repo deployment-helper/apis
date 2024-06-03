@@ -53,12 +53,12 @@ export class FfmpegService {
           this.filterFps('2:v', 'fps'),
           // this.filterScale('fps', 'scaled', {
           //   w: '1920',
-          //   h: '1080',
+          //   h: '2160',
           // }),
+
           this.filterScaleZoompan('fps', 'scaled'),
           this.filterSetpts('scaled', 'setpts'),
           this.filterSetSar('setpts', 'setsar'),
-          this.filterZoomInOut('setsar', 'output', 'in'),
         ])
         // Set the video codec
         .videoCodec('libx264')
@@ -203,41 +203,6 @@ export class FfmpegService {
       options: {
         h: options.h,
         v: options.v,
-      },
-      outputs: outputs,
-    };
-  }
-
-  filterMoveUpDown(inputs: string, outputs: string, dir: 'up' | 'down' = 'up') {
-    // Ref - https://ffmpeg.org/ffmpeg-filters.html#zoompan
-    // need to use crop filter for this movement
-    const options = {
-      w: '1920',
-      h: '1080',
-      x: '0',
-      y: '2160-t*60',
-    };
-
-    return [this.filterCrop(inputs, outputs, options)];
-  }
-
-  filterMoveLeftRight(
-    inputs: string,
-    outputs: string,
-    dir: 'left' | 'right' = 'left',
-  ) {
-    const x =
-      dir === 'left' ? 'min(max(x,px)+0.0001,w-iw)' : 'max(min(x,px)-0.0001,0)';
-    return {
-      filter: 'zoompan',
-      inputs: inputs,
-      options: {
-        z: 'zoom',
-        d: 500,
-        x: x,
-        y: 'ih/2-(ih/zoom/2)',
-        fps: DEFAULT_FPS,
-        s: '1920x1080',
       },
       outputs: outputs,
     };
