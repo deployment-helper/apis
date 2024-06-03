@@ -51,10 +51,14 @@ export class FfmpegService {
             outputs: 'audio',
           },
           this.filterFps('2:v', 'fps'),
-          this.filterScale('fps', 'scaled'),
-          // this.filterScaleZoompan('fps', 'scaled'),
-          // this.filterZoomInOut('scaled', 'output', 'out'),
-          ...this.filterRotate('scaled', 'output'),
+          // this.filterScale('fps', 'scaled', {
+          //   w: '1920',
+          //   h: '1080',
+          // }),
+          this.filterScaleZoompan('fps', 'scaled'),
+          this.filterSetpts('scaled', 'setpts'),
+          this.filterSetSar('setpts', 'setsar'),
+          this.filterZoomInOut('setsar', 'output', 'in'),
         ])
         // Set the video codec
         .videoCodec('libx264')
@@ -161,7 +165,7 @@ export class FfmpegService {
     const z =
       dir === 'in'
         ? 'min(max(zoom,pzoom)+0.0001,1.5)'
-        : 'if(lte(on,1),1.3,max(zoom,pzoom)-0.0001)';
+        : 'if(lte(on,1),1.5,max(zoom,pzoom)-0.0001)';
     return {
       filter: 'zoompan',
       inputs: inputs,
@@ -177,22 +181,44 @@ export class FfmpegService {
     };
   }
 
-  filterMoveUpDown(inputs: string, outputs: string, dir: 'up' | 'down' = 'up') {
-    const y =
-      dir === 'up' ? 'min(max(y,py)+0.0001,h-ih)' : 'max(min(y,py)-0.0001,0)';
+  filterSetpts(inputs: string, outputs: string) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#setpts
+    // Reset the presentation timestamp to 0
     return {
-      filter: 'zoompan',
+      filter: 'setpts=PTS-STARTPTS',
+      inputs: inputs,
+      outputs: outputs,
+    };
+  }
+
+  filterScroll(
+    inputs: string,
+    outputs: string,
+    options: { h: string; v: string },
+  ) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#scroll
+    return {
+      filter: 'scroll',
       inputs: inputs,
       options: {
-        z: 'zoom',
-        d: 500,
-        x: 'iw/2-(iw/zoom/2)',
-        y: y,
-        fps: DEFAULT_FPS,
-        s: '1920x1080',
+        h: options.h,
+        v: options.v,
       },
       outputs: outputs,
     };
+  }
+
+  filterMoveUpDown(inputs: string, outputs: string, dir: 'up' | 'down' = 'up') {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#zoompan
+    // need to use crop filter for this movement
+    const options = {
+      w: '1920',
+      h: '1080',
+      x: '0',
+      y: '2160-t*60',
+    };
+
+    return [this.filterCrop(inputs, outputs, options)];
   }
 
   filterMoveLeftRight(
@@ -289,11 +315,30 @@ export class FfmpegService {
     return this[randomFilter](input, output);
   }
 
-  filterScale(input: string, output: string) {
+  filterSetSar(input: string, output: string) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#setsar
+    // https://stackoverflow.com/questions/50346707/ffmpeg-scaling-not-working-for-video
     return {
-      filter: 'scale=1920:1080',
+      filter: 'setsar=1',
       inputs: input,
       outputs: output,
+    };
+  }
+
+  filterScale(
+    input: string,
+    output: string,
+    options: { w: string; h: string },
+  ) {
+    return {
+      filter: 'scale',
+      inputs: input,
+      outputs: output,
+      options: {
+        w: options.w,
+        h: options.h,
+        force_original_aspect_ratio: 'disable',
+      },
     };
   }
 
