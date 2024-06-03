@@ -22,6 +22,7 @@ export class FfmpegService {
     // TODO: remove hardcoded path
     const backgroundMusic =
       '/Users/vinaymavi/quiz-project-content/deep-meditation-192828.mp3';
+    const overlayVideo = '/Users/vinaymavi/quiz-project-content/overlay7.mov';
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
     this.logger.log('Start Mp3AndImageMerge');
@@ -38,6 +39,8 @@ export class FfmpegService {
         // Add the image as the background
         .input(imageFilePath)
         .loop(1)
+        // overlay video
+        .input(overlayVideo)
         // amix the audio files
         .complexFilter([
           {
@@ -51,14 +54,15 @@ export class FfmpegService {
             outputs: 'audio',
           },
           this.filterFps('2:v', 'fps'),
-          // this.filterScale('fps', 'scaled', {
-          //   w: '1920',
-          //   h: '2160',
-          // }),
-
-          this.filterScaleZoompan('fps', 'scaled'),
+          this.filterScale('fps', 'scaled', {
+            w: '1920',
+            h: '1080',
+          }),
+          // this.filterScaleZoompan('fps', 'scaled'),
           this.filterSetpts('scaled', 'setpts'),
           this.filterSetSar('setpts', 'setsar'),
+          this.filterFormat('setsar', 'formatted'),
+          this.filterOverlay(['formatted', '3:v'], 'output'),
         ])
         // Set the video codec
         .videoCodec('libx264')
@@ -244,6 +248,29 @@ export class FfmpegService {
         h: options.h,
         x: options.x,
         y: options.y,
+      },
+      outputs: outputs,
+    };
+  }
+
+  filterFormat(inputs: string, outputs: string) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#format
+    // This format filter needs .mov file with alpha channel
+    return {
+      filter: 'format=rgba,colorchannelmixer=aa=0.2',
+      inputs: inputs,
+      outputs: outputs,
+    };
+  }
+
+  filterOverlay(inputs: string[], outputs: string) {
+    // Ref - https://ffmpeg.org/ffmpeg-filters.html#overlay
+    return {
+      filter: 'overlay',
+      inputs: inputs,
+      options: {
+        x: '0',
+        y: '0',
       },
       outputs: outputs,
     };
