@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 
-import { IWorker, TSlideInfo } from './types';
+import { IWorker, TSlideInfo, TSlideInfoArray } from './types';
 import { Injectable, Logger } from '@nestjs/common';
 import { RunnerFactory } from './runner.factory';
 import { AudioVideoMerger } from './audio-video.merger';
@@ -13,6 +13,8 @@ import { ConfigService } from '@nestjs/config';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FieldValue } from '@google-cloud/firestore';
 import { v4 as uuid } from 'uuid';
+import { SlidesRunner } from './slides.runner';
+import { ApiRunner } from './api.runner';
 
 @Injectable()
 export class VideoWorker implements IWorker {
@@ -32,6 +34,9 @@ export class VideoWorker implements IWorker {
     this.nodeEnv = config.getOrThrow('NODE_ENV');
   }
 
+  /**
+   * @Deprecated This method is deprecated and should not be used
+   */
   //  This version of the start is designed to get generated mp3 files from s3 server
   async start(url: string, data?: IPresentationDto): Promise<any> {
     try {
@@ -53,9 +58,13 @@ export class VideoWorker implements IWorker {
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(60 * 1000);
       this.logger.log('Get browser runner for given URL');
-      const runner = this.runnerFactory.getBrowserRunner(url, page);
+      const runner = this.runnerFactory.getBrowserRunner(url);
       this.logger.log('Start runner');
-      const slidesImages: Array<TSlideInfo> = await runner.start(url, data);
+      const slidesImages: Array<TSlideInfo> = await runner.start(
+        url,
+        data,
+        page,
+      );
       this.logger.log(`Slides count ${slidesImages.length}`);
 
       this.logger.log('Get Audio generator for given URL');
@@ -178,30 +187,42 @@ export class VideoWorker implements IWorker {
   }
 
   async generateImages(url: string, data: IGenerateVideoDto): Promise<any> {
-    this.logger.log('Star browser');
-    const browser = await puppeteer
-      .launch({
-        headless: true,
-        timeout: 0,
-        args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
-      })
-      .catch((e) => console.error('Error launching Chrome:', e));
+    const runner = this.runnerFactory.getBrowserRunner(url);
+    if (runner && runner instanceof ApiRunner) {
+      this.logger.log('Start API Runner');
+      const slidesImages = await runner.start<TSlideInfoArray>(url, data);
+      return slidesImages;
+    } else if (runner && runner instanceof SlidesRunner) {
+      this.logger.log('Start slides runner');
+      this.logger.log('Star browser');
+      const browser = await puppeteer
+        .launch({
+          headless: true,
+          timeout: 0,
+          args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
+        })
+        .catch((e) => console.error('Error launching Chrome:', e));
 
-    if (!browser) {
-      throw new Error('Browser not created');
+      if (!browser) {
+        throw new Error('Browser not created');
+      }
+
+      const page = await browser.newPage();
+      this.logger.log('Get browser runner for given URL');
+
+      this.logger.log('Start runner');
+      const slidesImages: Array<TSlideInfo> = await runner.start(
+        url,
+        {
+          pid: data.videoId,
+        },
+        page,
+      );
+      this.logger.log('Stopping runner');
+      await runner.stop();
+      this.logger.log('Stopping browser');
+      await browser.close();
+      return slidesImages;
     }
-
-    const page = await browser.newPage();
-    this.logger.log('Get browser runner for given URL');
-    const runner = this.runnerFactory.getBrowserRunner(url, page);
-    this.logger.log('Start runner');
-    const slidesImages: Array<TSlideInfo> = await runner.start(url, {
-      pid: data.videoId,
-    });
-    this.logger.log('Stopping runner');
-    await runner.stop();
-    this.logger.log('Stopping browser');
-    await browser.close();
-    return slidesImages;
   }
 }

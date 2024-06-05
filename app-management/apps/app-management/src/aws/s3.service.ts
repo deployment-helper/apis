@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -11,6 +11,8 @@ import { readFile } from 'fs/promises';
 export class S3Service {
   private readonly client: S3Client;
   private readonly s3Bucket: string;
+  logger = new Logger(S3Service.name);
+
   constructor() {
     this.client = new S3Client({ region: 'ap-south-1' });
     this.s3Bucket = 'vm-presentations';
@@ -31,12 +33,26 @@ export class S3Service {
       s3Loc: `s3://${this.s3Bucket}/${fileName}/presentation.json`,
     };
   }
+
   getKeyFromS3Url(s3Loc: string) {
     return s3Loc.includes('s3://')
       ? s3Loc.replace(`s3://${this.s3Bucket}/`, '')
       : s3Loc;
   }
 
+  getKeyFromPublicUrl(publicUrl: string) {
+    return publicUrl.includes('https://')
+      ? publicUrl.replace(
+          `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/`,
+          '',
+        )
+      : publicUrl;
+  }
+
+  /**
+   * Get Mp3 file from S3
+   * @param key
+   */
   async get(key: string): Promise<any> {
     if (!key) {
       return undefined;
@@ -56,6 +72,28 @@ export class S3Service {
     }
 
     const data = await resp.Body.transformToString();
+    return data;
+  }
+
+  async getObject(key: string): Promise<any> {
+    if (!key) {
+      return undefined;
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: key,
+    });
+
+    const resp: any = await this.client.send(command).catch(() => {
+      this.logger.error('S3 Error, file=' + key);
+    });
+
+    if (!resp) {
+      return undefined;
+    }
+
+    const data = await resp.Body;
     return data;
   }
 

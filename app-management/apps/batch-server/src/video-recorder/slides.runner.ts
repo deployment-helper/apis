@@ -1,4 +1,4 @@
-import { IRunner, TSlideInfo } from './types';
+import { IWebRunner, TSlideInfo } from './types';
 import { Page } from 'puppeteer';
 import { SharedService } from '@app/shared';
 import { Logger } from '@nestjs/common';
@@ -10,22 +10,27 @@ import { ImageService } from '@app/shared/image.service';
  * This Slide runner is designed for Vinay's slides portal.
  * Runner take screenshot and get meta information for provided URLs slides
  */
-export class SlidesRunner implements IRunner {
+export class SlidesRunner implements IWebRunner {
   nextArrowSelector = 'aside .navigate-right.enabled .controls-arrow';
   slideSelector = '.slides section.present';
   slides: Array<TSlideInfo> = [];
   private readonly logger = new Logger(SlidesRunner.name);
+  private page: Page;
 
   constructor(
-    private page: Page,
     private sharedService: SharedService,
     private fs: FsService,
     private s3: S3Service,
     private imageService: ImageService,
   ) {}
 
-  async start(url: string, data?: any): Promise<any> {
+  async start(
+    url: string,
+    data?: any,
+    page?: Page,
+  ): Promise<Array<TSlideInfo>> {
     try {
+      this.page = page;
       const pageUrl = this.sharedService.getServiceKeyUrl(url);
       this.logger.log('Start page');
       await this.page.setViewport({ width: 1920, height: 1080 });

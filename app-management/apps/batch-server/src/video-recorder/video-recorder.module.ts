@@ -17,6 +17,7 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FontsService } from '@app/shared/fonts.service';
 import { ImageService } from '@app/shared/image.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ImageService } from '@app/shared/image.service';
     BullModule.registerQueue({
       name: REDIS_QUEUE_VIDEO_GENERATOR,
     }),
+    HttpModule,
   ],
   controllers: [VideoController],
   providers: [

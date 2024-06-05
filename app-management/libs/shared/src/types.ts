@@ -2,6 +2,8 @@ export enum ServerNames {
   'docs.google.com' = 'google-docs',
   'localhost:3000' = 'slides',
   'webapps-psi.vercel.app' = 'slides',
+  // This temporary server name and used to work with apis calls of the application
+  'apis.app-management.com' = 'apis.app-management',
 }
 
 export interface IGeneratedVideoInfo {
