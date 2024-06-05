@@ -9,14 +9,18 @@ export class AudioVideoMerger {
 
   constructor(private fs: FsService, private ffmpeg: FfmpegService) {}
 
-  async merge(slideImages: TSlideInfo[], slideAudios: TSlideInfo[]) {
+  async merge(
+    slideImages: TSlideInfo[],
+    slideAudios: TSlideInfo[],
+    isSkipFirtAndLastSlide = true,
+  ) {
     const videos: string[] = [];
     this.logger.log('Begin Merge');
     for (let i = 0; i < slideImages.length; i++) {
       // We are start and end slide in our application to have reveal.js layout work properly
       // So we need to trim the video to remove start and end slide
       // continue if first and last slide
-      if (i === 0 || i === slideImages.length - 1) {
+      if (isSkipFirtAndLastSlide && (i === 0 || i === slideImages.length - 1)) {
         continue;
       }
       const slideImage = slideImages[i];

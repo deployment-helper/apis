@@ -121,7 +121,12 @@ export class VideoWorker implements IWorker {
       this.logger.log('scenesAudios count', scenesAudios.length);
 
       this.logger.log('Begin audio and image merge');
-      const videoPaths = await this.avMerger.merge(scenesImages, scenesAudios);
+      // TODO: In this merge last argument should be dynamic as per screen runner(Runner for getting scene images)
+      const videoPaths = await this.avMerger.merge(
+        scenesImages,
+        scenesAudios,
+        false,
+      );
       this.logger.log('End audio and image merge');
 
       this.logger.log('Merge all videos');

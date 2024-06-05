@@ -4,7 +4,6 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 
-// This is runner is not working as expected download images in reandom order. Need to fix this
 export class ApiRunner implements IApiRunner {
   logger: Logger = new Logger(ApiRunner.name);
 
@@ -27,12 +26,11 @@ export class ApiRunner implements IApiRunner {
     this.fs.checkAndCreateDir(`${videoId}/image-files`);
     const slides = [];
     const scenes = docs[0]?.scenes;
-    const promises = [];
     // Iterate over scenes and download images
-    scenes?.forEach((scene) => {
-      promises.push(this.downloadS3ImageAndSave(scene.image, videoId));
+    for (const scene of scenes) {
+      const fullPath = await this.downloadS3ImageAndSave(scene.image, videoId);
       slides.push({
-        file: '',
+        file: fullPath,
         description: scene.description,
         slideid: scene.id,
         meta: {
@@ -40,14 +38,7 @@ export class ApiRunner implements IApiRunner {
           language: video.audioLanguage,
         },
       });
-    });
-
-    const paths = await Promise.all(promises);
-
-    // Update slide file path
-    slides.forEach((slide, index) => {
-      slide.file = paths[index];
-    });
+    }
 
     return slides as T;
   }
