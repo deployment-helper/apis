@@ -82,6 +82,18 @@ export interface IVideo {
 }
 
 export interface IScene {
+  createdAt: string;
+  updatedAt: string;
+  id: string;
+  description: string;
+  layoutId: string;
+  image: string;
+  content: any;
+}
+
+export interface IScenes {
+  createdAt: string;
+  scenes: IScene[];
+  updatedAt: string;
   videoId: string;
-  scenes: any[];
 }

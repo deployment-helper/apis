@@ -14,7 +14,7 @@ import { v4 as uuid } from 'uuid';
 
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
-import { ELanguage, IScene, IVideo } from '@app/shared/types';
+import { ELanguage, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
 
 @Controller('videos')
@@ -147,7 +147,7 @@ export class VideoController {
     @Req() req: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
-    const scenesDocs = await this.fireStore.list<IScene>(`video/${id}/scenes`);
+    const scenesDocs = await this.fireStore.list<IScenes>(`video/${id}/scenes`);
 
     const newVideo = await this.fireStore.add('video', {
       ...video,

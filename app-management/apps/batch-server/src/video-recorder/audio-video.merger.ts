@@ -10,52 +10,53 @@ export class AudioVideoMerger {
   constructor(private fs: FsService, private ffmpeg: FfmpegService) {}
 
   async merge(
-    slideImages: TSlideInfo[],
+    scenesInfo: TSlideInfo[],
     slideAudios: TSlideInfo[],
     isSkipFirtAndLastSlide = true,
   ) {
     const videos: string[] = [];
     this.logger.log('Begin Merge');
-    for (let i = 0; i < slideImages.length; i++) {
+    for (let i = 0; i < scenesInfo.length; i++) {
       // We are start and end slide in our application to have reveal.js layout work properly
       // So we need to trim the video to remove start and end slide
       // continue if first and last slide
-      if (isSkipFirtAndLastSlide && (i === 0 || i === slideImages.length - 1)) {
+      if (isSkipFirtAndLastSlide && (i === 0 || i === scenesInfo.length - 1)) {
         continue;
       }
-      const slideImage = slideImages[i];
-      const slideAudio = slideAudios[i];
+      const sceneInfo = scenesInfo[i];
+      const sceneAudio = slideAudios[i];
 
       this.logger.log(`Slide no ${i}`);
-      if (!slideAudio.file.length) {
-        this.logger.log(`Continue ${slideImage}`);
+      if (!sceneAudio.file.length) {
+        this.logger.log(`Continue ${sceneInfo}`);
+        this.logger.warn('No audio file found for slide');
         continue;
       }
 
-      const filename = slideAudio.meta.filename;
-      const pid = slideAudio.meta.pid;
+      const filename = sceneAudio.meta.filename;
+      const videoId = sceneAudio.meta.pid;
 
       this.logger.log('Create video file');
-      this.fs.checkAndCreateDir(`${pid}/video-files`);
+      this.fs.checkAndCreateDir(`${videoId}/video-files`);
       const videoPath = this.fs.getFullPath(
-        `${pid}/video-files/${filename}.mp4`,
+        `${videoId}/video-files/${filename}.mp4`,
       );
       const captionVideoPath = this.fs.getFullPath(
-        `${pid}/video-files/${filename}-caption.mp4`,
+        `${videoId}/video-files/${filename}-caption.mp4`,
       );
       this.logger.log('Start ffmpeg');
       try {
         await this.ffmpeg.mergeMp3AndImage(
-          slideAudio.file,
-          slideImage.file,
+          sceneAudio.file,
+          sceneInfo.file,
           videoPath,
         );
         this.logger.log('Add caption to video');
         await this.ffmpeg.addCaptionToVideo(
           videoPath,
           captionVideoPath,
-          slideImage.description || '',
-          slideImage.meta.language,
+          sceneInfo.description || '',
+          sceneInfo.meta.language,
           // TODO read wordsPerSubtitle form video
           10,
         );
@@ -66,7 +67,7 @@ export class AudioVideoMerger {
       this.logger.log('Stop ffmpeg');
       videos.push(captionVideoPath);
     }
-    return videos;
     this.logger.log('End Merge');
+    return videos;
   }
 }

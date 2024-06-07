@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@apps/app-management/aws/s3.service';
+import { IScene } from '@app/shared/types';
 
 export class ApiRunner implements IApiRunner {
   logger: Logger = new Logger(ApiRunner.name);
@@ -25,7 +26,7 @@ export class ApiRunner implements IApiRunner {
     // create image directory
     this.fs.checkAndCreateDir(`${videoId}/image-files`);
     const slides = [];
-    const scenes = docs[0]?.scenes;
+    const scenes: IScene[] = docs[0]?.scenes;
     // Iterate over scenes and download images
     for (const scene of scenes) {
       const fullPath = await this.downloadS3ImageAndSave(scene.image, videoId);
@@ -33,6 +34,7 @@ export class ApiRunner implements IApiRunner {
         file: fullPath,
         description: scene.description,
         slideid: scene.id,
+        layout: scene.layoutId,
         meta: {
           name: scene.id,
           language: video.audioLanguage,

@@ -22,7 +22,6 @@ export class FfmpegService {
     // TODO: remove hardcoded path
     const backgroundMusic =
       '/Users/vinaymavi/quiz-project-content/deep-meditation-192828.mp3';
-    const overlayVideo = '/Users/vinaymavi/quiz-project-content/overlay7.mov';
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
     this.logger.log('Start Mp3AndImageMerge');
@@ -39,8 +38,6 @@ export class FfmpegService {
         // Add the image as the background
         .input(imageFilePath)
         .loop(1)
-        // overlay video
-        .input(overlayVideo)
         // amix the audio files
         .complexFilter([
           {
@@ -54,15 +51,13 @@ export class FfmpegService {
             outputs: 'audio',
           },
           this.filterFps('2:v', 'fps'),
-          this.filterScale('fps', 'scaled', {
+          this.filterSetpts('fps', 'setpts'),
+          ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
+          this.filterScale('randomFiltered', 'scaled', {
             w: '1920',
             h: '1080',
           }),
-          // this.filterScaleZoompan('fps', 'scaled'),
-          this.filterSetpts('scaled', 'setpts'),
-          this.filterSetSar('setpts', 'setsar'),
-          this.filterFormat('setsar', 'formatted'),
-          this.filterOverlay(['formatted', '3:v'], 'output'),
+          this.filterSetSar('scaled', 'output'),
         ])
         // Set the video codec
         .videoCodec('libx264')
@@ -76,6 +71,7 @@ export class FfmpegService {
           '-pix_fmt yuv420p',
           '-profile:v baseline',
           '-level 3.0',
+          `-r ${DEFAULT_FPS}`,
           '-movflags +faststart',
         ])
         .format('mp4')
@@ -108,6 +104,15 @@ export class FfmpegService {
   escapeText(text: string): string {
     // replace all commas with an empty string because the drawtext filter uses commas as a separator
     return text.replace(/,/g, '').replace(/[:=,']/g, '\\$&');
+  }
+
+  applyRandomSceneFilter(inputs: string, outputs: string) {
+    const randomFilters = ['filterRotate', 'filterZoomInOut'];
+
+    const randomFilter =
+      randomFilters[Math.floor(Math.random() * randomFilters.length)];
+
+    return this[randomFilter](inputs, outputs);
   }
 
   filterDrawText(
@@ -170,19 +175,22 @@ export class FfmpegService {
       dir === 'in'
         ? 'min(max(zoom,pzoom)+0.0001,1.5)'
         : 'if(lte(on,1),1.5,max(zoom,pzoom)-0.0001)';
-    return {
-      filter: 'zoompan',
-      inputs: inputs,
-      options: {
-        z: z,
-        d: 500,
-        x: 'iw/2-(iw/zoom/2)',
-        y: 'ih/2-(ih/zoom/2)',
-        fps: DEFAULT_FPS,
-        s: '1920x1080',
+    return [
+      this.filterScaleZoompan(inputs, '_zoompaned'),
+      {
+        filter: 'zoompan',
+        inputs: '_zoompaned',
+        options: {
+          z: z,
+          d: 500,
+          x: 'iw/2-(iw/zoom/2)',
+          y: 'ih/2-(ih/zoom/2)',
+          fps: DEFAULT_FPS,
+          s: '1920x1080',
+        },
+        outputs: outputs,
       },
-      outputs: outputs,
-    };
+    ];
   }
 
   filterSetpts(inputs: string, outputs: string) {
@@ -226,7 +234,7 @@ export class FfmpegService {
       // Calculate crop options to keep the video in the frame
       //and want to crop 40 px from all sides
       this.filterCrop('_rotated', outputs, {
-        w: '1820',
+        w: '1800',
         h: '960',
         x: '60',
         y: '60',
@@ -293,20 +301,6 @@ export class FfmpegService {
     };
   }
 
-  filterSceneRandom(input: string, output: string) {
-    const randomFilters = [
-      'filterRotate',
-      'filterZoomInOut', // 'in' or 'out
-      'filterMoveUpDown',
-      'filterMoveLeftRight',
-    ];
-
-    const randomFilter =
-      randomFilters[Math.floor(Math.random() * randomFilters.length)];
-
-    return this[randomFilter](input, output);
-  }
-
   filterSetSar(input: string, output: string) {
     // Ref - https://ffmpeg.org/ffmpeg-filters.html#setsar
     // https://stackoverflow.com/questions/50346707/ffmpeg-scaling-not-working-for-video
@@ -364,6 +358,13 @@ export class FfmpegService {
       _ffmpeg
         .input(inputFilePath)
         .videoFilters(videoFilters)
+        .outputOptions([
+          '-pix_fmt yuv420p',
+          '-profile:v baseline',
+          '-level 3.0',
+          `-r ${DEFAULT_FPS}`,
+          '-movflags +faststart',
+        ])
         .output(outputFilePath)
         .on('start', (commandLine) => {
           this.logger.log(commandLine);
@@ -408,6 +409,10 @@ export class FfmpegService {
         .duration(duration)
         .on('start', (commandLine) => {
           this.logger.log(commandLine);
+        })
+        // TODO: Enable this line for debugging
+        .on('stderr', (err) => {
+          this.logger.error(err);
         })
         .on('end', () => {
           this.logger.log('End video merge');

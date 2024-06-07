@@ -55,7 +55,8 @@ export class SlidesAudioGenerator {
       this.logger.log('Begin audio generator');
       this.fs.checkAndCreateDir(`${data.videoId}/mp3-files`);
       for (const slide of slides) {
-        const description = slide.description?.trim() || 'hello world';
+        const description =
+          slide.description?.trim() || 'no description provided';
 
         // TODO: run this in parallel
         const audioFilePath = await this.getAudioFromTextAndSave(
@@ -67,7 +68,9 @@ export class SlidesAudioGenerator {
         audioFiles.push({
           file: audioFilePath,
           meta: {
+            // TODO: rename this filename, needs to check .mp3 extension use
             filename: `${slide.meta.name}.mp3`,
+            // TODO: rename this pid to videoId
             pid: data.videoId,
           },
         });
@@ -102,10 +105,15 @@ export class SlidesAudioGenerator {
     return audioFilePath;
   }
 
-  async getAudioFromTextAndSave(text, pid, name, language = 'en-US') {
+  async getAudioFromTextAndSave(
+    text: string,
+    sceneId: string,
+    name: string,
+    language = 'en-US',
+  ) {
     const synthesisService = new SynthesisService();
     const audio = await synthesisService.synthesize([text], language);
-    const filename = `${pid}/mp3-files/${name}.mp3`;
+    const filename = `${sceneId}/mp3-files/${name}.mp3`;
     const audioFilePath = await this.fs.createFile(
       filename,
       audio[0].data,

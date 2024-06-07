@@ -114,16 +114,16 @@ export class VideoWorker implements IWorker {
   async startV2(url: string, data?: IGenerateVideoDto): Promise<any> {
     try {
       this.logger.log('Begin Worker');
-      const scenesImages = await this.generateImages(url, data);
-      this.logger.log('scenesImages count', scenesImages.length);
+      const scenesInfo = await this.generateImages(url, data);
+      this.logger.log('scenesImages count', scenesInfo.length);
 
-      const scenesAudios = await this.generateAudios(scenesImages, data);
+      const scenesAudios = await this.generateAudios(scenesInfo, data);
       this.logger.log('scenesAudios count', scenesAudios.length);
 
       this.logger.log('Begin audio and image merge');
       // TODO: In this merge last argument should be dynamic as per screen runner(Runner for getting scene images)
       const videoPaths = await this.avMerger.merge(
-        scenesImages,
+        scenesInfo,
         scenesAudios,
         false,
       );
@@ -202,7 +202,7 @@ export class VideoWorker implements IWorker {
       this.logger.log('Star browser');
       const browser = await puppeteer
         .launch({
-          headless: true,
+          headless: 'new',
           timeout: 0,
           args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
         })
