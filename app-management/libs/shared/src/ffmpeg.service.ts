@@ -107,7 +107,7 @@ export class FfmpegService {
   }
 
   applyRandomSceneFilter(inputs: string, outputs: string) {
-    const randomFilters = ['filterRotate', 'filterZoomInOut'];
+    const randomFilters = ['filterRotate', 'filterZoomIn', 'filterZoomOut'];
 
     const randomFilter =
       randomFilters[Math.floor(Math.random() * randomFilters.length)];
@@ -169,19 +169,34 @@ export class FfmpegService {
     return videoFilters;
   }
 
-  filterZoomInOut(inputs: string, outputs: string, dir: 'in' | 'out' = 'in') {
-    // TODO: zoom out(out) is not working as expected need to fix this
-    const z =
-      dir === 'in'
-        ? 'min(max(zoom,pzoom)+0.0001,1.5)'
-        : 'if(lte(on,1),1.5,max(zoom,pzoom)-0.0001)';
+  filterZoomIn(inputs: string, outputs: string) {
     return [
       this.filterScaleZoompan(inputs, '_zoompaned'),
       {
         filter: 'zoompan',
         inputs: '_zoompaned',
         options: {
-          z: z,
+          z: 'min(max(zoom,pzoom)+0.0001,1.5)',
+          d: 500,
+          x: 'iw/2-(iw/zoom/2)',
+          y: 'ih/2-(ih/zoom/2)',
+          fps: DEFAULT_FPS,
+          s: '1920x1080',
+        },
+        outputs: outputs,
+      },
+    ];
+  }
+
+  filterZoomOut(inputs: string, outputs: string) {
+    // TODO: zoom out(out) is not working as expected need to fix this;
+    return [
+      this.filterScaleZoompan(inputs, '_zoompaned'),
+      {
+        filter: 'zoompan',
+        inputs: '_zoompaned',
+        options: {
+          z: 'if(lte(on,1),1.5,max(zoom,pzoom)-0.0001)',
           d: 500,
           x: 'iw/2-(iw/zoom/2)',
           y: 'ih/2-(ih/zoom/2)',
