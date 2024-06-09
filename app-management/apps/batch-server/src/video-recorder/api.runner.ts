@@ -25,12 +25,12 @@ export class ApiRunner implements IApiRunner {
 
     // create image directory
     this.fs.checkAndCreateDir(`${videoId}/image-files`);
-    const slides = [];
+    const scenesInfo = [];
     const scenes: IScene[] = docs[0]?.scenes;
     // Iterate over scenes and download images
     for (const scene of scenes) {
       const fullPath = await this.downloadS3ImageAndSave(scene.image, videoId);
-      slides.push({
+      scenesInfo.push({
         file: fullPath,
         description: scene.description,
         slideid: scene.id,
@@ -42,7 +42,7 @@ export class ApiRunner implements IApiRunner {
       });
     }
 
-    return slides as T;
+    return scenesInfo as T;
   }
 
   async stop(): Promise<any> {

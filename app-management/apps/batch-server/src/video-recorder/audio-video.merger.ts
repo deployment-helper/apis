@@ -41,9 +41,11 @@ export class AudioVideoMerger {
       const videoPath = this.fs.getFullPath(
         `${videoId}/video-files/${filename}.mp4`,
       );
-      const captionVideoPath = this.fs.getFullPath(
-        `${videoId}/video-files/${filename}-caption.mp4`,
-      );
+      // TODO: caption is not synced and not working for some languages like Hindi.
+      //  disabling it for now
+      // const captionVideoPath = this.fs.getFullPath(
+      //   `${videoId}/video-files/${filename}-caption.mp4`,
+      // );
       this.logger.log('Start ffmpeg');
       try {
         await this.ffmpeg.mergeMp3AndImage(
@@ -51,21 +53,23 @@ export class AudioVideoMerger {
           sceneInfo.file,
           videoPath,
         );
-        this.logger.log('Add caption to video');
-        await this.ffmpeg.addCaptionToVideo(
-          videoPath,
-          captionVideoPath,
-          sceneInfo.description || '',
-          sceneInfo.meta.language,
-          // TODO read wordsPerSubtitle form video
-          10,
-        );
+        // this.logger.log('Add caption to video');
+        // TODO: caption is not synced and not working for some languages like Hindi.
+        //  disabling it for now
+        // await this.ffmpeg.addCaptionToVideo(
+        //   videoPath,
+        //   captionVideoPath,
+        //   sceneInfo.description || '',
+        //   sceneInfo.meta.language,
+        //   // TODO read wordsPerSubtitle form video
+        //   10,
+        // );
       } catch (e) {
         this.logger.error(e);
       }
 
       this.logger.log('Stop ffmpeg');
-      videos.push(captionVideoPath);
+      videos.push(videoPath);
     }
     this.logger.log('End Merge');
     return videos;

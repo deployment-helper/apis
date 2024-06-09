@@ -114,6 +114,7 @@ export class VideoWorker implements IWorker {
   async startV2(url: string, data?: IGenerateVideoDto): Promise<any> {
     try {
       this.logger.log('Begin Worker');
+      const startTime = new Date().getTime();
       const scenesInfo = await this.generateImages(url, data);
       this.logger.log('scenesImages count', scenesInfo.length);
 
@@ -174,6 +175,11 @@ export class VideoWorker implements IWorker {
         await this.fs.deleteDir(this.fs.getFullPath(data.videoId));
         this.logger.log('End cleanup');
       }
+      const endTime = new Date().getTime();
+      // Log total time taken in seconds
+      this.logger.log(
+        `Total time taken:${(endTime - startTime) / 1000} seconds`,
+      );
       this.logger.log('End worker');
     } catch (e) {
       this.logger.error(e);

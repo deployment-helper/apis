@@ -5,7 +5,7 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { ELanguage } from '@app/shared/types';
 import { FontsService } from '@app/shared/fonts.service';
 
-const DEFAULT_FPS = 60;
+const DEFAULT_FPS = 30;
 
 // Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
@@ -72,7 +72,10 @@ export class FfmpegService {
           '-profile:v baseline',
           '-level 3.0',
           `-r ${DEFAULT_FPS}`,
-          '-movflags +faststart',
+          '-threads 4',
+          '-preset ultrafast',
+          '-crf 18',
+          '-b:a 128k',
         ])
         .format('mp4')
         // Set the output file path
