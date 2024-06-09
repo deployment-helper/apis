@@ -46,7 +46,7 @@ export class FfmpegService {
               inputs: 2,
               duration: 'first',
               dropout_transition: 3,
-              weights: '1 0.25',
+              weights: '8 0.15',
             },
             outputs: 'audio',
           },
@@ -72,10 +72,10 @@ export class FfmpegService {
           '-profile:v baseline',
           '-level 3.0',
           `-r ${DEFAULT_FPS}`,
-          '-threads 4',
-          '-preset ultrafast',
-          '-crf 18',
-          '-b:a 128k',
+          '-threads 0',
+          '-preset superfast',
+          '-threads 10',
+          '-hide_banner',
         ])
         .format('mp4')
         // Set the output file path
@@ -312,8 +312,10 @@ export class FfmpegService {
 
   filterScaleZoompan(input: string, output: string) {
     // Here we are using high resolution to avoid jittering/shaking of image during zoompan
+    // Supported resolutions - 1920x1080, 1280x720, 854x480, 640x360, 426x240, 256x144
+    // 4k resolution - 3840x2160, 8000:-1, 8000:8000
     return {
-      filter: 'scale=8000:-1',
+      filter: 'scale=3840:-1',
       inputs: input,
       outputs: output,
     };

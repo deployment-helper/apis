@@ -31,6 +31,7 @@ export class SynthesisService {
       data: Buffer.from(a.data).toString('base64'),
     }));
   }
+
   private async synthesizeText(
     text: string,
     audioLanguage: string,
@@ -38,7 +39,7 @@ export class SynthesisService {
     const request = {
       input: { text },
       voice: { languageCode: audioLanguage || 'en-US' },
-      audioConfig: { audioEncoding: 'MP3' },
+      audioConfig: { audioEncoding: 'MP3', speakingRate: 0.9, pitch: -2 },
     };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
