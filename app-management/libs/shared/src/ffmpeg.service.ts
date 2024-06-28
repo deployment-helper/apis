@@ -179,7 +179,7 @@ export class FfmpegService {
         inputs: '_zoompaned',
         options: {
           z: 'min(max(zoom,pzoom)+0.0001,1.5)',
-          d: 500,
+          d: 50,
           x: 'iw/2-(iw/zoom/2)',
           y: 'ih/2-(ih/zoom/2)',
           fps: DEFAULT_FPS,
@@ -199,7 +199,7 @@ export class FfmpegService {
         inputs: '_zoompaned',
         options: {
           z: 'if(lte(on,1),1.5,max(zoom,pzoom)-0.0001)',
-          d: 500,
+          d: 50,
           x: 'iw/2-(iw/zoom/2)',
           y: 'ih/2-(ih/zoom/2)',
           fps: DEFAULT_FPS,
@@ -313,6 +313,7 @@ export class FfmpegService {
     // Here we are using high resolution to avoid jittering/shaking of image during zoompan
     // Supported resolutions - 1920x1080, 1280x720, 854x480, 640x360, 426x240, 256x144
     // 4k resolution - 3840x2160, 8000:-1, 8000:8000
+    // TODO: This large scaling is required as the zoompan filter jitters is not working as expected
     return {
       filter: 'scale=3840:-1',
       inputs: input,
