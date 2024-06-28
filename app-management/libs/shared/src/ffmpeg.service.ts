@@ -37,7 +37,7 @@ export class FfmpegService {
         .input(backgroundMusic)
         // Add the image as the background
         .input(imageFilePath)
-        .loop(1)
+        .inputOption('-loop 1')
         // amix the audio files
         .complexFilter([
           {
@@ -46,7 +46,7 @@ export class FfmpegService {
               inputs: 2,
               duration: 'first',
               dropout_transition: 3,
-              weights: '8 0.15',
+              weights: '8 0.3',
             },
             outputs: 'audio',
           },
@@ -65,16 +65,15 @@ export class FfmpegService {
         .audioCodec('aac')
         // set output options
         .outputOptions([
-          '-t ' + mp3Seconds,
           '-map [output]',
           '-map [audio]',
           '-pix_fmt yuv420p',
           '-profile:v baseline',
           '-level 3.0',
           `-r ${DEFAULT_FPS}`,
-          '-threads 0',
           '-preset superfast',
           '-threads 10',
+          '-shortest',
           '-hide_banner',
         ])
         .format('mp4')
