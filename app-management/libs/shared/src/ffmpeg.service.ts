@@ -246,16 +246,16 @@ export class FfmpegService {
         options: {
           a: 't*PI/1800', // Rotate the image 0.1 degree per second
         },
-        outputs: '_rotated',
+        outputs: outputs,
       },
       // Calculate crop options to keep the video in the frame
       //and want to crop 40 px from all sides
-      this.filterCrop('_rotated', outputs, {
-        w: '1800',
-        h: '960',
-        x: '60',
-        y: '60',
-      }),
+      // this.filterCrop('_rotated', outputs, {
+      //   w: '1800',
+      //   h: '960',
+      //   x: '60',
+      //   y: '60',
+      // }),
     ];
   }
 
