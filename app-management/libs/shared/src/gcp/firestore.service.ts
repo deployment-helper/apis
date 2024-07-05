@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Firestore, Query } from '@google-cloud/firestore';
+
 @Injectable()
 export class FirestoreService {
   private readonly db: Firestore;
@@ -68,6 +69,7 @@ export class FirestoreService {
     sceneDocId: string,
     data: any,
     sceneArrayIndex?: string,
+    addAfter?: boolean,
   ) {
     const doc = await this.get(collection, sceneDocId);
     if (!doc) {
@@ -78,7 +80,15 @@ export class FirestoreService {
     // @ts-ignore
     const scenes = doc.scenes;
 
-    if (sceneArrayIndex) {
+    // Add new empty scene after sceneArrayIndex
+
+    if (addAfter && sceneArrayIndex) {
+      scenes.splice(Number(sceneArrayIndex) + 1, 0, {
+        ...data,
+        updatedAt: new Date(),
+        createdAt: new Date(),
+      });
+    } else if (sceneArrayIndex) {
       scenes[sceneArrayIndex] = {
         ...scenes[sceneArrayIndex],
         ...data,

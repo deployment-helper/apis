@@ -43,8 +43,7 @@ export class VideoController {
     return this.fireStore.update('video', video.id, { scenesId: scenes.id });
   }
 
-  // Inside your VideoController class
-
+  // Delete a video
   @Delete('/:id')
   deleteVideo(@Param('id') id: string) {
     return this.fireStore.update('video', id, { isDeleted: true });
@@ -80,12 +79,14 @@ export class VideoController {
     return this.fireStore.add(`video/${id}/scenes`, data);
   }
 
-  // Update scene for a video
+  // Update scenes for a video
+  // Add new scene to scenes array
   @Put('/:id/scenes/:sceneId/:sceneArrayIndex?')
   updateScene(
     @Param('id') id: string,
     @Param('sceneId') sceneId: string,
     @Param('sceneArrayIndex') sceneArrayIndex: string,
+    @Query('addAfter') addAfter: boolean,
     @Body() data: any,
   ) {
     return this.fireStore.updateScene(
@@ -93,6 +94,7 @@ export class VideoController {
       sceneId,
       data,
       sceneArrayIndex,
+      addAfter,
     );
   }
 
