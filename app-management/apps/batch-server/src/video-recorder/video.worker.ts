@@ -132,20 +132,32 @@ export class VideoWorker implements IWorker {
 
       this.logger.log('Merge all videos');
       const uniqueVideoName = uuid();
-      const preparedVideoPath = this.fs.getFullPath(
+      const mergeAllVideoPath = this.fs.getFullPath(
         `${data.videoId}/${uniqueVideoName}.mp4`,
+      );
+      const videoWithBGMusicPath = this.fs.getFullPath(
+        `${data.videoId}/${uniqueVideoName}-bgmusic.mp4`,
       );
 
       const totalDuration = await this.ffmpeg.getTotalDuration(videoPaths);
       this.logger.debug('Total duration', totalDuration);
       await this.ffmpeg.mergeToFile(
         videoPaths,
-        preparedVideoPath,
+        mergeAllVideoPath,
         totalDuration,
       );
 
+      // TODO: remove hardcoded path
+      const backgroundMusic =
+        '/Users/vinaymavi/quiz-project-content/deep-meditation-192828.mp3';
+      await this.ffmpeg.addBackgroundMusicToVideo(
+        mergeAllVideoPath,
+        videoWithBGMusicPath,
+        backgroundMusic,
+      );
+
       const preapredVideoDuration = await this.ffmpeg.mp3Duration(
-        preparedVideoPath,
+        videoWithBGMusicPath,
       );
 
       this.logger.debug('Prepared video duration', preapredVideoDuration);
@@ -153,8 +165,8 @@ export class VideoWorker implements IWorker {
       this.logger.log('Begin S3 upload');
 
       await this.s3.readAndUpload(
-        preparedVideoPath,
-        `${data.videoId}/${preparedVideoPath}.mp4`,
+        videoWithBGMusicPath,
+        `${data.videoId}/${videoWithBGMusicPath}.mp4`,
       );
       this.logger.log('End S3 upload');
 
@@ -162,7 +174,7 @@ export class VideoWorker implements IWorker {
 
       await this.fireStore.update('video', data.videoId, {
         generatedVideoInfo: FieldValue.arrayUnion({
-          cloudFile: `${data.videoId}/${preparedVideoPath}.mp4`,
+          cloudFile: `${data.videoId}/${videoWithBGMusicPath}.mp4`,
           version: data.version,
           date: new Date().toISOString(),
         }),

@@ -19,9 +19,6 @@ export class FfmpegService {
     imageFilePath: string,
     outputFilePath: string,
   ): Promise<void> {
-    // TODO: remove hardcoded path
-    const backgroundMusic =
-      '/Users/vinaymavi/quiz-project-content/deep-meditation-192828.mp3';
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
     this.logger.log('Start Mp3AndImageMerge');
@@ -32,25 +29,12 @@ export class FfmpegService {
       _ffmpeg
         // Add the MP3 audio file
         .input(mp3FilePath)
-        // Add the background music
-        // background file needs to be added at the end this order to match amix duration
-        .input(backgroundMusic)
         // Add the image as the background
         .input(imageFilePath)
         .inputOption('-loop 1')
         // amix the audio files
         .complexFilter([
-          {
-            filter: 'amix',
-            options: {
-              inputs: 2,
-              duration: 'first',
-              dropout_transition: 3,
-              weights: '8 0.3',
-            },
-            outputs: 'audio',
-          },
-          this.filterFps('2:v', 'fps'),
+          this.filterFps('1:v', 'fps'),
           this.filterSetpts('fps', 'setpts'),
           ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
           this.filterScale('randomFiltered', 'scaled', {
@@ -66,7 +50,7 @@ export class FfmpegService {
         // set output options
         .outputOptions([
           '-map [output]',
-          '-map [audio]',
+          '-map 0:a',
           '-pix_fmt yuv420p',
           '-profile:v baseline',
           '-level 3.0',
@@ -402,6 +386,64 @@ export class FfmpegService {
           reject(new Error(`An error occurred: ${err.message}`));
         })
         .run();
+    });
+  }
+
+  async addBackgroundMusicToVideo(
+    inputFilePath: string,
+    outputFilePath: string,
+    musicFilePath: string,
+  ): Promise<void> {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Start adding background music to video');
+    const _ffmpeg = ffmpeg();
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input(inputFilePath)
+        .input(musicFilePath)
+        .complexFilter([
+          {
+            filter: 'amix',
+            options: {
+              inputs: 2,
+              duration: 'first',
+              dropout_transition: 3,
+              weights: '8 0.4',
+            },
+            outputs: 'audio',
+          },
+        ])
+        // copy the video codec
+        .videoCodec('copy')
+        // Specify the audio codec
+        .audioCodec('aac')
+        .outputOptions([
+          '-map 0:v',
+          '-map [audio]',
+          '-pix_fmt yuv420p',
+          '-level 3.0',
+          `-r ${DEFAULT_FPS}`,
+          '-preset superfast',
+          '-threads 10',
+          '-hide_banner',
+        ])
+        .format('mp4')
+        .save(outputFilePath)
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End adding background music to video');
+          resolve();
+        })
+        .on('error', (err) => {
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .on('progress', (progress) => {
+          this.logger.log(`Timemark : ${progress.timemark}`);
+        });
     });
   }
 
