@@ -74,4 +74,30 @@ export class AudioVideoMerger {
     this.logger.log('End Merge');
     return videos;
   }
+
+  // Image layout
+  async layout2(
+    mp3FilePath: string,
+    imageFilePath: string,
+    outputFilePath: string,
+  ) {
+    await this.ffmpeg.mergeMp3AndImage(
+      mp3FilePath,
+      imageFilePath,
+      outputFilePath,
+    );
+  }
+
+  // Video layout
+  async layout4(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+  ) {
+    await this.ffmpeg.mergeMp3AndVideo(
+      mp3FilePath,
+      videoFilePath,
+      outputFilePath,
+    );
+  }
 }

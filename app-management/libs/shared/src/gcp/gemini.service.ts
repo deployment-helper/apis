@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { ELanguage } from '@app/shared/types';
@@ -7,6 +7,7 @@ import { ELanguage } from '@app/shared/types';
 export class GeminiService {
   genAi: GoogleGenerativeAI;
   model: GenerativeModel;
+  logger = new Logger(GeminiService.name);
 
   constructor(private readonly config: ConfigService) {
     const apiKey = this.config.getOrThrow<string>('GEMINI_API_KEY');
@@ -22,6 +23,7 @@ export class GeminiService {
     tagetLanguage: ELanguage,
   ): Promise<string> {
     const prompt = `Translate the following ${language} text to ${tagetLanguage} language and use ${tagetLanguage} fonts, use common ${tagetLanguage} language words and professional tone, in ${tagetLanguage} language, Do not translate nouns, like name and persons etc. do not respond with Markdown format, return only translated text "${text}"`;
+    this.logger.log(prompt);
     return await this.prompt(prompt);
   }
 

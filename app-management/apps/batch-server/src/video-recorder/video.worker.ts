@@ -212,10 +212,12 @@ export class VideoWorker implements IWorker {
   async generateImages(url: string, data: IGenerateVideoDto): Promise<any> {
     const runner = this.runnerFactory.getBrowserRunner(url);
     if (runner && runner instanceof ApiRunner) {
+      // API Runner read objects from S3 and DB and return the slides info
       this.logger.log('Start API Runner');
       const slidesImages = await runner.start<TSlideInfoArray>(url, data);
       return slidesImages;
     } else if (runner && runner instanceof SlidesRunner) {
+      // Slides runner get capture screenshot from headless browser and read slide info from the data attributes of the slides
       this.logger.log('Start slides runner');
       this.logger.log('Star browser');
       const browser = await puppeteer

@@ -87,6 +87,54 @@ export class FfmpegService {
     });
   }
 
+  async mergeMp3AndVideo(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+  ) {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Start Mp3AndVideoMerge');
+    const mp3Seconds = await this.mp3Duration(mp3FilePath);
+    this.logger.log(`MP3 File duration ${mp3Seconds}`);
+    const _ffmpeg = ffmpeg();
+
+    return new Promise<void>((resolve, reject) => {
+      _ffmpeg
+        .input(mp3FilePath)
+        .input(videoFilePath)
+        .videoCodec('libx264')
+        .audioCodec('aac')
+        .outputOptions([
+          '-pix_fmt yuv420p',
+          '-profile:v baseline',
+          '-level 3.0',
+          `-r ${DEFAULT_FPS}`,
+          '-preset superfast',
+          '-threads 10',
+          '-hide_banner',
+        ])
+        .format('mp4')
+        .save(outputFilePath)
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End Mp3AndVideoMerge');
+          _ffmpeg.kill('0');
+          resolve();
+        })
+        .on('error', (err) => {
+          this.logger.error(err);
+          _ffmpeg.kill('1');
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .on('progress', (progress) => {
+          this.logger.log(`Timemark : ${progress.timemark}`);
+        });
+    });
+  }
+
   escapeText(text: string): string {
     // replace all commas with an empty string because the drawtext filter uses commas as a separator
     return text.replace(/,/g, '').replace(/[:=,']/g, '\\$&');
