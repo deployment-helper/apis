@@ -3,6 +3,7 @@ FROM node:18 AS base
 WORKDIR /app
 
 COPY apps ./apps
+COPY libs ./libs
 COPY nest-cli.json ./
 COPY package*.json ./
 COPY tsconfig*.json ./

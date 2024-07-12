@@ -31,6 +31,9 @@ const RecorderConfig = {
 
 const LOGGING_INTERVAL = 2;
 
+/**
+ * @deprecated This class is no longer in use we are using screenshot based video generation instead of recording the screen.
+ */
 @Injectable()
 @Processor(REDIS_QUEUE_VIDEO_RECORDER)
 export class VideoProcessor {

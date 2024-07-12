@@ -11,12 +11,16 @@ import { AuthService } from './auth.service';
 import { HttpExceptionFilter } from '@apps/app-management/http-exception.filter';
 import { AuthGuard } from './auth.guard';
 import { UserEntity } from '@apps/app-management/aws/user.entity';
-import {S3Service} from "@apps/app-management/aws/s3.service";
+import { S3Service } from '@apps/app-management/aws/s3.service';
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
 export class AuthController {
-  constructor(private serv: AuthService, private userEntity: UserEntity, private s3:S3Service) {}
+  constructor(
+    private serv: AuthService,
+    private userEntity: UserEntity,
+    private s3: S3Service,
+  ) {}
 
   @Get('createToken')
   createTokenByCode(@Query('code') code): Promise<any> {
@@ -51,9 +55,27 @@ export class AuthController {
     return this.serv.validateToken(accessToken);
   }
 
-    @Get('downloadS3ObjUrl')
-    @UseGuards(AuthGuard)
-    async downloadS3ObjUrl(@Query('key') key: string): Promise<{url: string}> {
-      return {url: await this.s3.getSignedUrlForDownload(key)};
+  @Get('downloadS3ObjUrl')
+  @UseGuards(AuthGuard)
+  async downloadS3ObjUrl(@Query('key') key: string): Promise<{ url: string }> {
+    return { url: await this.s3.getSignedUrlForDownload(key) };
+  }
+
+  @Get('uploadS3ObjUrl')
+  @UseGuards(AuthGuard)
+  async uploadS3ObjUrl(
+    @Query('key') key: string,
+    @Query('public') isPublic: boolean,
+  ): Promise<{ url: string; publicUrl: string }> {
+    let publicUrl = '';
+
+    if (isPublic) {
+      publicUrl = this.s3.getPublicUrl(key);
     }
+
+    return {
+      url: await this.s3.getSignedUrl(key),
+      publicUrl: publicUrl,
+    };
+  }
 }

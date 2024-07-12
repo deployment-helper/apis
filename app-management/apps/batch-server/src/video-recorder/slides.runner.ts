@@ -1,28 +1,36 @@
-import { IRunner, TSlideInfo } from './types';
+import { IWebRunner, TSlideInfo } from './types';
 import { Page } from 'puppeteer';
 import { SharedService } from '@app/shared';
 import { Logger } from '@nestjs/common';
 import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@apps/app-management/aws/s3.service';
+import { ImageService } from '@app/shared/image.service';
 
 /**
  * This Slide runner is designed for Vinay's slides portal.
  * Runner take screenshot and get meta information for provided URLs slides
  */
-export class SlidesRunner implements IRunner {
+export class SlidesRunner implements IWebRunner {
   nextArrowSelector = 'aside .navigate-right.enabled .controls-arrow';
   slideSelector = '.slides section.present';
   slides: Array<TSlideInfo> = [];
   private readonly logger = new Logger(SlidesRunner.name);
+  private page: Page;
 
   constructor(
-    private page: Page,
     private sharedService: SharedService,
     private fs: FsService,
     private s3: S3Service,
+    private imageService: ImageService,
   ) {}
-  async start(url: string, data?: any): Promise<any> {
+
+  async start(
+    url: string,
+    data?: any,
+    page?: Page,
+  ): Promise<Array<TSlideInfo>> {
     try {
+      this.page = page;
       const pageUrl = this.sharedService.getServiceKeyUrl(url);
       this.logger.log('Start page');
       await this.page.setViewport({ width: 1920, height: 1080 });
@@ -37,7 +45,11 @@ export class SlidesRunner implements IRunner {
           meta,
           data.pid,
         );
-        this.slides.push({ file: imagePath, meta });
+        this.slides.push({
+          file: imagePath,
+          description: meta.description,
+          meta,
+        });
       } while (await this.hasNextAndClick());
       return this.slides;
     } catch (e) {
@@ -53,6 +65,7 @@ export class SlidesRunner implements IRunner {
     const arrow = await this.page.$(this.nextArrowSelector);
     return !!arrow;
   }
+
   async hasNextAndClick(): Promise<boolean> {
     const hasNext = await this.hasNext();
     if (hasNext) {
@@ -62,6 +75,7 @@ export class SlidesRunner implements IRunner {
 
     return hasNext;
   }
+
   async getSlideMeta(): Promise<any> {
     const item = await this.page.$(this.slideSelector);
     try {
@@ -86,6 +100,7 @@ export class SlidesRunner implements IRunner {
       this.logger.error(e);
     }
   }
+
   async next(): Promise<void> {
     return await this.page.click(this.nextArrowSelector);
   }
@@ -95,7 +110,13 @@ export class SlidesRunner implements IRunner {
   }
 
   async takeScreenshotAndSave(meta: any, pid: string) {
-    const image = await this.takeScreenshot();
+    let image = await this.takeScreenshot();
+    image = await this.imageService.cropImage(image, {
+      left: 132,
+      right: 132,
+      top: 68,
+      bottom: 80,
+    });
     const filename = this.s3.mp3FileNameFromS3Key(meta.name, false);
     const imagePath = await this.fs.createFile(
       `${pid}/image-files/${filename}.png`,

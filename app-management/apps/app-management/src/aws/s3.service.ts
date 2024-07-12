@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import {
-  getSignedUrl,
-} from "@aws-sdk/s3-request-presigner";
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { readFile } from 'fs/promises';
 
 @Injectable()
 export class S3Service {
   private readonly client: S3Client;
   private readonly s3Bucket: string;
+  logger = new Logger(S3Service.name);
+
   constructor() {
     this.client = new S3Client({ region: 'ap-south-1' });
     this.s3Bucket = 'vm-presentations';
@@ -33,12 +33,26 @@ export class S3Service {
       s3Loc: `s3://${this.s3Bucket}/${fileName}/presentation.json`,
     };
   }
+
   getKeyFromS3Url(s3Loc: string) {
     return s3Loc.includes('s3://')
       ? s3Loc.replace(`s3://${this.s3Bucket}/`, '')
       : s3Loc;
   }
 
+  getKeyFromPublicUrl(publicUrl: string) {
+    return publicUrl.includes('https://')
+      ? publicUrl.replace(
+          `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/`,
+          '',
+        )
+      : publicUrl;
+  }
+
+  /**
+   * Get Mp3 file from S3
+   * @param key
+   */
   async get(key: string): Promise<any> {
     if (!key) {
       return undefined;
@@ -58,6 +72,28 @@ export class S3Service {
     }
 
     const data = await resp.Body.transformToString();
+    return data;
+  }
+
+  async getObject(key: string): Promise<any> {
+    if (!key) {
+      return undefined;
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: key,
+    });
+
+    const resp: any = await this.client.send(command).catch(() => {
+      this.logger.error('S3 Error, file=' + key);
+    });
+
+    if (!resp) {
+      return undefined;
+    }
+
+    const data = await resp.Body;
     return data;
   }
 
@@ -90,36 +126,40 @@ export class S3Service {
     return s3Key.split('audio/')[0];
   }
 
-  // create S3 signed URL
-    async getSignedUrl(key: string): Promise<string> {
-        const command =  new PutObjectCommand({
-            Bucket: this.s3Bucket,
-            Key: key,
-            ACL: 'public-read',
-            ContentType: 'image/jpeg',
-            Metadata: {
-              ContentType: 'image/jpeg',
-              ContentDisposition: 'inline',
-              Tagging: 'public-image=yes',
-            }
-        });
+  // create S3 signed URL to upload the file
+  async getSignedUrl(key: string): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: key,
+    });
 
-        const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
-        return url;
-    }
+    const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
+    return url;
+  }
 
-    // create a S3 signed URL to download the file
-    async getSignedUrlForDownload(key: string): Promise<string> {
-        const command =  new GetObjectCommand({
-            Bucket: this.s3Bucket,
-            Key: key,
-        });
+  // create a S3 signed URL to download the file
+  async getSignedUrlForDownload(key: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: key,
+    });
 
-        const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
-        return url;
-    }
+    const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
+    return url;
+  }
 
-    getPublicUrl(key: string): string {
-    return `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/${key}`
-    }
+  // make public URL for S3 object
+  async makePublic(key: string) {
+    const command = new PutObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: key,
+      ACL: 'public-read',
+    });
+
+    await this.client.send(command);
+  }
+
+  getPublicUrl(key: string): string {
+    return `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/${key}`;
+  }
 }

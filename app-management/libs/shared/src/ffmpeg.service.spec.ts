@@ -3,6 +3,7 @@ import { FfmpegService } from './ffmpeg.service';
 
 import { ConfigService } from '@nestjs/config';
 import { FsService } from '@app/shared/fs/fs.service';
+import { FontsService } from '@app/shared/fonts.service';
 
 describe('FfmpegService', () => {
   let service: FfmpegService;
@@ -16,6 +17,7 @@ describe('FfmpegService', () => {
       providers: [
         FfmpegService,
         FsService,
+        FontsService,
         {
           provide: ConfigService,
           useValue: configServiceMock,
