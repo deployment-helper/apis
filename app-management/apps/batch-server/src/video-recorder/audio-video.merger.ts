@@ -48,11 +48,18 @@ export class AudioVideoMerger {
       // );
       this.logger.log('Start ffmpeg');
       try {
-        await this.ffmpeg.mergeMp3AndImage(
-          sceneAudio.file,
-          sceneInfo.file,
-          videoPath,
-        );
+        if (sceneInfo.layout === 'layout2') {
+          await this.layout2(sceneAudio.file, sceneInfo.file, videoPath);
+        } else if (sceneInfo.layout === 'layout4') {
+          await this.layout4(sceneAudio.file, sceneInfo.file, videoPath);
+        } else if (sceneInfo.layout === 'layout5') {
+          await this.layout5(sceneAudio.file, sceneInfo.file, videoPath);
+        } else if (sceneInfo.layout === 'layout6') {
+          await this.layout6(sceneAudio.file, sceneInfo.file, videoPath);
+        } else {
+          this.logger.error(`Layout not found ${sceneInfo.layout}`);
+        }
+
         // this.logger.log('Add caption to video');
         // TODO: caption is not synced and not working for some languages like Hindi.
         //  disabling it for now
@@ -98,6 +105,40 @@ export class AudioVideoMerger {
       mp3FilePath,
       videoFilePath,
       outputFilePath,
+    );
+  }
+
+  // Image + Title layout
+  async layout5(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+  ) {
+    await this.ffmpeg.mergeMp3AndImage(
+      mp3FilePath,
+      videoFilePath,
+      outputFilePath,
+      {
+        text: 'This is the title',
+        type: 'title',
+      },
+    );
+  }
+
+  // Video + Title layout
+  async layout6(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+  ) {
+    await this.ffmpeg.mergeMp3AndVideo(
+      mp3FilePath,
+      videoFilePath,
+      outputFilePath,
+      {
+        text: 'This is the title',
+        type: 'title',
+      },
     );
   }
 }

@@ -97,3 +97,8 @@ export interface IScenes {
   updatedAt: string;
   videoId: string;
 }
+
+export interface IBodyCopyDrawText{
+  text:string,
+  type: 'title' | 'subtitle'
+}

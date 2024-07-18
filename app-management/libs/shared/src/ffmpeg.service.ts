@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as ffmpeg from 'fluent-ffmpeg';
 import { AudioVideoFilter } from 'fluent-ffmpeg';
 import { FsService } from '@app/shared/fs/fs.service';
-import { ELanguage } from '@app/shared/types';
+import { ELanguage, IBodyCopyDrawText } from '@app/shared/types';
 import { FontsService } from '@app/shared/fonts.service';
 
 const DEFAULT_FPS = 30;
@@ -18,6 +18,7 @@ export class FfmpegService {
     mp3FilePath: string,
     imageFilePath: string,
     outputFilePath: string,
+    bodyCopy?: IBodyCopyDrawText,
   ): Promise<void> {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -26,30 +27,41 @@ export class FfmpegService {
     this.logger.log(`MP3 File duration ${mp3Seconds}`);
     const _ffmpeg = ffmpeg();
     return new Promise((resolve, reject) => {
+      let output = 'output';
       _ffmpeg
         // Add the MP3 audio file
         .input(mp3FilePath)
         // Add the image as the background
         .input(imageFilePath)
-        .inputOption('-loop 1')
-        // amix the audio files
-        .complexFilter([
-          this.filterFps('1:v', 'fps'),
-          this.filterSetpts('fps', 'setpts'),
-          ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
-          this.filterScale('randomFiltered', 'scaled', {
-            w: '1920',
-            h: '1080',
-          }),
-          this.filterSetSar('scaled', 'output'),
-        ])
+        .inputOption('-loop 1');
+
+      const complexFilter = [
+        this.filterFps('1:v', 'fps'),
+        this.filterSetpts('fps', 'setpts'),
+        ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
+        this.filterScale('randomFiltered', 'scaled', {
+          w: '1920',
+          h: '1080',
+        }),
+        this.filterSetSar('scaled', 'output'),
+      ];
+
+      if (bodyCopy) {
+        output = 'bodyCopyOutput';
+        complexFilter.push(
+          this.filterDrawTextV2(bodyCopy, mp3Seconds, 'output', output),
+        );
+      }
+
+      _ffmpeg
+        .complexFilter(complexFilter)
         // Set the video codec
         .videoCodec('libx264')
         // Specify the audio codec
         .audioCodec('aac')
         // set output options
         .outputOptions([
-          '-map [output]',
+          `-map [${output}]`,
           '-map 0:a',
           '-pix_fmt yuv420p',
           '-profile:v baseline',
@@ -57,7 +69,7 @@ export class FfmpegService {
           `-r ${DEFAULT_FPS}`,
           '-preset superfast',
           '-threads 10',
-          '-shortest',
+          `-t ${mp3Seconds}`,
           '-hide_banner',
         ])
         .format('mp4')
@@ -91,6 +103,7 @@ export class FfmpegService {
     mp3FilePath: string,
     videoFilePath: string,
     outputFilePath: string,
+    bodyCopy?: IBodyCopyDrawText,
   ) {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -100,20 +113,45 @@ export class FfmpegService {
     const _ffmpeg = ffmpeg();
 
     return new Promise<void>((resolve, reject) => {
+      let output = 'setsared';
       _ffmpeg
         .input(mp3FilePath)
         .input(videoFilePath)
         .videoCodec('libx264')
-        .audioCodec('aac')
-        .outputOptions([
-          '-pix_fmt yuv420p',
-          '-profile:v baseline',
-          '-level 3.0',
-          `-r ${DEFAULT_FPS}`,
-          '-preset superfast',
-          '-threads 10',
-          '-hide_banner',
-        ])
+        .audioCodec('aac');
+
+      const complexFilter = [
+        this.filterScale('1:v', 'scaled', {
+          w: '1920',
+          h: '1080',
+        }),
+        this.filterSetSar('scaled', 'setsared'),
+      ];
+
+      if (bodyCopy) {
+        output = 'output';
+        // setsared is the output of the previous filter
+        complexFilter.push(
+          this.filterDrawTextV2(bodyCopy, mp3Seconds, 'setsared', 'output'),
+        );
+      }
+
+      const outputOptions = [
+        `-map [${output}]`,
+        '-map 0:a',
+        '-pix_fmt yuv420p',
+        '-profile:v baseline',
+        '-level 3.0',
+        `-r ${DEFAULT_FPS}`,
+        '-preset superfast',
+        '-threads 10',
+        `-t ${mp3Seconds}`,
+        '-hide_banner',
+      ];
+
+      _ffmpeg
+        .complexFilter(complexFilter)
+        .outputOptions(outputOptions)
         .format('mp4')
         .save(outputFilePath)
         .on('start', (commandLine) => {
@@ -147,6 +185,30 @@ export class FfmpegService {
       randomFilters[Math.floor(Math.random() * randomFilters.length)];
 
     return this[randomFilter](inputs, outputs);
+  }
+
+  filterDrawTextV2(
+    bodyCopy: IBodyCopyDrawText,
+    duration: number,
+    input: string,
+    output: string,
+  ) {
+    const fontFile = this.fontServ.getFontFilePath(ELanguage['English (US)']);
+
+    return {
+      filter: 'drawtext',
+      inputs: input,
+      options: {
+        text: this.escapeText(bodyCopy.text),
+        fontfile: fontFile,
+        fontsize: '186',
+        fontcolor: 'white',
+        x: '(w-text_w)/2', // Center the text horizontally
+        y: `(h-text_h)/2`, // Center the text vertically
+        enable: `between(t,0,${duration})`,
+      },
+      outputs: output,
+    };
   }
 
   filterDrawText(
