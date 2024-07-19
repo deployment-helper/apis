@@ -29,7 +29,16 @@ export class ApiRunner implements IApiRunner {
     const scenes: IScene[] = docs[0]?.scenes;
     // Iterate over scenes and download images
     for (const scene of scenes) {
+      this.logger.log(JSON.stringify(scene));
       const fullPath = await this.downloadS3ImageAndSave(scene.image, videoId);
+
+      const title = Object.keys(scene.content).find((key) => {
+        return (
+          scene.content[key].type === 'input' &&
+          scene.content[key].bodyCopyType === 'title'
+        );
+      });
+
       scenesInfo.push({
         file: fullPath,
         description: scene.description,
@@ -38,6 +47,7 @@ export class ApiRunner implements IApiRunner {
         meta: {
           name: scene.id,
           language: video.audioLanguage,
+          title: scene.content[title]?.value ? scene.content[title].value : '',
         },
       });
     }

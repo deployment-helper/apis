@@ -88,7 +88,7 @@ export interface IScene {
   description: string;
   layoutId: string;
   image: string;
-  content: any;
+  content: Record<string, any>;
 }
 
 export interface IScenes {
@@ -98,7 +98,8 @@ export interface IScenes {
   videoId: string;
 }
 
-export interface IBodyCopyDrawText{
-  text:string,
-  type: 'title' | 'subtitle'
+export type BodyCopyTypes = 'title' | 'subtitle';
+export interface IBodyCopyDrawText {
+  text: string;
+  type: BodyCopyTypes;
 }

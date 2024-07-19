@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TSlideInfo } from './types';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { IBodyCopyDrawText } from '@app/shared/types';
 
 @Injectable()
 export class AudioVideoMerger {
@@ -53,9 +54,15 @@ export class AudioVideoMerger {
         } else if (sceneInfo.layout === 'layout4') {
           await this.layout4(sceneAudio.file, sceneInfo.file, videoPath);
         } else if (sceneInfo.layout === 'layout5') {
-          await this.layout5(sceneAudio.file, sceneInfo.file, videoPath);
+          await this.layout5(sceneAudio.file, sceneInfo.file, videoPath, {
+            text: sceneInfo.meta.title,
+            type: 'title',
+          });
         } else if (sceneInfo.layout === 'layout6') {
-          await this.layout6(sceneAudio.file, sceneInfo.file, videoPath);
+          await this.layout6(sceneAudio.file, sceneInfo.file, videoPath, {
+            text: sceneInfo.meta.title,
+            type: 'title',
+          });
         } else {
           this.logger.error(`Layout not found ${sceneInfo.layout}`);
         }
@@ -113,15 +120,13 @@ export class AudioVideoMerger {
     mp3FilePath: string,
     videoFilePath: string,
     outputFilePath: string,
+    bodyCopy: IBodyCopyDrawText,
   ) {
     await this.ffmpeg.mergeMp3AndImage(
       mp3FilePath,
       videoFilePath,
       outputFilePath,
-      {
-        text: 'This is the title',
-        type: 'title',
-      },
+      bodyCopy,
     );
   }
 
@@ -130,15 +135,13 @@ export class AudioVideoMerger {
     mp3FilePath: string,
     videoFilePath: string,
     outputFilePath: string,
+    bodyCopy: IBodyCopyDrawText,
   ) {
     await this.ffmpeg.mergeMp3AndVideo(
       mp3FilePath,
       videoFilePath,
       outputFilePath,
-      {
-        text: 'This is the title',
-        type: 'title',
-      },
+      bodyCopy,
     );
   }
 }
