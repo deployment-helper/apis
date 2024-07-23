@@ -12,10 +12,11 @@ export class SynthesisService {
   async synthesize(
     text: string[],
     audioLanguage = 'en-US',
+    voiceCode?: string,
     merge = true,
   ): Promise<{ type: string; data: string }[]> {
     const audios = await Promise.all(
-      text.map((t) => this.synthesizeText(t, audioLanguage)),
+      text.map((t) => this.synthesizeText(t, audioLanguage, voiceCode)),
     );
     if (merge) {
       return [
@@ -35,11 +36,12 @@ export class SynthesisService {
   private async synthesizeText(
     text: string,
     audioLanguage: string,
+    voiceCode?: string,
   ): Promise<{ type: string; data: Uint8Array }> {
     const request = {
       input: { text },
-      voice: { languageCode: audioLanguage || 'en-US' },
-      audioConfig: { audioEncoding: 'MP3', speakingRate: 0.9, pitch: -2 },
+      voice: { languageCode: audioLanguage || 'en-US', name: voiceCode },
+      audioConfig: { audioEncoding: 'MP3', speakingRate: 0.9, pitch: 0 },
     };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

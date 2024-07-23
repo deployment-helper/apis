@@ -47,6 +47,7 @@ export class ApiRunner implements IApiRunner {
         meta: {
           name: scene.id,
           language: video.audioLanguage,
+          voiceCode: video.voiceCode,
           title: scene.content[title]?.value ? scene.content[title].value : '',
         },
       });
