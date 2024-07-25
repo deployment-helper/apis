@@ -129,7 +129,7 @@ export class SlidesAudioGenerator {
   }
 
   async getS3FileAndSave(key, pid) {
-    const fileStr = await this.s3.get(key);
+    const fileStr = await this.s3.getAsString(key);
     const fileJson = JSON.parse(fileStr);
     const filename = this.s3.mp3FileNameFromS3Key(key, false);
     const audioFilePath = await this.fs.createFile(

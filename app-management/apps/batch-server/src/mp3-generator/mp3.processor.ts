@@ -28,10 +28,12 @@ export class Mp3Processor {
     this.logger.log('MP3 file processing started');
     this.fs.checkAndCreateDir(dirPath);
 
-    const audioMetaFileTxt = await this.s3.get(job.data.s3File);
+    const audioMetaFileTxt = await this.s3.getAsString(job.data.s3File);
     const audioMetaFileJson = JSON.parse(audioMetaFileTxt);
 
-    const videoMetaFileTxt = await this.s3.get(job.data.s3VideoMetaData);
+    const videoMetaFileTxt = await this.s3.getAsString(
+      job.data.s3VideoMetaData,
+    );
     const videoMetaFileJson = JSON.parse(videoMetaFileTxt);
 
     let fileName = audioMetaFileJson.desc?.file;
@@ -208,7 +210,7 @@ export class Mp3Processor {
   }
 
   async getMp3File(key: string) {
-    const fileTxt = await this.s3.get(key);
+    const fileTxt = await this.s3.getAsString(key);
     const fileJson = JSON.parse(fileTxt);
     return fileJson.audioContent;
   }

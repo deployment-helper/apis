@@ -117,6 +117,7 @@ export class VideoWorker implements IWorker {
       const startTime = new Date().getTime();
       const scenesInfo = await this.generateImages(url, data);
       this.logger.log('scenesImages count', scenesInfo.length);
+      const videoMeta = scenesInfo[0]?.meta;
 
       const scenesAudios = await this.generateAudios(scenesInfo, data);
       this.logger.log('scenesAudios count', scenesAudios.length);
@@ -147,9 +148,11 @@ export class VideoWorker implements IWorker {
         totalDuration,
       );
 
-      // TODO: remove hardcoded path
-      const backgroundMusic =
-        '/Users/vinaymavi/quiz-project-content/deep-meditation-192828.mp3';
+      const backgroundMusic = await this.s3.getFileAndSave(
+        videoMeta.backgroundMusic,
+      );
+
+      this.logger.log(`'Background music path = ${backgroundMusic}`);
       await this.ffmpeg.addBackgroundMusicToVideo(
         mergeAllVideoPath,
         videoWithBGMusicPath,

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { rm, unlink, writeFile } from 'fs/promises';
 import { accessSync, existsSync, mkdirSync } from 'fs';
 
@@ -20,6 +20,13 @@ export class FsService {
     try {
       const fileFullPath = join(this.storageDir, filePath);
       this.logger.log(`Creating file ${fileFullPath}`);
+
+      // Create directory if it does not exist
+      const dir = dirname(fileFullPath);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+
       if (isBase64) {
         await writeFile(fileFullPath, Buffer.from(data, 'base64'));
       } else {
@@ -43,8 +50,8 @@ export class FsService {
       if (!existsSync(fullPath)) {
         mkdirSync(fullPath, { recursive: true });
       }
-    }catch (e){
-      this.logger.error(e)
+    } catch (e) {
+      this.logger.error(e);
     }
   }
 

@@ -6,6 +6,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { readFile } from 'fs/promises';
+import { FsService } from '@app/shared/fs/fs.service';
 
 @Injectable()
 export class S3Service {
@@ -13,7 +14,7 @@ export class S3Service {
   private readonly s3Bucket: string;
   logger = new Logger(S3Service.name);
 
-  constructor() {
+  constructor(private readonly fs: FsService) {
     this.client = new S3Client({ region: 'ap-south-1' });
     this.s3Bucket = 'vm-presentations';
   }
@@ -49,14 +50,7 @@ export class S3Service {
       : publicUrl;
   }
 
-  /**
-   * Get Mp3 file from S3
-   * @param key
-   */
   async get(key: string): Promise<any> {
-    if (!key) {
-      return undefined;
-    }
     const bucketKey = this.getKeyFromS3Url(key);
     const command = new GetObjectCommand({
       Bucket: this.s3Bucket,
@@ -71,7 +65,17 @@ export class S3Service {
       return undefined;
     }
 
-    const data = await resp.Body.transformToString();
+    return resp.Body;
+  }
+
+  /**
+   * Get text file from S3
+   * @param key
+   */
+  async getAsString(key: string): Promise<any> {
+    const body = await this.get(key);
+
+    const data = await body.transformToString();
     return data;
   }
 
@@ -161,5 +165,19 @@ export class S3Service {
 
   getPublicUrl(key: string): string {
     return `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/${key}`;
+  }
+
+  async getFileAndSave(key: string) {
+    const _key = this.getKeyFromPublicUrl(key);
+    const body = await this.get(_key);
+
+    const chunks = [];
+    for await (const chunk of body) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+    const filePath = await this.fs.createFile(_key, buffer);
+
+    return filePath;
   }
 }

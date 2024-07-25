@@ -48,6 +48,7 @@ export class ApiRunner implements IApiRunner {
           name: scene.id,
           language: video.audioLanguage,
           voiceCode: video.voiceCode,
+          backgroundMusic: video.backgroundMusic,
           title: scene.content[title]?.value ? scene.content[title].value : '',
         },
       });
