@@ -10,6 +10,8 @@ import { AwsModule } from './aws/aws.module';
 import { VideoModule } from './video/video.module';
 import { AiModule } from './ai/ai.module';
 import { OpenapiModule } from './openapi/openapi.module';
+import { WorkflowsController } from './workflows/workflows.controller';
+import { ChatgptService } from '@app/shared/openapi/chatgpt.service';
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { OpenapiModule } from './openapi/openapi.module';
     AiModule,
     OpenapiModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, WorkflowsController],
+  providers: [AppService, ChatgptService],
 })
 export class AppModule {}
