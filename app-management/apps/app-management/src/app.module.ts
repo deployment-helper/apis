@@ -12,6 +12,7 @@ import { AiModule } from './ai/ai.module';
 import { OpenapiModule } from './openapi/openapi.module';
 import { WorkflowsController } from './workflows/workflows.controller';
 import { ChatgptService } from '@app/shared/openapi/chatgpt.service';
+import { FirestoreService } from '@app/shared/gcp/firestore.service';
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import { ChatgptService } from '@app/shared/openapi/chatgpt.service';
     OpenapiModule,
   ],
   controllers: [AppController, WorkflowsController],
-  providers: [AppService, ChatgptService],
+  providers: [AppService, ChatgptService, FirestoreService],
 })
 export class AppModule {}
