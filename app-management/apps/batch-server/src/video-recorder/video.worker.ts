@@ -159,17 +159,36 @@ export class VideoWorker implements IWorker {
         backgroundMusic,
       );
 
-      const preapredVideoDuration = await this.ffmpeg.mp3Duration(
-        videoWithBGMusicPath,
-      );
+      let outputVideoPath = videoWithBGMusicPath;
 
-      this.logger.debug('Prepared video duration', preapredVideoDuration);
+      // Add overlay to video
+      let overlayVideoPath = undefined;
+      let overlay = undefined;
+      if (videoMeta?.defaultOverlay) {
+        this.logger.log('Add overlay to video');
+        overlay = await this.s3.getFileAndSave(videoMeta.defaultOverlay);
+        overlayVideoPath = this.fs.getFullPath(
+          `${data.videoId}/${uniqueVideoName}-overlay.mp4`,
+        );
+
+        await this.ffmpeg.addOverlayToVideo(
+          outputVideoPath,
+          overlayVideoPath,
+          overlay,
+        );
+
+        outputVideoPath = overlayVideoPath;
+      }
+
+      const outputVideoDur = await this.ffmpeg.mp3Duration(outputVideoPath);
+
+      this.logger.debug('Prepared video duration', outputVideoDur);
       this.logger.log('End merge all videos');
       this.logger.log('Begin S3 upload');
 
       await this.s3.readAndUpload(
-        videoWithBGMusicPath,
-        `${data.videoId}/${videoWithBGMusicPath}.mp4`,
+        outputVideoPath,
+        `${data.videoId}/${outputVideoPath}.mp4`,
       );
       this.logger.log('End S3 upload');
 
@@ -177,7 +196,7 @@ export class VideoWorker implements IWorker {
 
       await this.fireStore.update('video', data.videoId, {
         generatedVideoInfo: FieldValue.arrayUnion({
-          cloudFile: `${data.videoId}/${videoWithBGMusicPath}.mp4`,
+          cloudFile: `${data.videoId}/${outputVideoPath}.mp4`,
           version: data.version,
           date: new Date().toISOString(),
         }),

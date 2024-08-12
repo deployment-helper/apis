@@ -388,8 +388,7 @@ export class FfmpegService {
       filter: 'overlay',
       inputs: inputs,
       options: {
-        x: '0',
-        y: '0',
+        shortest: 1,
       },
       outputs: outputs,
     };
@@ -512,6 +511,7 @@ export class FfmpegService {
       _ffmpeg
         .input(inputFilePath)
         .input(musicFilePath)
+        .inputOption('-stream_loop -1')
         .complexFilter([
           {
             filter: 'amix',
@@ -531,6 +531,54 @@ export class FfmpegService {
         .outputOptions([
           '-map 0:v',
           '-map [audio]',
+          '-pix_fmt yuv420p',
+          '-level 3.0',
+          `-r ${DEFAULT_FPS}`,
+          '-preset superfast',
+          '-threads 10',
+          '-hide_banner',
+        ])
+        .format('mp4')
+        .save(outputFilePath)
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End adding background music to video');
+          resolve();
+        })
+        .on('error', (err) => {
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .on('progress', (progress) => {
+          this.logger.log(`Timemark : ${progress.timemark}`);
+        });
+    });
+  }
+
+  async addOverlayToVideo(
+    inputFilePath: string,
+    outputFilePath: string,
+    overlayFilePath: string,
+  ): Promise<void> {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Start adding background music to video');
+    const _ffmpeg = ffmpeg();
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input(inputFilePath)
+        .input(overlayFilePath)
+        .inputOption('-stream_loop -1')
+        .complexFilter([this.filterOverlay(['0:v', '1:v'], 'output')])
+        // copy the video codec
+        .videoCodec('libx264')
+        // Specify the audio codec
+        .audioCodec('aac')
+        .outputOptions([
+          '-map [output]',
+          '-map 0:a',
           '-pix_fmt yuv420p',
           '-level 3.0',
           `-r ${DEFAULT_FPS}`,
