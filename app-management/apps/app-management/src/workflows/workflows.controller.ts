@@ -12,6 +12,7 @@ import { execSync } from 'child_process';
 import { ChatgptService } from '@app/shared/openapi/chatgpt.service';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { IScenes, IVideo } from '@app/shared/types';
+import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 
 console.log("outside workflows controller");
@@ -114,20 +115,23 @@ export class WorkflowsController {
     sceneDescriptions = sceneDescriptions.filter(function(item){ return item != null})
     console.log("in workflows controller");
     for(let i=0;i<sceneDescriptions.length;i++){
+      let image = project?.assets[Math.ceil(Math.random()*1000)%project?.assets?.length];
       if(sceneDescriptions[i]){
         await this.fireStore.updateScene(
           `video/${video.id}/scenes`,
           scenes.id,
           {
+            "id": uuidv4(),
             "content": {
               "image": {
                 "type": "image",
                 "name": "image",
-                "value": project?.assets[Math.ceil(Math.random()*1000)%project?.assets?.length],//"https://via.placeholder.com/150",
+                "value": image,//"https://via.placeholder.com/150",
                 "placeholder": "Image"
               }
             },
             "description": sceneDescriptions[i],
+            "image": image,//"https://via.placeholder.com/150",
             "layoutId": "layout2"
           }
           //sceneArrayIndex,
