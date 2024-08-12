@@ -511,6 +511,7 @@ export class FfmpegService {
       _ffmpeg
         .input(inputFilePath)
         .input(musicFilePath)
+        .inputOption('-stream_loop -1')
         .complexFilter([
           {
             filter: 'amix',
