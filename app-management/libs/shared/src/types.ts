@@ -74,6 +74,8 @@ export interface IVideo {
   name: string;
   description?: string;
   audioLanguage?: ELanguage;
+  voiceCode?: string;
+  backgroundMusic?: string;
   createdAt: string;
   updatedAt: string;
   userId: string;
