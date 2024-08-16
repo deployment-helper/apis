@@ -1,3 +1,5 @@
+import { FOLDER_GROUPS } from '@app/shared/constants';
+
 export enum ServerNames {
   'docs.google.com' = 'google-docs',
   'localhost:3000' = 'slides',
@@ -100,6 +102,7 @@ export interface IScenes {
   videoId: string;
 }
 
+export type T_FOLDER_GROUPS = (typeof FOLDER_GROUPS)[number];
 export type BodyCopyTypes = 'title' | 'subtitle';
 export interface IBodyCopyDrawText {
   text: string;

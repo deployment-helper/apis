@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { join, dirname } from 'path';
 import { rm, unlink, writeFile } from 'fs/promises';
 import { accessSync, existsSync, mkdirSync } from 'fs';
+import { T_FOLDER_GROUPS } from '@app/shared/types';
+import { FOLDER_GROUPS } from '@app/shared/constants';
 
 @Injectable()
 export class FsService {
@@ -18,7 +20,9 @@ export class FsService {
     isBase64?: boolean,
   ): Promise<string> {
     try {
-      const fileFullPath = join(this.storageDir, filePath);
+      const fileFullPath = filePath?.includes(this.storageDir)
+        ? filePath
+        : join(this.storageDir, filePath);
       this.logger.log(`Creating file ${fileFullPath}`);
 
       // Create directory if it does not exist
@@ -41,6 +45,25 @@ export class FsService {
 
   getFullPath(fileName: string) {
     return join(this.storageDir, fileName);
+  }
+
+  getFullPathFromFilename(
+    fileName: string,
+    group: T_FOLDER_GROUPS,
+    ext?: string,
+  ) {
+    return fileName
+      .split('/')
+      .map((item) => {
+        if (item.includes('.')) {
+          return `${item.split('.')[0]}.${ext}`;
+        } else if (FOLDER_GROUPS.includes(item as T_FOLDER_GROUPS)) {
+          return group;
+        } else {
+          return item;
+        }
+      })
+      .join('/');
   }
 
   checkAndCreateDir(dir: string) {
