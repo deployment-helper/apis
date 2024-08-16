@@ -67,6 +67,7 @@ export class SlidesAudioGenerator {
           slide.meta?.defaultMp3SpeakingRate || DEFAULT_MP3_SPEAKING_RATE,
           slide.meta.language || 'en-US',
           slide.meta.voiceCode,
+          slide.meta?.postFixSilence,
         );
         audioFiles.push({
           file: audioFilePath,
@@ -115,6 +116,7 @@ export class SlidesAudioGenerator {
     speakingRate: number,
     language: string,
     voiceCode?: string,
+    postFixSilence?: string,
   ) {
     const synthesisService = new SynthesisService();
     const audio = await synthesisService.synthesize(
@@ -130,6 +132,27 @@ export class SlidesAudioGenerator {
       audio[0].data,
       true,
     );
+
+    if (postFixSilence) {
+      this.logger.log(`Postfix silence ${postFixSilence}`);
+      const s3Filepath = this.fs.getFullPathFromFilename(
+        audioFilePath,
+        'mp3-files',
+        '-s3.mp3',
+      );
+      const silenceMp3 = await this.s3.getFileAndSave(
+        postFixSilence,
+        s3Filepath,
+      );
+      const outputFile = this.fs.getFullPathFromFilename(
+        audioFilePath,
+        'mp3-files',
+        '-silence.mp3',
+      );
+      await this.ffmpeg.concat([audioFilePath, silenceMp3], outputFile);
+      return outputFile;
+    }
+
     return audioFilePath;
   }
 

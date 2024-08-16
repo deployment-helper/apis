@@ -660,6 +660,31 @@ export class FfmpegService {
         });
     });
   }
+  async concat(inputFiles: string[], outputFilePath: string) {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Begin video merge');
+    const _ffmpeg = ffmpeg();
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input('concat:' + inputFiles.join('|'))
+        .output(outputFilePath)
+        .outputOptions(['-c copy'])
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End video merge');
+          resolve(outputFilePath);
+        })
+        .on('error', (err) => {
+          this.logger.log('End video merge with error');
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .run();
+    });
+  }
 
   mp3Duration(mp3File: string) {
     // Use ffprobe to get the duration of the MP3 audio
