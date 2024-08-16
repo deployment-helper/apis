@@ -19,8 +19,9 @@ export class SynthesisController {
   ) {
     return this.synthesisService.synthesize(
       body.text,
-      body.audioLanguage,
+      undefined,
       body.voiceCode,
+      body.audioLanguage,
       body.merge,
     );
   }

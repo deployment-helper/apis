@@ -19,6 +19,7 @@ export interface IProject {
   defaultVoice?: string;
   defaultBackgroundMusic?: string;
   defaultOverlay?: string;
+  defaultMp3SpeakingRate?: number;
 }
 
 export interface IUser {
