@@ -112,7 +112,7 @@ export class FfmpegService {
     this.logger.log(`MP3 File duration ${mp3Seconds}`);
     const _ffmpeg = ffmpeg();
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
       let output = 'setsared';
       _ffmpeg
         .input(mp3FilePath)
@@ -131,9 +131,15 @@ export class FfmpegService {
       if (bodyCopy) {
         output = 'output';
         // setsared is the output of the previous filter
-        complexFilter.push(
-          this.filterDrawTextV2(bodyCopy, mp3Seconds, 'setsared', 'output'),
+        const filter = await this.filterDrawTextV2(
+          bodyCopy,
+          mp3Seconds,
+          'setsared',
+          'output',
+          mp3FilePath,
         );
+
+        complexFilter.push(filter);
       }
 
       const outputOptions = [
@@ -187,21 +193,30 @@ export class FfmpegService {
     return this[randomFilter](inputs, outputs);
   }
 
-  filterDrawTextV2(
+  async filterDrawTextV2(
     bodyCopy: IBodyCopyDrawText,
     duration: number,
     input: string,
     output: string,
+    // referenceFilePath is used to create text file in same parent directory
+    referenceFilePath?: string,
   ) {
+    // TODO: font file should be loaded based on the language
     const fontFile = this.fontServ.getFontFilePath(ELanguage['English (US)']);
+    const escapeText = this.escapeText(bodyCopy.text);
 
+    const text = await this.prepareDrawtextFilterText(
+      bodyCopy,
+      referenceFilePath,
+    );
     return {
       filter: 'drawtext',
       inputs: input,
       options: {
-        text: this.escapeText(bodyCopy.text),
+        textfile: text.textFile,
         fontfile: fontFile,
-        fontsize: '186',
+        fontsize: `${text.fontSize}`,
+        text_align: 'C',
         fontcolor: 'white',
         x: '(w-text_w)/2', // Center the text horizontally
         y: `(h-text_h)/2`, // Center the text vertically
@@ -519,7 +534,7 @@ export class FfmpegService {
               inputs: 2,
               duration: 'first',
               dropout_transition: 3,
-              weights: '8 0.4',
+              weights: '8 4',
             },
             outputs: 'audio',
           },
@@ -645,6 +660,31 @@ export class FfmpegService {
         });
     });
   }
+  async concat(inputFiles: string[], outputFilePath: string) {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Begin video merge');
+    const _ffmpeg = ffmpeg();
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input('concat:' + inputFiles.join('|'))
+        .output(outputFilePath)
+        .outputOptions(['-c copy'])
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End video merge');
+          resolve(outputFilePath);
+        })
+        .on('error', (err) => {
+          this.logger.log('End video merge with error');
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .run();
+    });
+  }
 
   mp3Duration(mp3File: string) {
     // Use ffprobe to get the duration of the MP3 audio
@@ -672,6 +712,68 @@ export class FfmpegService {
     }
 
     return totalDuration;
+  }
+
+  async prepareDrawtextFilterText(
+    bodyCopy: IBodyCopyDrawText,
+    referenceFilePath: string,
+  ): Promise<{
+    textFile: string;
+    lineCount: number;
+    fontSize: number;
+  }> {
+    const TITLE_FONT_SIZE = 120;
+    const SUBTITLE_FONT_SIZE = 50;
+    const TITLE_LINE_WORD_COUNT = 5;
+    const TITLE_LINE_MAX_CHAR_COUNT = 25;
+    const SUBTITLE_LINE_WORD_COUNT = 10;
+    const SUBTITLE_LINE_MAX_CHAR_COUNT = 40;
+
+    //   Split bodyCopy text into lines
+    const words = bodyCopy.text.split(' ');
+    const lines = [];
+    let singleLine = [];
+    const maxSingleLineLength =
+      bodyCopy.type === 'title'
+        ? TITLE_LINE_MAX_CHAR_COUNT
+        : SUBTITLE_LINE_MAX_CHAR_COUNT;
+    let lineWordCount = 0;
+
+    if (bodyCopy.text.length <= maxSingleLineLength) {
+      lines.push(bodyCopy.text);
+    } else {
+      for (let i = 0; i < words.length; i++) {
+        if (
+          singleLine.join(' ').length + words[i].length <=
+          maxSingleLineLength
+        ) {
+          singleLine.push(words[i]);
+        } else {
+          lines.push(singleLine.join(' '));
+          singleLine = [words[i]];
+        }
+
+        // Check for the last word
+        if (i === words.length - 1) {
+          lines.push(singleLine.join(' '));
+        }
+      }
+    }
+
+    const filePath = this.fs.getFullPathFromFilename(
+      referenceFilePath,
+      'text-files',
+      'txt',
+    );
+
+    await this.fs.createFile(filePath, lines.join('\n'));
+
+    return {
+      textFile: filePath,
+      lineCount: lines.length,
+      fontSize:
+        bodyCopy.type === 'title' ? TITLE_FONT_SIZE : SUBTITLE_FONT_SIZE,
+    };
   }
 
   async trimVideo(
