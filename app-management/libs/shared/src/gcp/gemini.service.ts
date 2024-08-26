@@ -22,9 +22,15 @@ export class GeminiService {
     language: ELanguage,
     tagetLanguage: ELanguage,
   ): Promise<string> {
+    // TODO: make those prompts user configurable
     const prompt = `Translate the following ${language} text to ${tagetLanguage} language and use ${tagetLanguage} fonts, use common ${tagetLanguage} language words and professional tone, in ${tagetLanguage} language, Do not translate nouns, like name and persons etc. do not respond with Markdown format, return only translated text "${text}"`;
     this.logger.log(prompt);
-    return await this.prompt(prompt);
+    try {
+      return await this.prompt(prompt);
+    } catch (e) {
+      this.logger.error(e);
+      return text;
+    }
   }
 
   async prompt(text: string): Promise<string> {

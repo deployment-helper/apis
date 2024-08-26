@@ -13,6 +13,13 @@ export enum ProjectTypes {
 export interface IProject {
   projectId: string;
   projectName: string;
+  userId: string;
+  assets: string[];
+  defaultLanguage?: string;
+  defaultVoice?: string;
+  defaultBackgroundMusic?: string;
+  defaultOverlay?: string;
+  defaultMp3SpeakingRate?: number;
 }
 
 export interface IUser {

@@ -88,8 +88,8 @@ export class SlidesController {
   ) {
     const data = await this.pres.getItem(pid, updatedAt);
     const item = unmarshall(data.Item);
-    const s3File = await this.s3.get(item.s3File);
-    const s3MetaFile = await this.s3.get(item.s3MetaFile);
+    const s3File = await this.s3.getAsString(item.s3File);
+    const s3MetaFile = await this.s3.getAsString(item.s3MetaFile);
 
     return {
       item,

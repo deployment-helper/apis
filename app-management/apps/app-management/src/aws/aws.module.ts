@@ -4,7 +4,8 @@ import { UserEntity } from './user.entity';
 import { PresentationEntity } from './presentation.entity';
 import { S3Service } from './s3.service';
 import { SnsService } from './sns.service';
-import {AwsController} from "@apps/app-management/aws/aws.controller";
+import { AwsController } from '@apps/app-management/aws/aws.controller';
+import { FsService } from '@app/shared/fs/fs.service';
 
 @Global()
 @Module({
@@ -14,6 +15,7 @@ import {AwsController} from "@apps/app-management/aws/aws.controller";
     PresentationEntity,
     S3Service,
     SnsService,
+    FsService,
   ],
   controllers: [AwsController],
   exports: [UserEntity, PresentationEntity, S3Service, SnsService],

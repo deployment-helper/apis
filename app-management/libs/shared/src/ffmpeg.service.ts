@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as ffmpeg from 'fluent-ffmpeg';
 import { AudioVideoFilter } from 'fluent-ffmpeg';
 import { FsService } from '@app/shared/fs/fs.service';
-import { ELanguage } from '@app/shared/types';
+import { ELanguage, IBodyCopyDrawText } from '@app/shared/types';
 import { FontsService } from '@app/shared/fonts.service';
 
 const DEFAULT_FPS = 30;
@@ -18,6 +18,7 @@ export class FfmpegService {
     mp3FilePath: string,
     imageFilePath: string,
     outputFilePath: string,
+    bodyCopy?: IBodyCopyDrawText,
   ): Promise<void> {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -26,30 +27,41 @@ export class FfmpegService {
     this.logger.log(`MP3 File duration ${mp3Seconds}`);
     const _ffmpeg = ffmpeg();
     return new Promise((resolve, reject) => {
+      let output = 'output';
       _ffmpeg
         // Add the MP3 audio file
         .input(mp3FilePath)
         // Add the image as the background
         .input(imageFilePath)
-        .inputOption('-loop 1')
-        // amix the audio files
-        .complexFilter([
-          this.filterFps('1:v', 'fps'),
-          this.filterSetpts('fps', 'setpts'),
-          ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
-          this.filterScale('randomFiltered', 'scaled', {
-            w: '1920',
-            h: '1080',
-          }),
-          this.filterSetSar('scaled', 'output'),
-        ])
+        .inputOption('-loop 1');
+
+      const complexFilter = [
+        this.filterFps('1:v', 'fps'),
+        this.filterSetpts('fps', 'setpts'),
+        ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
+        this.filterScale('randomFiltered', 'scaled', {
+          w: '1920',
+          h: '1080',
+        }),
+        this.filterSetSar('scaled', 'output'),
+      ];
+
+      if (bodyCopy) {
+        output = 'bodyCopyOutput';
+        complexFilter.push(
+          this.filterDrawTextV2(bodyCopy, mp3Seconds, 'output', output),
+        );
+      }
+
+      _ffmpeg
+        .complexFilter(complexFilter)
         // Set the video codec
         .videoCodec('libx264')
         // Specify the audio codec
         .audioCodec('aac')
         // set output options
         .outputOptions([
-          '-map [output]',
+          `-map [${output}]`,
           '-map 0:a',
           '-pix_fmt yuv420p',
           '-profile:v baseline',
@@ -57,7 +69,7 @@ export class FfmpegService {
           `-r ${DEFAULT_FPS}`,
           '-preset superfast',
           '-threads 10',
-          '-shortest',
+          `-t ${mp3Seconds}`,
           '-hide_banner',
         ])
         .format('mp4')
@@ -91,6 +103,7 @@ export class FfmpegService {
     mp3FilePath: string,
     videoFilePath: string,
     outputFilePath: string,
+    bodyCopy?: IBodyCopyDrawText,
   ) {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -99,21 +112,52 @@ export class FfmpegService {
     this.logger.log(`MP3 File duration ${mp3Seconds}`);
     const _ffmpeg = ffmpeg();
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
+      let output = 'setsared';
       _ffmpeg
         .input(mp3FilePath)
         .input(videoFilePath)
         .videoCodec('libx264')
-        .audioCodec('aac')
-        .outputOptions([
-          '-pix_fmt yuv420p',
-          '-profile:v baseline',
-          '-level 3.0',
-          `-r ${DEFAULT_FPS}`,
-          '-preset superfast',
-          '-threads 10',
-          '-hide_banner',
-        ])
+        .audioCodec('aac');
+
+      const complexFilter = [
+        this.filterScale('1:v', 'scaled', {
+          w: '1920',
+          h: '1080',
+        }),
+        this.filterSetSar('scaled', 'setsared'),
+      ];
+
+      if (bodyCopy) {
+        output = 'output';
+        // setsared is the output of the previous filter
+        const filter = await this.filterDrawTextV2(
+          bodyCopy,
+          mp3Seconds,
+          'setsared',
+          'output',
+          mp3FilePath,
+        );
+
+        complexFilter.push(filter);
+      }
+
+      const outputOptions = [
+        `-map [${output}]`,
+        '-map 0:a',
+        '-pix_fmt yuv420p',
+        '-profile:v baseline',
+        '-level 3.0',
+        `-r ${DEFAULT_FPS}`,
+        '-preset superfast',
+        '-threads 10',
+        `-t ${mp3Seconds}`,
+        '-hide_banner',
+      ];
+
+      _ffmpeg
+        .complexFilter(complexFilter)
+        .outputOptions(outputOptions)
         .format('mp4')
         .save(outputFilePath)
         .on('start', (commandLine) => {
@@ -147,6 +191,39 @@ export class FfmpegService {
       randomFilters[Math.floor(Math.random() * randomFilters.length)];
 
     return this[randomFilter](inputs, outputs);
+  }
+
+  async filterDrawTextV2(
+    bodyCopy: IBodyCopyDrawText,
+    duration: number,
+    input: string,
+    output: string,
+    // referenceFilePath is used to create text file in same parent directory
+    referenceFilePath?: string,
+  ) {
+    // TODO: font file should be loaded based on the language
+    const fontFile = this.fontServ.getFontFilePath(ELanguage['English (US)']);
+    const escapeText = this.escapeText(bodyCopy.text);
+
+    const text = await this.prepareDrawtextFilterText(
+      bodyCopy,
+      referenceFilePath,
+    );
+    return {
+      filter: 'drawtext',
+      inputs: input,
+      options: {
+        textfile: text.textFile,
+        fontfile: fontFile,
+        fontsize: `${text.fontSize}`,
+        text_align: 'C',
+        fontcolor: 'white',
+        x: '(w-text_w)/2', // Center the text horizontally
+        y: `(h-text_h)/2`, // Center the text vertically
+        enable: `between(t,0,${duration})`,
+      },
+      outputs: output,
+    };
   }
 
   filterDrawText(
@@ -326,8 +403,7 @@ export class FfmpegService {
       filter: 'overlay',
       inputs: inputs,
       options: {
-        x: '0',
-        y: '0',
+        shortest: 1,
       },
       outputs: outputs,
     };
@@ -450,6 +526,7 @@ export class FfmpegService {
       _ffmpeg
         .input(inputFilePath)
         .input(musicFilePath)
+        .inputOption('-stream_loop -1')
         .complexFilter([
           {
             filter: 'amix',
@@ -457,7 +534,7 @@ export class FfmpegService {
               inputs: 2,
               duration: 'first',
               dropout_transition: 3,
-              weights: '8 0.4',
+              weights: '8 4',
             },
             outputs: 'audio',
           },
@@ -469,6 +546,54 @@ export class FfmpegService {
         .outputOptions([
           '-map 0:v',
           '-map [audio]',
+          '-pix_fmt yuv420p',
+          '-level 3.0',
+          `-r ${DEFAULT_FPS}`,
+          '-preset superfast',
+          '-threads 10',
+          '-hide_banner',
+        ])
+        .format('mp4')
+        .save(outputFilePath)
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End adding background music to video');
+          resolve();
+        })
+        .on('error', (err) => {
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .on('progress', (progress) => {
+          this.logger.log(`Timemark : ${progress.timemark}`);
+        });
+    });
+  }
+
+  async addOverlayToVideo(
+    inputFilePath: string,
+    outputFilePath: string,
+    overlayFilePath: string,
+  ): Promise<void> {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Start adding background music to video');
+    const _ffmpeg = ffmpeg();
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input(inputFilePath)
+        .input(overlayFilePath)
+        .inputOption('-stream_loop -1')
+        .complexFilter([this.filterOverlay(['0:v', '1:v'], 'output')])
+        // copy the video codec
+        .videoCodec('libx264')
+        // Specify the audio codec
+        .audioCodec('aac')
+        .outputOptions([
+          '-map [output]',
+          '-map 0:a',
           '-pix_fmt yuv420p',
           '-level 3.0',
           `-r ${DEFAULT_FPS}`,
@@ -535,6 +660,31 @@ export class FfmpegService {
         });
     });
   }
+  async concat(inputFiles: string[], outputFilePath: string) {
+    // delete previous output file
+    await this.fs.deleteFile(outputFilePath);
+    this.logger.log('Begin video merge');
+    const _ffmpeg = ffmpeg();
+    return new Promise((resolve, reject) => {
+      _ffmpeg
+        .input('concat:' + inputFiles.join('|'))
+        .output(outputFilePath)
+        .outputOptions(['-c copy'])
+        .on('start', (commandLine) => {
+          this.logger.log(commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('End video merge');
+          resolve(outputFilePath);
+        })
+        .on('error', (err) => {
+          this.logger.log('End video merge with error');
+          this.logger.error(err);
+          reject(new Error(`An error occurred: ${err.message}`));
+        })
+        .run();
+    });
+  }
 
   mp3Duration(mp3File: string) {
     // Use ffprobe to get the duration of the MP3 audio
@@ -562,6 +712,68 @@ export class FfmpegService {
     }
 
     return totalDuration;
+  }
+
+  async prepareDrawtextFilterText(
+    bodyCopy: IBodyCopyDrawText,
+    referenceFilePath: string,
+  ): Promise<{
+    textFile: string;
+    lineCount: number;
+    fontSize: number;
+  }> {
+    const TITLE_FONT_SIZE = 120;
+    const SUBTITLE_FONT_SIZE = 50;
+    const TITLE_LINE_WORD_COUNT = 5;
+    const TITLE_LINE_MAX_CHAR_COUNT = 25;
+    const SUBTITLE_LINE_WORD_COUNT = 10;
+    const SUBTITLE_LINE_MAX_CHAR_COUNT = 40;
+
+    //   Split bodyCopy text into lines
+    const words = bodyCopy.text.split(' ');
+    const lines = [];
+    let singleLine = [];
+    const maxSingleLineLength =
+      bodyCopy.type === 'title'
+        ? TITLE_LINE_MAX_CHAR_COUNT
+        : SUBTITLE_LINE_MAX_CHAR_COUNT;
+    let lineWordCount = 0;
+
+    if (bodyCopy.text.length <= maxSingleLineLength) {
+      lines.push(bodyCopy.text);
+    } else {
+      for (let i = 0; i < words.length; i++) {
+        if (
+          singleLine.join(' ').length + words[i].length <=
+          maxSingleLineLength
+        ) {
+          singleLine.push(words[i]);
+        } else {
+          lines.push(singleLine.join(' '));
+          singleLine = [words[i]];
+        }
+
+        // Check for the last word
+        if (i === words.length - 1) {
+          lines.push(singleLine.join(' '));
+        }
+      }
+    }
+
+    const filePath = this.fs.getFullPathFromFilename(
+      referenceFilePath,
+      'text-files',
+      'txt',
+    );
+
+    await this.fs.createFile(filePath, lines.join('\n'));
+
+    return {
+      textFile: filePath,
+      lineCount: lines.length,
+      fontSize:
+        bodyCopy.type === 'title' ? TITLE_FONT_SIZE : SUBTITLE_FONT_SIZE,
+    };
   }
 
   async trimVideo(

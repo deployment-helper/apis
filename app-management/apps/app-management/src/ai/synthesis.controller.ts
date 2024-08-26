@@ -9,10 +9,18 @@ export class SynthesisController {
 
   @Post()
   async synthesize(
-    @Body() body: { text: string[]; audioLanguage?: string; merge?: boolean },
+    @Body()
+    body: {
+      text: string[];
+      audioLanguage?: string;
+      voiceCode?: string;
+      merge?: boolean;
+    },
   ) {
     return this.synthesisService.synthesize(
       body.text,
+      undefined,
+      body.voiceCode,
       body.audioLanguage,
       body.merge,
     );

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TSlideInfo } from './types';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
+import { IBodyCopyDrawText } from '@app/shared/types';
 
 @Injectable()
 export class AudioVideoMerger {
@@ -48,11 +49,24 @@ export class AudioVideoMerger {
       // );
       this.logger.log('Start ffmpeg');
       try {
-        await this.ffmpeg.mergeMp3AndImage(
-          sceneAudio.file,
-          sceneInfo.file,
-          videoPath,
-        );
+        if (sceneInfo.layout === 'layout2') {
+          await this.layout2(sceneAudio.file, sceneInfo.file, videoPath);
+        } else if (sceneInfo.layout === 'layout4') {
+          await this.layout4(sceneAudio.file, sceneInfo.file, videoPath);
+        } else if (sceneInfo.layout === 'layout5') {
+          await this.layout5(sceneAudio.file, sceneInfo.file, videoPath, {
+            text: sceneInfo.meta.title,
+            type: 'title',
+          });
+        } else if (sceneInfo.layout === 'layout6') {
+          await this.layout6(sceneAudio.file, sceneInfo.file, videoPath, {
+            text: sceneInfo.meta.title,
+            type: 'title',
+          });
+        } else {
+          this.logger.error(`Layout not found ${sceneInfo.layout}`);
+        }
+
         // this.logger.log('Add caption to video');
         // TODO: caption is not synced and not working for some languages like Hindi.
         //  disabling it for now
@@ -98,6 +112,36 @@ export class AudioVideoMerger {
       mp3FilePath,
       videoFilePath,
       outputFilePath,
+    );
+  }
+
+  // Image + Title layout
+  async layout5(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+    bodyCopy: IBodyCopyDrawText,
+  ) {
+    await this.ffmpeg.mergeMp3AndImage(
+      mp3FilePath,
+      videoFilePath,
+      outputFilePath,
+      bodyCopy,
+    );
+  }
+
+  // Video + Title layout
+  async layout6(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+    bodyCopy: IBodyCopyDrawText,
+  ) {
+    await this.ffmpeg.mergeMp3AndVideo(
+      mp3FilePath,
+      videoFilePath,
+      outputFilePath,
+      bodyCopy,
     );
   }
 }

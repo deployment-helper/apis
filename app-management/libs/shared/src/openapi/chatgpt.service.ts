@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OpenAI } from 'openai';
 import { ConfigService } from '@nestjs/config';
 import { ELanguage } from '@app/shared/types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class ChatgptService {
@@ -25,6 +27,13 @@ export class ChatgptService {
     return await this.sentPrompt(prompt);
   }
 
+  async generateScenesScript(
+    filePath: string,
+  ): Promise<string> {
+    const prompt = fs.readFileSync("prompt.txt");
+    return await this.sentPromptWithFile(prompt.toString(), filePath);
+  }
+
   async sentPrompt(text: string): Promise<string> {
     this.logger.log(`Sending prompt to OpenAI: ${text}`);
     const completion = await this.openapi.chat.completions.create({
@@ -40,4 +49,42 @@ export class ChatgptService {
 
     return completion.choices[0].message.content;
   }
+
+  async sentPromptWithFile(text: string, filePath: string): Promise<string> {
+    this.logger.log(`Sending prompt with File ${filePath} to OpenAI: ${text}`);
+    this.uploadFile(filePath);
+    const completion = await this.openapi.chat.completions.create({
+      // model: 'gpt-3.5-turbo',
+      model: 'gpt-4-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: text,
+        },
+      ],
+    });
+
+    let response = "";
+    for(let i=0; i<completion.choices.length; i++){
+      let choice = completion.choices[i];
+      response += choice.message.content;
+    }
+
+    return response;
+  }
+
+  async uploadFile(filePath: string): Promise<void>{
+    const fileStream = fs.createReadStream(filePath);
+
+    try {
+      const response = await this.openapi.files.create({
+        purpose: 'fine-tune', // Adjust the purpose based on your use case
+        file: fileStream,
+      });
+      console.log('File uploaded:', response);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  }
+
 }
