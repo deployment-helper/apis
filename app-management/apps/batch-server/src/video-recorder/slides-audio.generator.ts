@@ -5,6 +5,7 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { SynthesisService } from '@app/shared/gcp/synthesis.service';
 import { IGenerateVideoDto } from '../types';
+import { DEFAULT_MP3_SPEAKING_RATE } from '@app/shared/constants';
 
 /**
  * This file create a arrary of MP3 info from S3 file
@@ -63,8 +64,10 @@ export class SlidesAudioGenerator {
           description,
           data.videoId,
           slide.meta.name,
+          slide.meta?.defaultMp3SpeakingRate || DEFAULT_MP3_SPEAKING_RATE,
           slide.meta.language || 'en-US',
           slide.meta.voiceCode,
+          slide.meta?.postFixSilence,
         );
         audioFiles.push({
           file: audioFilePath,
@@ -110,14 +113,18 @@ export class SlidesAudioGenerator {
     text: string,
     sceneId: string,
     name: string,
-    language = 'en-US',
+    speakingRate: number,
+    language: string,
     voiceCode?: string,
+    postFixSilence?: string,
   ) {
     const synthesisService = new SynthesisService();
     const audio = await synthesisService.synthesize(
       [text],
-      language,
+      speakingRate,
       voiceCode,
+      language,
+      true,
     );
     const filename = `${sceneId}/mp3-files/${name}.mp3`;
     const audioFilePath = await this.fs.createFile(
@@ -125,6 +132,27 @@ export class SlidesAudioGenerator {
       audio[0].data,
       true,
     );
+
+    if (postFixSilence) {
+      this.logger.log(`Postfix silence ${postFixSilence}`);
+      const s3Filepath = this.fs.getFullPathFromFilename(
+        audioFilePath,
+        'mp3-files',
+        '-s3.mp3',
+      );
+      const silenceMp3 = await this.s3.getFileAndSave(
+        postFixSilence,
+        s3Filepath,
+      );
+      const outputFile = this.fs.getFullPathFromFilename(
+        audioFilePath,
+        'mp3-files',
+        '-silence.mp3',
+      );
+      await this.ffmpeg.concat([audioFilePath, silenceMp3], outputFile);
+      return outputFile;
+    }
+
     return audioFilePath;
   }
 

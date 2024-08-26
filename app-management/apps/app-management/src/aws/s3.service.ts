@@ -167,7 +167,7 @@ export class S3Service {
     return `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/${key}`;
   }
 
-  async getFileAndSave(key: string) {
+  async getFileAndSave(key: string, filePath?: string) {
     const _key = this.getKeyFromPublicUrl(key);
     const body = await this.get(_key);
 
@@ -176,8 +176,8 @@ export class S3Service {
       chunks.push(chunk);
     }
     const buffer = Buffer.concat(chunks);
-    const filePath = await this.fs.createFile(_key, buffer);
+    const downloadedFile = await this.fs.createFile(filePath || _key, buffer);
 
-    return filePath;
+    return downloadedFile;
   }
 }

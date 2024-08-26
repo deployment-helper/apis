@@ -4,6 +4,8 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@apps/app-management/aws/s3.service';
 import { IScene } from '@app/shared/types';
+import { IGenerateVideoDto } from '../types';
+import { IProject } from '@apps/app-management/types';
 
 export class ApiRunner implements IApiRunner {
   logger: Logger = new Logger(ApiRunner.name);
@@ -14,13 +16,17 @@ export class ApiRunner implements IApiRunner {
     private readonly s3: S3Service,
   ) {}
 
-  async start<T>(url: string, data: any): Promise<T> {
+  async start<T>(url: string, data: IGenerateVideoDto): Promise<T> {
     this.logger.log('Start API Runner');
     this.logger.log('URL: ', url);
     // Get video scenes
     // Download and save scenes image to local and return the paths and meta-data that required for audio and video generation
     const videoId = data.videoId;
     const video = await this.fireStore.get<any>('video', videoId);
+    const project = await this.fireStore.get<IProject>(
+      'project',
+      video.projectId,
+    );
     const docs = await this.fireStore.list<any>(`video/${videoId}/scenes`);
 
     // create image directory
@@ -48,8 +54,10 @@ export class ApiRunner implements IApiRunner {
           name: scene.id,
           language: video.audioLanguage,
           voiceCode: video.voiceCode,
+          projectId: video.projectId,
           backgroundMusic: video.backgroundMusic,
           title: scene.content[title]?.value ? scene.content[title].value : '',
+          ...project,
         },
       });
     }
