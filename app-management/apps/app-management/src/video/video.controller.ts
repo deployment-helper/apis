@@ -89,13 +89,21 @@ export class VideoController {
     @Query('addAfter') addAfter: boolean,
     @Body() data: any,
   ) {
-    return this.fireStore.updateScene(
-      `video/${id}/scenes`,
-      sceneId,
-      data,
-      sceneArrayIndex,
-      addAfter,
-    );
+    if (data?.scenes && Array.isArray(data.scenes)) {
+      return this.fireStore.updateScene(
+        `video/${id}/scenes`,
+        sceneId,
+        data?.scenes,
+      );
+    } else {
+      return this.fireStore.updateScene(
+        `video/${id}/scenes`,
+        sceneId,
+        data,
+        sceneArrayIndex,
+        addAfter,
+      );
+    }
   }
 
   // Delete a scene

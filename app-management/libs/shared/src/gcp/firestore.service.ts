@@ -67,7 +67,7 @@ export class FirestoreService {
   async updateScene(
     collection: string,
     sceneDocId: string,
-    data: any,
+    data: any | Array<any>,
     sceneArrayIndex?: string,
     addAfter?: boolean,
   ) {
@@ -94,6 +94,14 @@ export class FirestoreService {
         ...data,
         updatedAt: new Date(),
       };
+    } else if (Array.isArray(data)) {
+      data.forEach((scene) => {
+        scenes.push({
+          ...scene,
+          updatedAt: new Date(),
+          createdAt: new Date(),
+        });
+      });
     } else {
       scenes.push({
         ...data,
@@ -102,7 +110,7 @@ export class FirestoreService {
       });
     }
 
-    return this.update(collection, sceneDocId, { scenes });
+    return await this.update(collection, sceneDocId, { scenes });
   }
 
   async changeScenePosition(
