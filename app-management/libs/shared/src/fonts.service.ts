@@ -25,7 +25,7 @@ export const languageFontMap: Record<ELanguage, string> = {
   [ELanguage['French (France)']]: 'Roboto-Regular.ttf',
   [ELanguage['German (Germany)']]: 'Roboto-Regular.ttf',
   [ELanguage['Greek (Greece)']]: 'Roboto-Regular.ttf',
-  [ELanguage['Gujarati (India)']]: 'NotoSansGujarati-Regular.ttf\n',
+  [ELanguage['Gujarati (India)']]: 'NotoSansGujarati-Regular.ttf',
   [ELanguage['Hebrew (Israel)']]: 'Rubik-Regular.ttf',
   [ELanguage['Hindi (India)']]: 'NotoSansDevanagari-Regular.ttf',
   [ELanguage['Hungarian (Hungary)']]: 'Roboto-Regular.ttf',
