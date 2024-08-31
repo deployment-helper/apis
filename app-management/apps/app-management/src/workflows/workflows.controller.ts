@@ -52,7 +52,6 @@ export class WorkflowsController {
     @Req() req: any,
   ) {
 
-    //console.log("data .................... +" + JSON.stringify(data) );
     //yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" https://www.youtube.com/watch\?v\=HnQcJ03oEUo
     const stdout = execSync('yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" ' + data.videoURL);
 
@@ -107,15 +106,14 @@ export class WorkflowsController {
           sceneDescriptions[i] = scriptData[key];
       }
     }
-    //return { title: videoTitle, sceneDescriptions: sceneDescriptions};
 
     // get the Project
     const project = await this.fireStore.get('project', data.projectID);
 
     // Create the video
     const videoData = {
-      "projectId": project.id, //"8OA2kJwJS3J7AosAL7Ye",
-      "projectName": project.projectName, //"KidStories",
+      "projectId": project.id,
+      "projectName": project.projectName,
       "name": videoTitle,
       "description": videoTitle,
       "backgroundMusic": "https://vm-presentations.s3.ap-south-1.amazonaws.com/public/background-music/deep-meditation-192828.mp3",
@@ -138,7 +136,6 @@ export class WorkflowsController {
     const updatedVideo = this.fireStore.update('video', video.id, { scenesId: scenes.id });
 
     sceneDescriptions = sceneDescriptions.filter(function(item){ return item != null})
-    console.log("in workflows controller");
     for(let i=0;i<sceneDescriptions.length;i++){
       let image = project?.assets[Math.ceil(Math.random()*1000)%project?.assets?.length];
       if(sceneDescriptions[i]){
@@ -151,42 +148,18 @@ export class WorkflowsController {
               "image": {
                 "type": "image",
                 "name": "image",
-                "value": image,//"https://via.placeholder.com/150",
+                "value": image,,
                 "placeholder": "Image"
               }
             },
             "description": sceneDescriptions[i],
-            "image": image,//"https://via.placeholder.com/150",
+            "image": image,,
             "layoutId": "layout2"
           }
-          //sceneArrayIndex,
-          //addAfter,
         );
       }
     }
     return video;
-    //return sceneDescriptions.filter(function(item){ return item != null});
-
-    //return this.fireStore.update('video', video.id, { scenesId: scenes.id });
-
-    //
-    //Create Scenes
-    //{
-    //"id": "16c09b6c-30b2-467a-aa87-4f25847f14d4",
-    //"content": {
-    //    "image": {
-    //        "type": "image",
-    //        "name": "image",
-    //        "value": "https://via.placeholder.com/150",
-    //        "placeholder": "Image"
-    //    }
-    //},
-    //"description": "Desc",
-    //"layoutId": "layout2"
-    //}
-    //this.fireStore.add(`video/${id}/scenes`, data);
-    //return this.chatgptService.generateScenesScript(cleanedFilePath);
-    //return {content: fs.readFileSync(cleanedFilePath).toString()};
   }
 
   @Get("list")
