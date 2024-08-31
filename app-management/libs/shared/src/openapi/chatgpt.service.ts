@@ -29,8 +29,9 @@ export class ChatgptService {
 
   async generateScenesScript(
     filePath: string,
+    promptFilePath: string,
   ): Promise<string> {
-    const prompt = fs.readFileSync("prompt.txt");
+    const prompt = fs.readFileSync(promptFilePath);
     return await this.sentPromptWithFile(prompt.toString(), filePath);
   }
 
@@ -52,7 +53,8 @@ export class ChatgptService {
 
   async sentPromptWithFile(text: string, filePath: string): Promise<string> {
     this.logger.log(`Sending prompt with File ${filePath} to OpenAI: ${text}`);
-    this.uploadFile(filePath);
+    //const uploadResponse = await this.uploadFile(filePath);
+    const subtitle = fs.readFileSync(filePath);
     const completion = await this.openapi.chat.completions.create({
       // model: 'gpt-3.5-turbo',
       model: 'gpt-4-turbo',
@@ -60,6 +62,10 @@ export class ChatgptService {
         {
           role: 'system',
           content: text,
+        },
+        {
+          role: 'user',
+          content:  `use this as input data ${subtitle}`,
         },
       ],
     });
