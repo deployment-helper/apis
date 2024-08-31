@@ -116,10 +116,10 @@ export class WorkflowsController {
       "projectName": project.projectName,
       "name": videoTitle,
       "description": videoTitle,
-      "backgroundMusic": "https://vm-presentations.s3.ap-south-1.amazonaws.com/public/background-music/deep-meditation-192828.mp3",
-      "overlay": "https://vm-presentations.s3.ap-south-1.amazonaws.com/public/7aebc7e3-86a8-4e2b-9994-634e7aeda3f2.mov",
-      "audioLanguage": "en-US",
-      "voiceCode": "en-US-Journey-F",
+      "backgroundMusic": project.defaultBackgroundMusic, //"https://vm-presentations.s3.ap-south-1.amazonaws.com/public/background-music/deep-meditation-192828.mp3",
+      "overlay": project.defaultOverlay, //"https://vm-presentations.s3.ap-south-1.amazonaws.com/public/7aebc7e3-86a8-4e2b-9994-634e7aeda3f2.mov",
+      "audioLanguage": project.defaultLanguage, //"en-US",
+      "voiceCode": project.defaultVoice, //"en-US-Journey-F",
     }
 
     const video = await this.fireStore.add('video', {
@@ -148,12 +148,12 @@ export class WorkflowsController {
               "image": {
                 "type": "image",
                 "name": "image",
-                "value": image,,
+                "value": image,
                 "placeholder": "Image"
               }
             },
             "description": sceneDescriptions[i],
-            "image": image,,
+            "image": image,
             "layoutId": "layout2"
           }
         );
