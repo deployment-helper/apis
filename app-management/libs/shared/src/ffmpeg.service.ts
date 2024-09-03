@@ -117,6 +117,7 @@ export class FfmpegService {
       _ffmpeg
         .input(mp3FilePath)
         .input(videoFilePath)
+        .inputOption('-stream_loop -1')
         .videoCodec('libx264')
         .audioCodec('aac');
 
@@ -217,10 +218,13 @@ export class FfmpegService {
         fontfile: fontFile,
         fontsize: `${text.fontSize}`,
         text_align: 'C',
-        fontcolor: 'white',
+        fontcolor: 'GhostWhite',
         x: '(w-text_w)/2', // Center the text horizontally
         y: `(h-text_h)/2`, // Center the text vertically
         enable: `between(t,0,${duration})`,
+        shadowcolor: 'black',
+        shadowx: 2,
+        shadowy: 2,
       },
       outputs: output,
     };
