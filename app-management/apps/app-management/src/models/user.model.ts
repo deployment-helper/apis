@@ -7,18 +7,18 @@ import {
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { USER_TABLE_NAME } from '@apps/app-management/constants';
 
-export class ProjectModel implements IProject {
-  projectId: string;
+export class ProjectModel implements Partial<IProject> {
+  id: string;
   projectName: string;
 
   constructor(name: string) {
     this.projectName = name;
-    this.projectId = uuid();
+    this.id = uuid();
   }
 
   toJson() {
     return {
-      projectId: this.projectId,
+      projectId: this.id,
       projectName: this.projectName,
     };
   }
