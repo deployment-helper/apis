@@ -180,7 +180,9 @@ export class VideoWorker implements IWorker {
         outputVideoPath = overlayVideoPath;
       }
 
-      const outputVideoDur = await this.ffmpeg.mp3Duration(outputVideoPath);
+      const outputVideoDur = await this.ffmpeg.mp3DurationFormatted(
+        outputVideoPath,
+      );
 
       this.logger.debug('Prepared video duration', outputVideoDur);
       this.logger.log('End merge all videos');

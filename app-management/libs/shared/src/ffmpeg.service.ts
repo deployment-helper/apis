@@ -664,6 +664,7 @@ export class FfmpegService {
         });
     });
   }
+
   async concat(inputFiles: string[], outputFilePath: string) {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -707,6 +708,13 @@ export class FfmpegService {
     });
   }
 
+  async mp3DurationFormatted(mp3File: string) {
+    const duration = await this.mp3Duration(mp3File);
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
   async getTotalDuration(filePaths: string[]): Promise<number> {
     let totalDuration = 0;
 
@@ -741,7 +749,7 @@ export class FfmpegService {
       bodyCopy.type === 'title'
         ? TITLE_LINE_MAX_CHAR_COUNT
         : SUBTITLE_LINE_MAX_CHAR_COUNT;
-    let lineWordCount = 0;
+    const lineWordCount = 0;
 
     if (bodyCopy.text.length <= maxSingleLineLength) {
       lines.push(bodyCopy.text);

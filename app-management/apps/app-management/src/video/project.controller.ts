@@ -10,13 +10,19 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
-import { filter } from 'rxjs';
 
 @Controller('projects')
 @UseGuards(AuthGuard)
 export class ProjectController {
   constructor(private readonly firestoreService: FirestoreService) {}
-  @Post()
+
+  @Get('/fix')
+  async fixCollection() {
+    await this.firestoreService.fixCreatedAtAndUpdatedAt('project');
+    return 'done';
+  }
+
+  @Post('/')
   // project_name: string
   createProject(
     @Body() data: { projectName: string; projectDesc: string },
@@ -28,7 +34,7 @@ export class ProjectController {
     });
   }
 
-  @Get()
+  @Get('/')
   async getProjects(@Req() req: any) {
     return this.firestoreService.listByFields('project', [
       { field: 'userId', value: req.user.sub },

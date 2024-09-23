@@ -25,6 +25,12 @@ export class VideoController {
     private readonly gemini: GeminiService,
   ) {}
 
+  @Get('/fix')
+  async fixCollection() {
+    await this.fireStore.fixCreatedAtAndUpdatedAt('video');
+    return 'done';
+  }
+
   // create a video
   @Post('/')
   async createVideo(@Body() data: any, @Req() req: any) {

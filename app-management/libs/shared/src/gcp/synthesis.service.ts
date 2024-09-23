@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 
 @Injectable()
 export class SynthesisService {
   private readonly client: TextToSpeechClient;
-  private readonly logger = new Logger(SynthesisService.name);
+
   constructor() {
     this.client = new TextToSpeechClient();
   }
@@ -51,7 +51,6 @@ export class SynthesisService {
         pitch: 0,
       },
     };
-    this.logger.log(request);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const [response] = await this.client.synthesizeSpeech(request);
