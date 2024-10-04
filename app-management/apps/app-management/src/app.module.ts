@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -13,10 +13,33 @@ import { OpenapiModule } from './openapi/openapi.module';
 import { WorkflowsController } from './workflows/workflows.controller';
 import { ChatgptService } from '@app/shared/openapi/chatgpt.service';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
+import { BatchController } from './batch.controller';
+import { BullModule } from '@nestjs/bull';
+import {
+  REDIS_QUEUE_VIDEO_GENERATOR,
+  REDIS_QUEUE_VIDEO_RECORDER,
+} from '@apps/batch-server/constants';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        redis: {
+          host: config.getOrThrow('REDIS_HOST'),
+          port: config.getOrThrow('REDIS_PORT'),
+          password: config.getOrThrow('REDIS_PASS'),
+        },
+      }),
+    }),
+    BullModule.registerQueue({
+      name: REDIS_QUEUE_VIDEO_RECORDER,
+    }),
+    BullModule.registerQueue({
+      name: REDIS_QUEUE_VIDEO_GENERATOR,
+    }),
     AuthModule,
     YoutubeModule,
     SlidesModule,
@@ -25,7 +48,7 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
     AiModule,
     OpenapiModule,
   ],
-  controllers: [AppController, WorkflowsController],
+  controllers: [AppController, WorkflowsController, BatchController],
   providers: [AppService, ChatgptService, FirestoreService],
 })
 export class AppModule {}
