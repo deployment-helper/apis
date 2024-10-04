@@ -21,6 +21,9 @@
       "@apps/app-management/*": [
         "apps/app-management/src/*"
       ],
+      "@apps/batch-server/*": [
+        "apps/batch-server/src/*"
+      ],
       "@app/shared": [
         "libs/shared/src"
       ],
