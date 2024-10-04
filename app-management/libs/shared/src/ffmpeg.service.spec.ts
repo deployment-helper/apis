@@ -52,13 +52,13 @@ describe('FfmpegService', () => {
     const expectedOutput = {
       textFile: 'test_path',
       lineCount: 1,
-      fontSize: 120,
+      fontSize: 100,
     };
 
     const expectedOutput1 = {
       textFile: 'test_path',
       lineCount: 6,
-      fontSize: 120,
+      fontSize: 100,
     };
 
     expect(output).toEqual(expectedOutput);
