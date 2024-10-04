@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Firestore, Query } from '@google-cloud/firestore';
+import { Firestore, Query, Timestamp } from '@google-cloud/firestore';
 
 @Injectable()
 export class FirestoreService {
   private readonly db: Firestore;
 
   constructor() {
+    // TODO: Add the project id to the config
     this.db = new Firestore({
       projectId: 'chat-gpt-videos',
     });
@@ -13,7 +14,12 @@ export class FirestoreService {
 
   async add(collection: string, data: any) {
     const docRef = this.db.collection(collection).doc();
-    await docRef.set({ ...data, createdAt: new Date(), updatedAt: new Date() });
+    await docRef.set({
+      ...data,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+
     // read value from this docRef
     const doc = await docRef.get();
     return { ...doc.data(), id: docRef.id };
@@ -21,7 +27,16 @@ export class FirestoreService {
 
   async update(collection: string, id: string, data: any) {
     const docRef = this.db.collection(collection).doc(id);
-    await docRef.update({ ...data, updatedAt: new Date() }, { merge: true });
+    const keysToDelete = ['id', 'createdAt']; // Add the keys you want to delete
+
+    keysToDelete.forEach((key) => {
+      delete data[key];
+    });
+
+    await docRef.update(
+      { ...data, updatedAt: Timestamp.now() },
+      { merge: true },
+    );
     // read value from this docRef
     const doc = await docRef.get();
     return { ...doc.data(), id: docRef.id };
@@ -67,10 +82,16 @@ export class FirestoreService {
   async updateScene(
     collection: string,
     sceneDocId: string,
-    data: any,
+    data: any | Array<any>,
     sceneArrayIndex?: string,
     addAfter?: boolean,
   ) {
+    const keysToDelete = ['id', 'createdAt']; // Add the keys you want to delete
+
+    keysToDelete.forEach((key) => {
+      delete data[key];
+    });
+
     const doc = await this.get(collection, sceneDocId);
     if (!doc) {
       throw new Error('Document not found');
@@ -85,24 +106,32 @@ export class FirestoreService {
     if (addAfter && sceneArrayIndex) {
       scenes.splice(Number(sceneArrayIndex) + 1, 0, {
         ...data,
-        updatedAt: new Date(),
-        createdAt: new Date(),
+        updatedAt: Timestamp.now(),
+        createdAt: Timestamp.now(),
       });
     } else if (sceneArrayIndex) {
       scenes[sceneArrayIndex] = {
         ...scenes[sceneArrayIndex],
         ...data,
-        updatedAt: new Date(),
+        updatedAt: Timestamp.now(),
       };
+    } else if (Array.isArray(data)) {
+      data.forEach((scene) => {
+        scenes.push({
+          ...scene,
+          updatedAt: Timestamp.now(),
+          createdAt: Timestamp.now(),
+        });
+      });
     } else {
       scenes.push({
         ...data,
-        updatedAt: new Date(),
-        createdAt: new Date(),
+        updatedAt: Timestamp.now(),
+        createdAt: Timestamp.now(),
       });
     }
 
-    return this.update(collection, sceneDocId, { scenes });
+    return await this.update(collection, sceneDocId, { scenes });
   }
 
   async changeScenePosition(
@@ -143,5 +172,26 @@ export class FirestoreService {
     scenes.splice(sceneArrayIndex, 1);
 
     return this.update(collection, sceneDocId, { scenes });
+  }
+
+  async fixCreatedAtAndUpdatedAt(collection: string) {
+    const snapshot = await this.db.collection(collection).get();
+
+    snapshot.forEach(async (doc) => {
+      const data = doc.data();
+      // Check if `createdAt` is stored as an object
+      if (data.createdAt && data.createdAt._seconds) {
+        // Convert `_seconds` and `_nanoseconds` to Firestore Timestamp
+        const createdAtTimestamp = new Timestamp(
+          data.createdAt._seconds,
+          data.createdAt._nanoseconds,
+        );
+
+        // Update the document with the new `createdAt` as a Firestore Timestamp
+        await this.db.collection(collection).doc(doc.id).update({
+          createdAt: createdAtTimestamp,
+        });
+      }
+    });
   }
 }

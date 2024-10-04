@@ -6,7 +6,6 @@ import { BatchServerController } from './batch-server.controller';
 import { BatchServerService } from './batch-server.service';
 import { AppService } from '@apps/app-management/app.service';
 import { VideoRecorderModule } from './video-recorder/video-recorder.module';
-import { Mp3GeneratorModule } from './mp3-generator/mp3-generator.module';
 
 @Module({
   imports: [
@@ -23,7 +22,6 @@ import { Mp3GeneratorModule } from './mp3-generator/mp3-generator.module';
       }),
     }),
     VideoRecorderModule,
-    Mp3GeneratorModule,
   ],
   controllers: [BatchServerController],
   providers: [AppService, BatchServerService],

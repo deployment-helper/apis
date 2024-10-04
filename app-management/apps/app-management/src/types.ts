@@ -11,7 +11,7 @@ export enum ProjectTypes {
 }
 
 export interface IProject {
-  projectId: string;
+  id: string;
   projectName: string;
   userId: string;
   assets: string[];

@@ -25,11 +25,30 @@ export class VideoController {
     private readonly gemini: GeminiService,
   ) {}
 
+  @Get('/fix')
+  async fixCollection() {
+    await this.fireStore.fixCreatedAtAndUpdatedAt('video');
+    return 'done';
+  }
+
   // create a video
   @Post('/')
   async createVideo(@Body() data: any, @Req() req: any) {
+    // convert properties to object
+    const obj = {};
+    if (data.properties) {
+      const pairs = data.properties.split('\n');
+
+      pairs.forEach((pair) => {
+        const [key, value] = pair.split('=');
+        obj[key] = value;
+      });
+      delete data.properties;
+    }
+
     const video = await this.fireStore.add('video', {
       ...data,
+      ...obj,
       isDeleted: false,
       userId: req.user.sub,
     });
@@ -89,13 +108,21 @@ export class VideoController {
     @Query('addAfter') addAfter: boolean,
     @Body() data: any,
   ) {
-    return this.fireStore.updateScene(
-      `video/${id}/scenes`,
-      sceneId,
-      data,
-      sceneArrayIndex,
-      addAfter,
-    );
+    if (data?.scenes && Array.isArray(data.scenes)) {
+      return this.fireStore.updateScene(
+        `video/${id}/scenes`,
+        sceneId,
+        data?.scenes,
+      );
+    } else {
+      return this.fireStore.updateScene(
+        `video/${id}/scenes`,
+        sceneId,
+        data,
+        sceneArrayIndex,
+        addAfter,
+      );
+    }
   }
 
   // Delete a scene

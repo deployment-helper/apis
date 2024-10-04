@@ -117,6 +117,7 @@ export class FfmpegService {
       _ffmpeg
         .input(mp3FilePath)
         .input(videoFilePath)
+        .inputOption('-stream_loop -1')
         .videoCodec('libx264')
         .audioCodec('aac');
 
@@ -217,10 +218,13 @@ export class FfmpegService {
         fontfile: fontFile,
         fontsize: `${text.fontSize}`,
         text_align: 'C',
-        fontcolor: 'white',
+        fontcolor: 'GhostWhite',
         x: '(w-text_w)/2', // Center the text horizontally
         y: `(h-text_h)/2`, // Center the text vertically
         enable: `between(t,0,${duration})`,
+        shadowcolor: 'black',
+        shadowx: 2,
+        shadowy: 2,
       },
       outputs: output,
     };
@@ -534,7 +538,7 @@ export class FfmpegService {
               inputs: 2,
               duration: 'first',
               dropout_transition: 3,
-              weights: '8 4',
+              weights: '8 5',
             },
             outputs: 'audio',
           },
@@ -660,6 +664,7 @@ export class FfmpegService {
         });
     });
   }
+
   async concat(inputFiles: string[], outputFilePath: string) {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -703,6 +708,13 @@ export class FfmpegService {
     });
   }
 
+  async mp3DurationFormatted(mp3File: string) {
+    const duration = await this.mp3Duration(mp3File);
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
   async getTotalDuration(filePaths: string[]): Promise<number> {
     let totalDuration = 0;
 
@@ -722,10 +734,10 @@ export class FfmpegService {
     lineCount: number;
     fontSize: number;
   }> {
-    const TITLE_FONT_SIZE = 120;
+    const TITLE_FONT_SIZE = 100;
     const SUBTITLE_FONT_SIZE = 50;
     const TITLE_LINE_WORD_COUNT = 5;
-    const TITLE_LINE_MAX_CHAR_COUNT = 25;
+    const TITLE_LINE_MAX_CHAR_COUNT = 22;
     const SUBTITLE_LINE_WORD_COUNT = 10;
     const SUBTITLE_LINE_MAX_CHAR_COUNT = 40;
 
@@ -737,7 +749,7 @@ export class FfmpegService {
       bodyCopy.type === 'title'
         ? TITLE_LINE_MAX_CHAR_COUNT
         : SUBTITLE_LINE_MAX_CHAR_COUNT;
-    let lineWordCount = 0;
+    const lineWordCount = 0;
 
     if (bodyCopy.text.length <= maxSingleLineLength) {
       lines.push(bodyCopy.text);
@@ -749,13 +761,13 @@ export class FfmpegService {
         ) {
           singleLine.push(words[i]);
         } else {
-          lines.push(singleLine.join(' '));
+          lines.push(singleLine.join(' ').toUpperCase());
           singleLine = [words[i]];
         }
 
         // Check for the last word
         if (i === words.length - 1) {
-          lines.push(singleLine.join(' '));
+          lines.push(singleLine.join(' ').toUpperCase());
         }
       }
     }
