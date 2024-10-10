@@ -6,9 +6,11 @@ import { ConfigService } from '@nestjs/config';
 export class SharedService {
   public readonly logger = new Logger(SharedService.name);
   serviceKey: string;
+
   constructor(private readonly config: ConfigService) {
     this.serviceKey = config.getOrThrow('SERVICE_KEY');
   }
+
   getServerName(urlStr: string) {
     const url = new URL(urlStr);
     const serverName = ServerNames[url.host];

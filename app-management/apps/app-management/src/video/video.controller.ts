@@ -65,7 +65,9 @@ export class VideoController {
   // Delete a video
   @Delete('/:id')
   deleteVideo(@Param('id') id: string) {
+    // TODO: add deleted at time to the video
     return this.fireStore.update('video', id, { isDeleted: true });
+    //   TODO: remove S3 assets related to this video.
   }
 
   // Get all videos

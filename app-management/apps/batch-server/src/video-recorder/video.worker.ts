@@ -7,7 +7,7 @@ import { AudioVideoMerger } from './audio-video.merger';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { IGenerateVideoDto, IPresentationDto } from '../types';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 import { ConfigService } from '@nestjs/config';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';

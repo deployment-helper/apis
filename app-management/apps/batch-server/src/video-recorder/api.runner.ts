@@ -2,7 +2,7 @@ import { IApiRunner } from './types';
 import { Logger } from '@nestjs/common';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FsService } from '@app/shared/fs/fs.service';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { IScene } from '@app/shared/types';
 import { IGenerateVideoDto } from '../types';
 import { IProject } from '@apps/app-management/types';

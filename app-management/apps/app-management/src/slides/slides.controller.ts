@@ -15,11 +15,11 @@ import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import PresentationCreateDto, {
-  PresentationUpdateDto,
   IVideoMetaData,
+  PresentationUpdateDto,
 } from './slides.dto';
 import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { SnsService } from '@apps/app-management/aws/sns.service';
 import { S3_VIDEO_META_DATA_FILE_NAME } from '../constants';
 

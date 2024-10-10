@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { PublishCommand, SNSClient } from '@aws-sdk/client-sns';
 
+/**
+ * This service is not in use needs to be removed.
+ */
 @Injectable()
 export class SnsService {
   private readonly client: SNSClient;

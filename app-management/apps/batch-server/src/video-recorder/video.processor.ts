@@ -9,7 +9,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { IPresentationDto } from '../types';
 import { ConfigService } from '@nestjs/config';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 
 const RecorderConfig = {
