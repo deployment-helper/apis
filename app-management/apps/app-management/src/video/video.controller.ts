@@ -84,6 +84,7 @@ export class VideoController {
       project.assets,
       generatedVideoAssets,
     );
+    return video;
   }
 
   // Get all videos
