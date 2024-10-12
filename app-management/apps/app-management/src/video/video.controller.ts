@@ -16,7 +16,7 @@ import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { ELanguage, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
-import { SharedService } from '@app/shared';
+import { SharedService } from '@app/shared/shared.service';
 import { IProject } from '@apps/app-management/types';
 
 @Controller('videos')

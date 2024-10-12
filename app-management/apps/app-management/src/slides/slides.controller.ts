@@ -23,6 +23,10 @@ import { S3Service } from '@app/shared/aws/s3.service';
 import { SnsService } from '@apps/app-management/aws/sns.service';
 import { S3_VIDEO_META_DATA_FILE_NAME } from '../constants';
 
+/**
+ * @Depricated
+ * This controller is depricated and will be removed in future
+ */
 @Controller('slides')
 @UseGuards(AuthGuard)
 export class SlidesController {
