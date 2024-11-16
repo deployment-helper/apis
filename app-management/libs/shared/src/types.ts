@@ -82,6 +82,7 @@ export interface IVideo {
   updatedAt: string;
   userId: string;
   scenesId: string;
+  projectId: string;
   generatedVideoInfo?: IGeneratedVideoInfo[];
 }
 
@@ -104,6 +105,7 @@ export interface IScenes {
 
 export type T_FOLDER_GROUPS = (typeof FOLDER_GROUPS)[number];
 export type BodyCopyTypes = 'title' | 'subtitle';
+
 export interface IBodyCopyDrawText {
   text: string;
   type: BodyCopyTypes;

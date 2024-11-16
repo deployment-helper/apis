@@ -3,7 +3,7 @@ import { Page } from 'puppeteer';
 import { SharedService } from '@app/shared';
 import { Logger } from '@nestjs/common';
 import { FsService } from '@app/shared/fs/fs.service';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { ImageService } from '@app/shared/image.service';
 
 /**

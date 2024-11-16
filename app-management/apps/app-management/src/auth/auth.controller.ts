@@ -11,7 +11,7 @@ import { AuthService } from './auth.service';
 import { HttpExceptionFilter } from '@apps/app-management/http-exception.filter';
 import { AuthGuard } from './auth.guard';
 import { UserEntity } from '@apps/app-management/aws/user.entity';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
