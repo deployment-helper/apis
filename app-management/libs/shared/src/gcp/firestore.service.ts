@@ -86,7 +86,7 @@ export class FirestoreService {
     sceneArrayIndex?: string,
     addAfter?: boolean,
   ) {
-    const keysToDelete = ['id', 'createdAt']; // Add the keys you want to delete
+    const keysToDelete = ['createdAt']; // Add the keys you want to delete
 
     keysToDelete.forEach((key) => {
       delete data[key];
