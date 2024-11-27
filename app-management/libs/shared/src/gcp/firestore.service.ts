@@ -117,11 +117,22 @@ export class FirestoreService {
       };
     } else if (Array.isArray(data)) {
       data.forEach((scene) => {
-        scenes.push({
-          ...scene,
-          updatedAt: Timestamp.now(),
-          createdAt: Timestamp.now(),
-        });
+        // check if scene is already present
+        const index = scenes.findIndex((s) => s.id === scene.id);
+        // if index exists, update existing scene else add new scene
+
+        if (index !== -1) {
+          scenes[index] = {
+            ...scene,
+            updatedAt: Timestamp.now(),
+          };
+        } else {
+          scenes.push({
+            ...scene,
+            updatedAt: Timestamp.now(),
+            createdAt: Timestamp.now(),
+          });
+        }
       });
     } else {
       scenes.push({
