@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -66,6 +67,23 @@ export class S3Service {
     }
 
     return resp.Body;
+  }
+
+  async delete(key: string) {
+    const bucketKey = this.getKeyFromPublicUrl(key);
+    this.logger.debug('Deleting key: ' + bucketKey);
+    const command = new DeleteObjectCommand({
+      Bucket: this.s3Bucket,
+      Key: bucketKey,
+    });
+    await this.client.send(command);
+    return key;
+  }
+
+  deleteAll(keys: string[]) {
+    this.logger.debug('Deleting keys: ' + keys.join(', '));
+    const uniqueKeys = new Set(keys);
+    return Promise.all(Array.from(uniqueKeys).map((key) => this.delete(key)));
   }
 
   /**

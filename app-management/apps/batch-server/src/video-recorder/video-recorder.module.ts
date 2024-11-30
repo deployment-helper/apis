@@ -6,7 +6,7 @@ import {
   REDIS_QUEUE_VIDEO_RECORDER,
 } from '../constants';
 import { VideoProcessor } from './video.processor';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { VideoGeneratorProcessor } from './video-generator.processor';
 import { VideoWorker } from './video.worker';
 import { RunnerFactory } from './runner.factory';
@@ -18,6 +18,8 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { FontsService } from '@app/shared/fonts.service';
 import { ImageService } from '@app/shared/image.service';
 import { HttpModule } from '@nestjs/axios';
+import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
+import { DynamodbClientService } from '@apps/app-management/aws/dynamodb.service';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { HttpModule } from '@nestjs/axios';
     FfmpegService,
     FsService,
     FirestoreService,
+    DynamodbClientService,
+    PresentationEntity,
     FontsService,
     ImageService,
   ],

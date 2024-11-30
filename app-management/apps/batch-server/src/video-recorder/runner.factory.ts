@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ServerNames } from '@app/shared/types';
 import { SlidesRunner } from './slides.runner';
 import { SlidesAudioGenerator } from './slides-audio.generator';
-import { S3Service } from '@apps/app-management/aws/s3.service';
+import { S3Service } from '@app/shared/aws/s3.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { ImageService } from '@app/shared/image.service';

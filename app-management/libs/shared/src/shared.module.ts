@@ -8,6 +8,7 @@ import { FontsService } from './fonts.service';
 import { ImageService } from './image.service';
 import { ChatgptService } from './openapi/chatgpt.service';
 import { GeminiService } from './gcp/gemini.service';
+import { AwsModule } from './aws/aws.module';
 
 @Module({
   providers: [
@@ -27,6 +28,6 @@ import { GeminiService } from './gcp/gemini.service';
     ImageService,
     GeminiService,
   ],
-  imports: [GcpModule],
+  imports: [GcpModule, AwsModule],
 })
 export class SharedModule {}

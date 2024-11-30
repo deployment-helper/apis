@@ -16,6 +16,8 @@ import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { ELanguage, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
+import { SharedService } from '@app/shared/shared.service';
+import { IProject } from '@apps/app-management/types';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -23,6 +25,7 @@ export class VideoController {
   constructor(
     private readonly fireStore: FirestoreService,
     private readonly gemini: GeminiService,
+    private readonly sharedService: SharedService,
   ) {}
 
   @Get('/fix')
@@ -64,8 +67,24 @@ export class VideoController {
 
   // Delete a video
   @Delete('/:id')
-  deleteVideo(@Param('id') id: string) {
-    return this.fireStore.update('video', id, { isDeleted: true });
+  async deleteVideo(@Param('id') id: string) {
+    // TODO: add deleted at time to the video
+    await this.fireStore.update('video', id, { isDeleted: true });
+    const video = await this.fireStore.get<IVideo>('video', id);
+    const project = await this.fireStore.get<IProject>(
+      'project',
+      video.projectId,
+    );
+    const scenes = await this.fireStore.list<IScenes>(`video/${id}/scenes`);
+    const generatedVideoAssets = video?.generatedVideoInfo.map(
+      (_asset) => _asset.cloudFile,
+    );
+    await this.sharedService.deleteS3Assets(
+      scenes[0] || '',
+      project.assets,
+      generatedVideoAssets,
+    );
+    return video;
   }
 
   // Get all videos
