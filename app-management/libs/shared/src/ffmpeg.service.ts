@@ -26,7 +26,7 @@ export class FfmpegService {
     const mp3Seconds = await this.mp3Duration(mp3FilePath);
     this.logger.log(`MP3 File duration ${mp3Seconds}`);
     const _ffmpeg = ffmpeg();
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let output = 'output';
       _ffmpeg
         // Add the MP3 audio file
@@ -48,9 +48,14 @@ export class FfmpegService {
 
       if (bodyCopy) {
         output = 'bodyCopyOutput';
-        complexFilter.push(
-          this.filterDrawTextV2(bodyCopy, mp3Seconds, 'output', output),
+        const bodyCopyFiler = await this.filterDrawTextV2(
+          bodyCopy,
+          mp3Seconds,
+          'output',
+          output,
+          mp3FilePath,
         );
+        complexFilter.push(bodyCopyFiler);
       }
 
       _ffmpeg
@@ -202,6 +207,10 @@ export class FfmpegService {
     // referenceFilePath is used to create text file in same parent directory
     referenceFilePath?: string,
   ) {
+    if (!bodyCopy) {
+      return undefined;
+    }
+
     // TODO: font file should be loaded based on the language
     const fontFile = this.fontServ.getFontFilePath(ELanguage['English (US)']);
     const escapeText = this.escapeText(bodyCopy.text);
@@ -726,6 +735,7 @@ export class FfmpegService {
     return totalDuration;
   }
 
+  // Create a text file with the body copy text
   async prepareDrawtextFilterText(
     bodyCopy: IBodyCopyDrawText,
     referenceFilePath: string,
