@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
 import { rm, unlink, writeFile } from 'fs/promises';
 import { accessSync, existsSync, mkdirSync } from 'fs';
 import { T_FOLDER_GROUPS } from '@app/shared/types';
@@ -10,6 +10,7 @@ import { FOLDER_GROUPS } from '@app/shared/constants';
 export class FsService {
   private storageDir: string;
   private readonly logger = new Logger(FsService.name);
+
   constructor(private readonly config: ConfigService) {
     this.storageDir = this.config.getOrThrow('STORAGE_DIR');
   }
@@ -52,6 +53,7 @@ export class FsService {
     group: T_FOLDER_GROUPS,
     ext?: string,
   ) {
+    this.logger.log(`Getting full path for ${fileName}`);
     return fileName
       .split('/')
       .map((item) => {
