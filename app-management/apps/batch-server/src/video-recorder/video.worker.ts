@@ -147,7 +147,7 @@ export class VideoWorker implements IWorker {
         mergeAllVideoPath,
         totalDuration,
       );
-
+      // TODO: Add BG when BG music added to the video.
       const backgroundMusic = await this.s3.getFileAndSave(
         videoMeta.backgroundMusic,
       );
