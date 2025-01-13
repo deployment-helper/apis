@@ -33,7 +33,7 @@ export class SynthesisService {
       return [
         {
           type: 'base64',
-          data: Buffer.concat(audios.map((a) => a.data)).toString('base64'),
+          data: this.mergeWavFiles(audios.map((a) => a.data)),
         },
       ];
     }
@@ -42,6 +42,36 @@ export class SynthesisService {
       type: a.type,
       data: Buffer.from(a.data).toString('base64'),
     }));
+  }
+
+  private mergeWavFiles(audioBuffers: Uint8Array[]): string {
+    const headerSize = 44;
+    const dataBuffers = audioBuffers.map((buffer) =>
+      Buffer.from(buffer.slice(headerSize)),
+    );
+    const totalDataSize = dataBuffers.reduce(
+      (acc, buffer) => acc + buffer.length,
+      0,
+    );
+    const totalSize = totalDataSize + headerSize;
+
+    const mergedBuffer = Buffer.alloc(totalSize);
+
+    // Copy the header from the first file
+    Buffer.from(audioBuffers[0]).copy(mergedBuffer, 0, 0, headerSize);
+
+    // Update the file size in the header
+    mergedBuffer.writeUInt32LE(totalSize - 8, 4);
+    mergedBuffer.writeUInt32LE(totalDataSize, 40);
+
+    // Concatenate the data sections
+    let offset = headerSize;
+    dataBuffers.forEach((buffer) => {
+      buffer.copy(mergedBuffer, offset);
+      offset += buffer.length;
+    });
+
+    return mergedBuffer.toString('base64');
   }
 
   private async synthesizeText(
@@ -54,7 +84,7 @@ export class SynthesisService {
       input: { text },
       voice: { languageCode: audioLanguage, name: voiceCode },
       audioConfig: {
-        audioEncoding: 'MP3',
+        audioEncoding: 'LINEAR16',
         speakingRate: speakingRate,
         pitch: 0,
       },
