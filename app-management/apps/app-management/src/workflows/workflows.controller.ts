@@ -1,5 +1,6 @@
 import {
   Body,
+  Query,
   Controller,
   Get,
   Logger,
@@ -15,6 +16,7 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { IProject } from '@apps/app-management/types';
+import fetchImageLinks from '@app/shared/fetchImageLinks';
 
 function cleanSubtitles(lines: string[]): string[] {
   const cleanedLines: string[] = [];
@@ -180,6 +182,18 @@ export class WorkflowsController {
     }
     this.logger.log('Finished creating video.');
     return video;
+  }
+
+  @Get('image-links')
+  async getImageLinks(@Query('prompt') prompt: string): Promise<string[]> {
+    try {
+      const images = await fetchImageLinks(prompt);
+      console.log('Image Links:', images);
+      return images;
+    } catch (error) {
+      console.error('Error fetching image links:', error);
+      return [];
+    }
   }
 
   @Get('list')
