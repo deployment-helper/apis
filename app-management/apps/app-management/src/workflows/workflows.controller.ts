@@ -59,7 +59,7 @@ export class WorkflowsController {
     data: { videoURL: string; projectID: string },
     @Req() req: any,
   ) {
-    //yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" https://www.youtube.com/watch\?v\=HnQcJ03oEUo
+    //yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" HnQcJ03oEUo
     this.logger.log('Start creating video from YouTube video.');
     // TODO: clean this file after the process.
     const cmd = 'yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" ' + data.videoURL; 
@@ -123,7 +123,7 @@ export class WorkflowsController {
       'project',
       data.projectID,
     );
-console.log(project);
+    console.log(project);
     this.logger.log('Start creating video.');
     // Create the video
     const videoData = {
@@ -155,33 +155,32 @@ console.log(project);
     console.log("sceneDescriptions Length" + sceneDescriptions.length);
     for (let i = 0; i < sceneDescriptions.length; i++) {
       if (sceneDescriptions[i]) {
-        let images = await getAspectRatioImages(sceneDescriptions[i]);
-         console.log(i);
-         console.log(images);
-        // Use Promise.all to handle async operations inside the map function
+        let images = await getAspectRatioImages(sceneDescriptions[i].slice(0,70));
+        if(images.length == 0){
+          images = await getAspectRatioImages(sceneDescriptions[i].slice(35,105));
+        }
+        if(images.length == 0){
+          images = await getAspectRatioImages(sceneDescriptions[i].slice(0,35));
+        }
+        console.log(images);
         let image = images[0] || project?.assets[
           Math.ceil(Math.random() * 1000) % project?.assets?.length
         ];
-        
-        // TODO: update scenes once as every operation is a cost
-        // await this.fireStore.updateScene(
-        //   `video/${video.id}/scenes`,
-        //   scenes.id,
-          scenesData.push({
-            id: uuidv4(),
-            content: {
-              image: {
-                type: 'image',
-                name: 'image',
-                value: image,
-                placeholder: 'Image',
-              },
+      
+        scenesData.push({
+          id: uuidv4(),
+          content: {
+            image: {
+              type: 'image',
+              name: 'image',
+              value: image,
+              placeholder: 'Image',
             },
-            description: sceneDescriptions[i],
-            image: image,
-            layoutId: 'layout2',
-          });
-      //   );
+          },
+          description: sceneDescriptions[i],
+          image: image,
+          layoutId: 'layout2',
+        });
        }
     }
 
@@ -217,4 +216,3 @@ console.log(project);
     return { list: 1 };
   }
 }
-

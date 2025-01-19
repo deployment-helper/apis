@@ -51,7 +51,7 @@ async function getAspectRatio(imageUrl: string): Promise<string | null> {
 }
 
 async function getAspectRatioImages(prompt: string): Promise<string[]> {
-    let image_links = await fetchImageLinks(`image for ${prompt.replace(/[']/g,"").slice(0,50)} in 16:9 aspect ratio`);
+    let image_links = await fetchImageLinks(`image for ${prompt.replace(/[']/g,"")} in 16:9 aspect ratio`);
     console.log(image_links);
     return (
         await Promise.all(
