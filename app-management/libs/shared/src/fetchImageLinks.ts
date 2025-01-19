@@ -1,4 +1,72 @@
 import { exec } from 'child_process';
+import * as probe from "probe-image-size";
+import { Readable } from 'stream';
+
+
+async function getAspectRatio(imageUrl: string): Promise<string | null> {
+    try {
+
+
+        var response = await fetch(imageUrl, {
+            "headers": {
+              "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+              "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+              "cache-control": "max-age=0",
+              "if-modified-since": "Thu, 08 Aug 2024 17:23:52 GMT",
+              "if-none-match": "\"af3f3f173fd9fe61e69ddefcdef2232a\"",
+              "priority": "u=0, i",
+              "sec-ch-ua": "\"Google Chrome\";v=\"131\", \"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\"",
+              "sec-ch-ua-mobile": "?0",
+              "sec-ch-ua-platform": "\"macOS\"",
+              "sec-fetch-dest": "document",
+              "sec-fetch-mode": "navigate",
+              "sec-fetch-site": "none",
+              "sec-fetch-user": "?1",
+              "upgrade-insecure-requests": "1",
+              "cookie": "__cf_bm=71bKI8HY51Wew3Mb9fj9NTmU005SC9GlLKzkeJOafwI-1737174284-1.0.1.1-2S3SBVOifjx6tckVLm5Mz6T3dCUp6bLFhIHTtUWbtmG4DtLwWsLJfpsXwAams9FS8bmTnRP4deAXOdSUbQ8COQ"
+            },
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": null,
+            "method": "GET"
+          });
+
+        const result = await probe(Readable.from(response.body));
+
+        if (result.width && result.height) {
+            const width = result.width;
+            const height = result.height;
+
+            const aspectRatio = (width / height).toFixed(2);
+            console.log(`Aspect Ratio: ${aspectRatio} (Width: ${width}, Height: ${height})`);
+
+            return aspectRatio;
+        } else {
+            console.error("Invalid image dimensions returned");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching image dimensions:", error);
+        return null;
+    }
+}
+
+async function getAspectRatioImages(prompt: string): Promise<string[]> {
+    let image_links = await fetchImageLinks(`image for ${prompt.replace(/[']/g,"").slice(0,50)} in 16:9 aspect ratio`);
+    console.log(image_links);
+    return (
+        await Promise.all(
+            image_links.map(async (imageUrl) => {
+                try{
+                const aspectRatio = await getAspectRatio(imageUrl);
+                return aspectRatio === "1.78" ? imageUrl : null;
+                }catch(error){
+                    console.log("error" + error);
+                    return null;
+                }
+            })
+        )
+    ).filter(Boolean); // Remove null values
+}
 
 function fetchImageLinks(prompt: string): Promise<string[]> {
   const encodedPrompt = encodeURIComponent(prompt);
@@ -48,4 +116,4 @@ function fetchImageLinks(prompt: string): Promise<string[]> {
   });
 }
 
-export default fetchImageLinks;
+export default getAspectRatioImages;
