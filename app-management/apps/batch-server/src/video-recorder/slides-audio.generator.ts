@@ -126,6 +126,7 @@ export class SlidesAudioGenerator {
     postFixSilence?: string,
     speakerRefFile?: string,
   ) {
+    this.logger.log('Begin synthesis');
     const audio = await this.synthesisService.synthesize(
       [text],
       speakingRate,
@@ -158,6 +159,7 @@ export class SlidesAudioGenerator {
         '-silence.wav',
       );
       await this.ffmpeg.concat([audioFilePath, silenceMp3], outputFile);
+      this.logger.log('End synthesis');
       return outputFile;
     }
 

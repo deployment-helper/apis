@@ -87,15 +87,15 @@ export class SynthesisService {
     speakingRate: number,
     voiceCode: string,
   ): Promise<{ type: string; data: Uint8Array }> {
+    this.logger.log('GCP synthesis');
     const request = {
       input: { text },
       voice: { languageCode: audioLanguage, name: voiceCode },
       audioConfig: {
         audioEncoding: 'LINEAR16',
-        speakingRate: speakingRate,
-        pitch: 0,
       },
     };
+    this.logger.log('req', request);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const [response] = await this.client.synthesizeSpeech(request);
@@ -108,6 +108,7 @@ export class SynthesisService {
     speakerRefFile?: string,
     speaker = 'Tanja Adelina',
   ) {
+    this.logger.log('TTS synthesis');
     //send a post request to TTS server to synthesize the text
     const ttsLangCode = language === language.split('-')[0] || 'en';
     const body = {
