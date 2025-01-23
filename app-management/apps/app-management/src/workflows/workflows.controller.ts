@@ -4,6 +4,7 @@ import {
   Get,
   Logger,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { IProject } from '@apps/app-management/types';
+import getAspectRatioImages from '@app/shared/fetchImageLinks';
 
 function cleanSubtitles(lines: string[]): string[] {
   const cleanedLines: string[] = [];
@@ -44,6 +46,7 @@ function cleanSubtitles(lines: string[]): string[] {
 @UseGuards(AuthGuard)
 export class WorkflowsController {
   private readonly logger = new Logger(WorkflowsController.name);
+
   constructor(
     private readonly chatgptService: ChatgptService,
     private readonly fireStore: FirestoreService,
@@ -56,13 +59,14 @@ export class WorkflowsController {
     data: { videoURL: string; projectID: string },
     @Req() req: any,
   ) {
-    //yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" https://www.youtube.com/watch\?v\=HnQcJ03oEUo
+    //yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" HnQcJ03oEUo
     this.logger.log('Start creating video from YouTube video.');
     // TODO: clean this file after the process.
-    const stdout = execSync(
+    const cmd =
       'yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" ' +
-        data.videoURL,
-    );
+      data.videoURL;
+    this.logger.log('running ' + cmd);
+    const stdout = execSync(cmd);
 
     this.logger.log('Finished creating video from YouTube video.');
 
@@ -89,7 +93,7 @@ export class WorkflowsController {
 
     this.logger.log('Finished generating scenes script.');
 
-    let scriptData: any = {};
+    const scriptData: any = {};
     scriptData['Title'] = rawData['Title'];
     scriptData['Hook'] = rawData['Hook'];
     scriptData['Introduction'] = rawData['Introduction'];
@@ -108,7 +112,7 @@ export class WorkflowsController {
     let sceneDescriptions = [];
     const keys = Object.keys(scriptData);
     for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
+      const key = keys[i];
       if (key != 'Title') {
         if (scriptData[key] != null) sceneDescriptions[i] = scriptData[key];
       }
@@ -119,7 +123,7 @@ export class WorkflowsController {
       'project',
       data.projectID,
     );
-
+    console.log(project);
     this.logger.log('Start creating video.');
     // Create the video
     const videoData = {
@@ -128,58 +132,90 @@ export class WorkflowsController {
       name: videoTitle,
       description: videoTitle,
       backgroundMusic: project.defaultBackgroundMusic,
-      overlay: project.defaultOverlay,
-      audioLanguage: project.defaultLanguage,
-      voiceCode: project.defaultVoice,
+      //overlay: project.defaultOverlay,
+      audioLanguage: 'en-US', //project.defaultLanguage,
+      userId: 'bda80c16-c900-45e8-a079-49048d56cd54',
+      voiceCode: 'en-US-Studio-Q', // project.defaultVoice,
+      isDeleted: false,
+      isPublished: false,
     };
-
+    console.log(videoData);
     const video = await this.fireStore.add('video', {
       ...videoData,
       isDeleted: false,
       userId: req.user.sub,
     });
-
-    const scenes = await this.fireStore.add(`video/${video.id}/scenes`, {
-      videoId: video.id,
-      scenes: [],
-    });
-
-    const updatedVideo = this.fireStore.update('video', video.id, {
-      scenesId: scenes.id,
-    });
+    console.log(video);
 
     sceneDescriptions = sceneDescriptions.filter(function (item) {
       return item != null;
     });
+
+    const scenesData = [];
+    console.log('sceneDescriptions Length' + sceneDescriptions.length);
     for (let i = 0; i < sceneDescriptions.length; i++) {
-      let image =
-        project?.assets[
-          Math.ceil(Math.random() * 1000) % project?.assets?.length
-        ];
       if (sceneDescriptions[i]) {
-        // TODO: update scenes once as every operation is a cost
-        await this.fireStore.updateScene(
-          `video/${video.id}/scenes`,
-          scenes.id,
-          {
-            id: uuidv4(),
-            content: {
-              image: {
-                type: 'image',
-                name: 'image',
-                value: image,
-                placeholder: 'Image',
-              },
-            },
-            description: sceneDescriptions[i],
-            image: image,
-            layoutId: 'layout2',
-          },
+        let images = await getAspectRatioImages(
+          sceneDescriptions[i].slice(0, 70),
         );
+        if (images.length == 0) {
+          images = await getAspectRatioImages(
+            sceneDescriptions[i].slice(35, 105),
+          );
+        }
+        if (images.length == 0) {
+          images = await getAspectRatioImages(
+            sceneDescriptions[i].slice(0, 35),
+          );
+        }
+        console.log(images);
+        const image =
+          images[0] ||
+          project?.assets[
+            Math.ceil(Math.random() * 1000) % project?.assets?.length
+          ];
+
+        scenesData.push({
+          id: uuidv4(),
+          content: {
+            image: {
+              type: 'image',
+              name: 'image',
+              value: image,
+              placeholder: 'Image',
+            },
+          },
+          description: sceneDescriptions[i],
+          image: image,
+          layoutId: 'layout2',
+        });
       }
     }
+
+    const scenes = await this.fireStore.add(`video/${video.id}/scenes`, {
+      videoId: video.id,
+      scenes: scenesData,
+    });
+    console.log(scenes);
+
+    const updatedVideo = this.fireStore.update('video', video.id, {
+      scenesId: scenes.id,
+    });
+    console.log(updatedVideo);
     this.logger.log('Finished creating video.');
     return video;
+  }
+
+  @Get('image-links')
+  async getImageLinks(@Query('prompt') prompt: string): Promise<string[]> {
+    try {
+      const images = await getAspectRatioImages(prompt);
+      console.log('Image Links:', images);
+      return images;
+    } catch (error) {
+      console.error('Error fetching image links:', error);
+      return [];
+    }
   }
 
   @Get('list')

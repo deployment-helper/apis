@@ -15,6 +15,7 @@ export class SynthesisController {
       audioLanguage?: string;
       voiceCode?: string;
       merge?: boolean;
+      speakerRefFile?: string | null;
     },
   ) {
     return this.synthesisService.synthesize(
@@ -23,6 +24,7 @@ export class SynthesisController {
       body.voiceCode,
       body.audioLanguage,
       body.merge,
+      body.speakerRefFile,
     );
   }
 }

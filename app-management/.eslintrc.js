@@ -22,5 +22,9 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     'no-shadowed-variable': 0,
+    '@typescript-eslint/ban-ts-comment': [
+      'warn',
+      { 'ts-ignore': 'allow-with-description' },
+    ],
   },
 };

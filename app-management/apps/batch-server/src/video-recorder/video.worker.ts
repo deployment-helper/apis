@@ -114,6 +114,7 @@ export class VideoWorker implements IWorker {
   async startV2(url: string, data?: IGenerateVideoDto): Promise<any> {
     try {
       this.logger.log('Begin Worker');
+      this.logger.log('Video data', data);
       const startTime = new Date().getTime();
       const scenesInfo = await this.generateImages(url, data);
       this.logger.log('scenesImages count', scenesInfo.length);
@@ -147,7 +148,7 @@ export class VideoWorker implements IWorker {
         mergeAllVideoPath,
         totalDuration,
       );
-
+      // TODO: Add BG when BG music added to the video.
       const backgroundMusic = await this.s3.getFileAndSave(
         videoMeta.backgroundMusic,
       );

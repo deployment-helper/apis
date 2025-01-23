@@ -49,7 +49,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-#          GitHub Personal Access Token
+          #          GitHub Personal Access Token
           password: ${{ secrets.ACCESS_TOKEN }}
       - uses: docker/build-push-action@v4
         with:
@@ -66,7 +66,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-#          GitHub personal access token
+          #          GitHub personal access token
           password: ${{ secrets.ACCESS_TOKEN }}
       - uses: docker/build-push-action@v4
         with:
@@ -97,26 +97,27 @@ jobs:
       - name: Push Docker image to Artifact Registry
         run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-  gcp_bath_server:
-    name: GCP batch server build and push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0.2.1
-        with:
-          project_id: ${{ env.PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
-
-      - name: Configure Docker for Artifact Registry
-        run: gcloud --quiet auth configure-docker ${{ env.REGION }}-docker.pkg.dev
-
-      - name: Build Docker image
-#        Build image from Dockerfile.batch-service
-        run: docker build -f Dockerfile.batch-service -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }} .
-
-      - name: Push Docker image to Artifact Registry
-        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }}
+#  commenting out the batch server build and push job
+#  gcp_bath_server:
+#    name: GCP batch server build and push
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - name: Set up Google Cloud SDK
+#        uses: google-github-actions/setup-gcloud@v0.2.1
+#        with:
+#          project_id: ${{ env.PROJECT_ID }}
+#          service_account_key: ${{ secrets.GCP_SA_KEY }}
+#          export_default_credentials: true
+#
+#      - name: Configure Docker for Artifact Registry
+#        run: gcloud --quiet auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+#
+#      - name: Build Docker image
+##        Build image from Dockerfile.batch-service
+#        run: docker build -f Dockerfile.batch-service -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }} .
+#
+#      - name: Push Docker image to Artifact Registry
+#        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.BS_IMAGE_NAME }}:${{ github.sha }}

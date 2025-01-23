@@ -3,9 +3,9 @@ import { TSlideInfo } from './types';
 import { S3Service } from '@app/shared/aws/s3.service';
 import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
-import { SynthesisService } from '@app/shared/gcp/synthesis.service';
 import { IGenerateVideoDto } from '../types';
 import { DEFAULT_MP3_SPEAKING_RATE } from '@app/shared/constants';
+import { SynthesisService } from '@app/shared/gcp/synthesis.service';
 
 /**
  * This file create a arrary of MP3 info from S3 file
@@ -17,8 +17,14 @@ export class SlidesAudioGenerator {
     private s3: S3Service,
     private fs: FsService,
     private ffmpeg: FfmpegService,
+    private synthesisService: SynthesisService,
   ) {}
 
+  /**
+   * @Deprecated This method is deprecated and should not be used
+   * @param slides
+   * @param data
+   */
   async start(slides: Array<TSlideInfo>, data?: any) {
     const audioFiles: Array<TSlideInfo> = [];
     this.logger.log('Begin audio generator');
@@ -68,6 +74,7 @@ export class SlidesAudioGenerator {
           slide.meta.language || 'en-US',
           slide.meta.voiceCode,
           slide.meta?.postFixSilence,
+          data.speakerRefFile,
         );
         audioFiles.push({
           file: audioFilePath,
@@ -117,14 +124,16 @@ export class SlidesAudioGenerator {
     language: string,
     voiceCode?: string,
     postFixSilence?: string,
+    speakerRefFile?: string,
   ) {
-    const synthesisService = new SynthesisService();
-    const audio = await synthesisService.synthesize(
+    this.logger.log('Begin synthesis');
+    const audio = await this.synthesisService.synthesize(
       [text],
       speakingRate,
       voiceCode,
       language,
       true,
+      speakerRefFile,
     );
     const filename = `${sceneId}/mp3-files/${name}.mp3`;
     const audioFilePath = await this.fs.createFile(
@@ -138,7 +147,7 @@ export class SlidesAudioGenerator {
       const s3Filepath = this.fs.getFullPathFromFilename(
         audioFilePath,
         'mp3-files',
-        '-s3.mp3',
+        '-s3.wav',
       );
       const silenceMp3 = await this.s3.getFileAndSave(
         postFixSilence,
@@ -147,9 +156,10 @@ export class SlidesAudioGenerator {
       const outputFile = this.fs.getFullPathFromFilename(
         audioFilePath,
         'mp3-files',
-        '-silence.mp3',
+        '-silence.wav',
       );
       await this.ffmpeg.concat([audioFilePath, silenceMp3], outputFile);
+      this.logger.log('End synthesis');
       return outputFile;
     }
 

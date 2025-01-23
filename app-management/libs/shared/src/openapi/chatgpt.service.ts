@@ -65,21 +65,21 @@ export class ChatgptService {
         },
         {
           role: 'user',
-          content:  `use this as input data ${subtitle}`,
+          content: `use this as input data ${subtitle}`,
         },
       ],
     });
 
-    let response = "";
-    for(let i=0; i<completion.choices.length; i++){
-      let choice = completion.choices[i];
+    let response = '';
+    for (let i = 0; i < completion.choices.length; i++) {
+      const choice = completion.choices[i];
       response += choice.message.content;
     }
 
     return response;
   }
 
-  async uploadFile(filePath: string): Promise<void>{
+  async uploadFile(filePath: string): Promise<void> {
     const fileStream = fs.createReadStream(filePath);
 
     try {
@@ -92,5 +92,4 @@ export class ChatgptService {
       console.error('Error uploading file:', error);
     }
   }
-
 }
