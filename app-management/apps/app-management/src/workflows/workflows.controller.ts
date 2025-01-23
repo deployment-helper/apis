@@ -1,10 +1,10 @@
 import {
   Body,
-  Query,
   Controller,
   Get,
   Logger,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,7 +17,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { IProject } from '@apps/app-management/types';
 import getAspectRatioImages from '@app/shared/fetchImageLinks';
-
 
 function cleanSubtitles(lines: string[]): string[] {
   const cleanedLines: string[] = [];
@@ -47,6 +46,7 @@ function cleanSubtitles(lines: string[]): string[] {
 @UseGuards(AuthGuard)
 export class WorkflowsController {
   private readonly logger = new Logger(WorkflowsController.name);
+
   constructor(
     private readonly chatgptService: ChatgptService,
     private readonly fireStore: FirestoreService,
@@ -62,11 +62,11 @@ export class WorkflowsController {
     //yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" HnQcJ03oEUo
     this.logger.log('Start creating video from YouTube video.');
     // TODO: clean this file after the process.
-    const cmd = 'yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" ' + data.videoURL; 
+    const cmd =
+      'yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt -o "subtitle.srt" ' +
+      data.videoURL;
     this.logger.log('running ' + cmd);
-    const stdout = execSync(
-      cmd
-    );
+    const stdout = execSync(cmd);
 
     this.logger.log('Finished creating video from YouTube video.');
 
@@ -93,7 +93,7 @@ export class WorkflowsController {
 
     this.logger.log('Finished generating scenes script.');
 
-    let scriptData: any = {};
+    const scriptData: any = {};
     scriptData['Title'] = rawData['Title'];
     scriptData['Hook'] = rawData['Hook'];
     scriptData['Introduction'] = rawData['Introduction'];
@@ -112,7 +112,7 @@ export class WorkflowsController {
     let sceneDescriptions = [];
     const keys = Object.keys(scriptData);
     for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
+      const key = keys[i];
       if (key != 'Title') {
         if (scriptData[key] != null) sceneDescriptions[i] = scriptData[key];
       }
@@ -133,9 +133,9 @@ export class WorkflowsController {
       description: videoTitle,
       backgroundMusic: project.defaultBackgroundMusic,
       //overlay: project.defaultOverlay,
-      audioLanguage: "en-US", //project.defaultLanguage,
-      userId: "bda80c16-c900-45e8-a079-49048d56cd54",
-      voiceCode: "en-US-Studio-Q", // project.defaultVoice,
+      audioLanguage: 'en-US', //project.defaultLanguage,
+      userId: 'bda80c16-c900-45e8-a079-49048d56cd54',
+      voiceCode: 'en-US-Studio-Q', // project.defaultVoice,
       isDeleted: false,
       isPublished: false,
     };
@@ -151,22 +151,30 @@ export class WorkflowsController {
       return item != null;
     });
 
-    let scenesData = [];
-    console.log("sceneDescriptions Length" + sceneDescriptions.length);
+    const scenesData = [];
+    console.log('sceneDescriptions Length' + sceneDescriptions.length);
     for (let i = 0; i < sceneDescriptions.length; i++) {
       if (sceneDescriptions[i]) {
-        let images = await getAspectRatioImages(sceneDescriptions[i].slice(0,70));
-        if(images.length == 0){
-          images = await getAspectRatioImages(sceneDescriptions[i].slice(35,105));
+        let images = await getAspectRatioImages(
+          sceneDescriptions[i].slice(0, 70),
+        );
+        if (images.length == 0) {
+          images = await getAspectRatioImages(
+            sceneDescriptions[i].slice(35, 105),
+          );
         }
-        if(images.length == 0){
-          images = await getAspectRatioImages(sceneDescriptions[i].slice(0,35));
+        if (images.length == 0) {
+          images = await getAspectRatioImages(
+            sceneDescriptions[i].slice(0, 35),
+          );
         }
         console.log(images);
-        let image = images[0] || project?.assets[
-          Math.ceil(Math.random() * 1000) % project?.assets?.length
-        ];
-      
+        const image =
+          images[0] ||
+          project?.assets[
+            Math.ceil(Math.random() * 1000) % project?.assets?.length
+          ];
+
         scenesData.push({
           id: uuidv4(),
           content: {
@@ -181,7 +189,7 @@ export class WorkflowsController {
           image: image,
           layoutId: 'layout2',
         });
-       }
+      }
     }
 
     const scenes = await this.fireStore.add(`video/${video.id}/scenes`, {
@@ -197,7 +205,6 @@ export class WorkflowsController {
     this.logger.log('Finished creating video.');
     return video;
   }
-  
 
   @Get('image-links')
   async getImageLinks(@Query('prompt') prompt: string): Promise<string[]> {

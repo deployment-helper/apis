@@ -30,7 +30,9 @@ async function getAspectRatio(imageUrl: string): Promise<string | null> {
       method: 'GET',
     });
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
+    // Readable.from is working with this stream but not mentioned in the types
     const result = await probe(Readable.from(response.body));
 
     if (result.width && result.height) {
