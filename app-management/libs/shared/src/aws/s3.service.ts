@@ -43,6 +43,7 @@ export class S3Service {
   }
 
   getKeyFromPublicUrl(publicUrl: string) {
+    this.logger.log('Public URL: ' + publicUrl);
     return publicUrl.includes('https://')
       ? publicUrl.replace(
           `https://${this.s3Bucket}.s3.ap-south-1.amazonaws.com/`,

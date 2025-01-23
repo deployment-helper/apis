@@ -3,6 +3,7 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { S3Service } from '@app/shared/aws/s3.service';
 
 @Injectable()
 export class SynthesisService {
@@ -13,6 +14,7 @@ export class SynthesisService {
   constructor(
     private readonly configService: ConfigService,
     private readonly http: HttpService,
+    private readonly s3: S3Service,
   ) {
     this.client = new TextToSpeechClient();
     this.TTS_SERVER_URL =
@@ -25,11 +27,12 @@ export class SynthesisService {
     voiceCode: string,
     audioLanguage: string,
     merge = true,
+    speakerRefFile?: string,
   ): Promise<{ type: string; data: string }[]> {
     const audios = await Promise.all(
       text.map((t) =>
         audioLanguage.startsWith('tts')
-          ? this.synthesizeTextTTS(t, audioLanguage)
+          ? this.synthesizeTextTTS(t, audioLanguage, speakerRefFile)
           : this.synthesizeText(t, audioLanguage, speakingRate, voiceCode),
       ),
     );
@@ -102,8 +105,8 @@ export class SynthesisService {
   private async synthesizeTextTTS(
     text: string,
     language: string,
+    speakerRefFile?: string,
     speaker = 'Tanja Adelina',
-    referenceAudio?: string,
   ) {
     //send a post request to TTS server to synthesize the text
     const ttsLangCode = language === language.split('-')[0] || 'en';
@@ -111,6 +114,7 @@ export class SynthesisService {
       text,
       language: ttsLangCode,
       speaker,
+      speaker_ref: this.s3.getKeyFromPublicUrl(speakerRefFile),
     };
 
     this.logger.log(`Synthesizing text: ${text} with language: ${language}`);

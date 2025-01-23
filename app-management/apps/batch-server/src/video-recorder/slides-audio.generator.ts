@@ -20,6 +20,11 @@ export class SlidesAudioGenerator {
     private synthesisService: SynthesisService,
   ) {}
 
+  /**
+   * @Deprecated This method is deprecated and should not be used
+   * @param slides
+   * @param data
+   */
   async start(slides: Array<TSlideInfo>, data?: any) {
     const audioFiles: Array<TSlideInfo> = [];
     this.logger.log('Begin audio generator');
@@ -69,6 +74,7 @@ export class SlidesAudioGenerator {
           slide.meta.language || 'en-US',
           slide.meta.voiceCode,
           slide.meta?.postFixSilence,
+          data.speakerRefFile,
         );
         audioFiles.push({
           file: audioFilePath,
@@ -118,6 +124,7 @@ export class SlidesAudioGenerator {
     language: string,
     voiceCode?: string,
     postFixSilence?: string,
+    speakerRefFile?: string,
   ) {
     const audio = await this.synthesisService.synthesize(
       [text],
@@ -125,6 +132,7 @@ export class SlidesAudioGenerator {
       voiceCode,
       language,
       true,
+      speakerRefFile,
     );
     const filename = `${sceneId}/mp3-files/${name}.mp3`;
     const audioFilePath = await this.fs.createFile(
