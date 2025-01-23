@@ -20,6 +20,7 @@ import { ImageService } from '@app/shared/image.service';
 import { HttpModule } from '@nestjs/axios';
 import { PresentationEntity } from '@apps/app-management/aws/presentation.entity';
 import { DynamodbClientService } from '@apps/app-management/aws/dynamodb.service';
+import { SynthesisService } from '@app/shared/gcp/synthesis.service';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { DynamodbClientService } from '@apps/app-management/aws/dynamodb.service
     PresentationEntity,
     FontsService,
     ImageService,
+    SynthesisService,
   ],
 })
 export class VideoRecorderModule {}

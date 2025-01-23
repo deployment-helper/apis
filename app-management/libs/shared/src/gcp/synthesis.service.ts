@@ -27,7 +27,11 @@ export class SynthesisService {
     merge = true,
   ): Promise<{ type: string; data: string }[]> {
     const audios = await Promise.all(
-      text.map((t) => this.synthesizeTextTTS(t, audioLanguage)),
+      text.map((t) =>
+        audioLanguage.startsWith('tts')
+          ? this.synthesizeTextTTS(t, audioLanguage)
+          : this.synthesizeText(t, audioLanguage, speakingRate, voiceCode),
+      ),
     );
     if (merge) {
       return [

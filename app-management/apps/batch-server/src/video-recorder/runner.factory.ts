@@ -9,7 +9,7 @@ import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { ImageService } from '@app/shared/image.service';
 import { ApiRunner } from './api.runner';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
-import { HttpService } from '@nestjs/axios';
+import { SynthesisService } from '@app/shared/gcp/synthesis.service';
 
 @Injectable()
 export class RunnerFactory {
@@ -20,7 +20,7 @@ export class RunnerFactory {
     private ffmpeg: FfmpegService,
     private imageService: ImageService,
     private fireStore: FirestoreService,
-    private httpserv: HttpService,
+    private synthesisService: SynthesisService,
   ) {}
 
   private readonly logger = new Logger(RunnerFactory.name);
@@ -52,7 +52,12 @@ export class RunnerFactory {
       server === ServerNames['localhost:3000'] ||
       server === ServerNames['apis.app-management.com']
     ) {
-      return new SlidesAudioGenerator(this.s3, this.fs, this.ffmpeg);
+      return new SlidesAudioGenerator(
+        this.s3,
+        this.fs,
+        this.ffmpeg,
+        this.synthesisService,
+      );
     } else {
       this.logger.error(`${server} not supported.`);
     }
