@@ -93,6 +93,10 @@ export class SynthesisService {
       voice: { languageCode: audioLanguage, name: voiceCode },
       audioConfig: {
         audioEncoding: 'LINEAR16',
+        // TODO: This speaking rate and pitch parameters needs to be configurable
+        // and should be passed from the client if project language supports it. For now, we are using as default.
+        speakingRate: speakingRate,
+        pitch: 0,
       },
     };
     this.logger.log('req', request);
