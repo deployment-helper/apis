@@ -7,7 +7,9 @@ import {
   Post,
   Put,
   Query,
+  RawBodyRequest,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
@@ -18,6 +20,9 @@ import { ELanguage, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
 import { SharedService } from '@app/shared/shared.service';
 import { IProject } from '@apps/app-management/types';
+import { S3Service } from '@app/shared/aws/s3.service';
+import { Request } from 'express';
+import { S3_ARTIFACTS_FOLDER } from '@apps/app-management/constants';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -26,6 +31,7 @@ export class VideoController {
     private readonly fireStore: FirestoreService,
     private readonly gemini: GeminiService,
     private readonly sharedService: SharedService,
+    private readonly s3: S3Service,
   ) {}
 
   @Get('/fix')
@@ -184,6 +190,19 @@ export class VideoController {
   @Get('/:id/scenes/:sceneId')
   getScene(@Param('id') id: string, @Param('sceneId') sceneId: string) {
     return this.fireStore.get(`video/${id}/scenes`, sceneId);
+  }
+
+  @Post('/:id/artifact')
+  async createArtifact(
+    @Param('id') id: string,
+    @Req() req: RawBodyRequest<Request>,
+    @Res() res: any,
+  ) {
+    // Using this rawbody https://docs.nestjs.com/faq/raw-body docs to get the raw body
+    const s3Key = `${S3_ARTIFACTS_FOLDER}/${id}/${uuid()}.txt`;
+    const rawbody = req.rawBody;
+    await this.s3.createTextFileInMemoryAndSaveToS3(s3Key, rawbody.toString());
+    res.status(201).json({ message: `Artifact ${s3Key} created` });
   }
 
   // copy a video and its scenes
