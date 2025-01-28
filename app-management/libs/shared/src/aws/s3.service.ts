@@ -199,4 +199,13 @@ export class S3Service {
 
     return downloadedFile;
   }
+
+  async createTextFileInMemoryAndSaveToS3(
+    fileName: string,
+    content: string,
+  ): Promise<void> {
+    const fileContent = Buffer.from(content, 'utf-8');
+    await this.set(fileName, fileContent);
+    this.logger.log(`File ${fileName} created and saved to S3`);
+  }
 }
