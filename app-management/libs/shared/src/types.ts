@@ -71,6 +71,11 @@ export enum ELanguage {
   'Vietnamese (Vietnam)' = 'vi-VN',
 }
 
+export interface IArtifacts {
+  name: string;
+  s3Key: string;
+}
+
 export interface IVideo {
   id: string;
   name: string;
@@ -84,6 +89,7 @@ export interface IVideo {
   scenesId: string;
   projectId: string;
   generatedVideoInfo?: IGeneratedVideoInfo[];
+  artifacts?: IArtifacts[];
 }
 
 export interface IScene {
