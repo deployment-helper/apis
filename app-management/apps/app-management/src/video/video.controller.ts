@@ -202,7 +202,37 @@ export class VideoController {
     const s3Key = `${S3_ARTIFACTS_FOLDER}/${id}/${uuid()}.txt`;
     const rawbody = req.rawBody;
     await this.s3.createTextFileInMemoryAndSaveToS3(s3Key, rawbody.toString());
-    res.status(201).json({ message: `Artifact ${s3Key} created` });
+
+    const video = await this.fireStore.get<IVideo>('video', id);
+    const artifacts = video?.artifacts || [];
+    artifacts.push(s3Key);
+
+    await this.fireStore.update('video', id, { artifacts: artifacts });
+    res.status(201).json({
+      message: `Artifact ${s3Key} created`,
+      s3Key,
+      videoId: id,
+    });
+  }
+
+  @Delete('/:id/artifact')
+  async deleteArtifact(
+    @Param('id') id: string,
+    @Body('s3Key') s3Key: string,
+    @Res() res: any,
+  ) {
+    const video = await this.fireStore.get<IVideo>('video', id);
+    video.artifacts = video?.artifacts?.filter(
+      (artifact) => artifact !== s3Key,
+    );
+
+    await this.fireStore.update('video', id, { artifacts: video.artifacts });
+    await this.s3.delete(s3Key);
+
+    res.status(200).json({
+      message: `Artifact ${s3Key} deleted`,
+      s3Key,
+    });
   }
 
   // copy a video and its scenes

@@ -84,6 +84,7 @@ export interface IVideo {
   scenesId: string;
   projectId: string;
   generatedVideoInfo?: IGeneratedVideoInfo[];
+  artifacts?: string[];
 }
 
 export interface IScene {
