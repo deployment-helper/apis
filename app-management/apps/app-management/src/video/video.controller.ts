@@ -16,7 +16,7 @@ import { v4 as uuid } from 'uuid';
 
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
-import { ELanguage, IScenes, IVideo } from '@app/shared/types';
+import { ELanguage, IArtifacts, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
 import { SharedService } from '@app/shared/shared.service';
 import { IProject } from '@apps/app-management/types';
@@ -195,6 +195,7 @@ export class VideoController {
   @Post('/:id/artifact')
   async createArtifact(
     @Param('id') id: string,
+    @Query('name') name: string,
     @Req() req: RawBodyRequest<Request>,
     @Res() res: any,
   ) {
@@ -204,8 +205,8 @@ export class VideoController {
     await this.s3.createTextFileInMemoryAndSaveToS3(s3Key, rawbody.toString());
 
     const video = await this.fireStore.get<IVideo>('video', id);
-    const artifacts = video?.artifacts || [];
-    artifacts.push(s3Key);
+    const artifacts: IArtifacts[] = video?.artifacts || [];
+    artifacts.push({ name, s3Key });
 
     await this.fireStore.update('video', id, { artifacts: artifacts });
     res.status(201).json({
@@ -223,7 +224,7 @@ export class VideoController {
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     video.artifacts = video?.artifacts?.filter(
-      (artifact) => artifact !== s3Key,
+      (artifact) => artifact.s3Key !== s3Key,
     );
 
     await this.fireStore.update('video', id, { artifacts: video.artifacts });
