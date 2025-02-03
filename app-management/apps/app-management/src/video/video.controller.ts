@@ -220,14 +220,22 @@ export class VideoController {
   async deleteArtifact(
     @Param('id') id: string,
     @Body('s3Key') s3Key: string,
+    @Body('dbKey') dbKey: string,
+    @Body('propertyToCompare') propertyToCompare: string,
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
-    video.artifacts = video?.artifacts?.filter(
-      (artifact) => artifact.s3Key !== s3Key,
+    const allowedDBKeys = ['artifacts', 'generatedVideoInfo'];
+    const allowedPropertyToCompare = ['cloudFile', 's3Key'];
+    dbKey = allowedDBKeys.includes(dbKey) ? dbKey : 'artifacts';
+    propertyToCompare = allowedPropertyToCompare.includes(propertyToCompare)
+      ? propertyToCompare
+      : 's3Key';
+    video[dbKey] = video?.[dbKey]?.filter(
+      (_item) => _item[propertyToCompare] !== s3Key,
     );
 
-    await this.fireStore.update('video', id, { artifacts: video.artifacts });
+    await this.fireStore.update('video', id, { [dbKey]: video[dbKey] });
     await this.s3.delete(s3Key);
 
     res.status(200).json({
