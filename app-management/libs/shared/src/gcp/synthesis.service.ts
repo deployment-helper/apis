@@ -40,7 +40,7 @@ export class SynthesisService {
       return [
         {
           type: 'base64',
-          data: this.mergeWavFiles(audios.map((a) => a.data)),
+          data: this.mergeFiles(audios.map((a) => a.data)),
         },
       ];
     }
@@ -51,29 +51,19 @@ export class SynthesisService {
     }));
   }
 
-  private mergeWavFiles(audioBuffers: Uint8Array[]): string {
-    const headerSize = 44;
-    const dataBuffers = audioBuffers.map((buffer) =>
-      Buffer.from(buffer.slice(headerSize)),
-    );
-    const totalDataSize = dataBuffers.reduce(
+  private mergeFiles(audioBuffers: Uint8Array[]): string {
+    const headerSize = 0; // MP3 files do not have a fixed header size like WAV files
+    const totalDataSize = audioBuffers.reduce(
       (acc, buffer) => acc + buffer.length,
       0,
     );
-    const totalSize = totalDataSize + headerSize;
 
-    const mergedBuffer = Buffer.alloc(totalSize);
-
-    // Copy the header from the first file
-    Buffer.from(audioBuffers[0]).copy(mergedBuffer, 0, 0, headerSize);
-
-    // Update the file size in the header
-    mergedBuffer.writeUInt32LE(totalSize - 8, 4);
-    mergedBuffer.writeUInt32LE(totalDataSize, 40);
+    const mergedBuffer = Buffer.alloc(totalDataSize);
 
     // Concatenate the data sections
-    let offset = headerSize;
-    dataBuffers.forEach((buffer) => {
+    let offset = 0;
+    audioBuffers.forEach((buffer) => {
+      // @ts-ignore
       buffer.copy(mergedBuffer, offset);
       offset += buffer.length;
     });
@@ -92,7 +82,7 @@ export class SynthesisService {
       input: { text },
       voice: { languageCode: audioLanguage, name: voiceCode },
       audioConfig: {
-        audioEncoding: 'LINEAR16',
+        audioEncoding: 'MP3',
         // TODO: This speaking rate and pitch parameters needs to be configurable
         // and should be passed from the client if project language supports it. For now, we are using as default.
         speakingRate: speakingRate,
@@ -131,6 +121,7 @@ export class SynthesisService {
       );
       const resp = await firstValueFrom(this.http.post(url, body));
       const data = resp.data;
+
       return {
         type: 'base64',
         data: Buffer.from(data.audioContent, 'base64'),
