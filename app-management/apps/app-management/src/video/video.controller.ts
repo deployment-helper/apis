@@ -16,7 +16,7 @@ import { v4 as uuid } from 'uuid';
 
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
-import { ELanguage, IScenes, IVideo } from '@app/shared/types';
+import { ELanguage, IArtifacts, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
 import { SharedService } from '@app/shared/shared.service';
 import { IProject } from '@apps/app-management/types';
@@ -195,6 +195,7 @@ export class VideoController {
   @Post('/:id/artifact')
   async createArtifact(
     @Param('id') id: string,
+    @Query('name') name: string,
     @Req() req: RawBodyRequest<Request>,
     @Res() res: any,
   ) {
@@ -202,7 +203,45 @@ export class VideoController {
     const s3Key = `${S3_ARTIFACTS_FOLDER}/${id}/${uuid()}.txt`;
     const rawbody = req.rawBody;
     await this.s3.createTextFileInMemoryAndSaveToS3(s3Key, rawbody.toString());
-    res.status(201).json({ message: `Artifact ${s3Key} created` });
+
+    const video = await this.fireStore.get<IVideo>('video', id);
+    const artifacts: IArtifacts[] = video?.artifacts || [];
+    artifacts.push({ name, s3Key });
+
+    await this.fireStore.update('video', id, { artifacts: artifacts });
+    res.status(201).json({
+      message: `Artifact ${s3Key} created`,
+      s3Key,
+      videoId: id,
+    });
+  }
+
+  @Delete('/:id/artifact')
+  async deleteArtifact(
+    @Param('id') id: string,
+    @Body('s3Key') s3Key: string,
+    @Body('dbKey') dbKey: string,
+    @Body('keyToCompare') keyToCompare: string,
+    @Res() res: any,
+  ) {
+    const video = await this.fireStore.get<IVideo>('video', id);
+    const allowedDBKeys = ['artifacts', 'generatedVideoInfo'];
+    const allowedPropertyToCompare = ['cloudFile', 's3Key'];
+    dbKey = allowedDBKeys.includes(dbKey) ? dbKey : 'artifacts';
+    keyToCompare = allowedPropertyToCompare.includes(keyToCompare)
+      ? keyToCompare
+      : 's3Key';
+    video[dbKey] = video?.[dbKey]?.filter(
+      (_item) => _item[keyToCompare] !== s3Key,
+    );
+
+    await this.fireStore.update('video', id, { [dbKey]: video[dbKey] });
+    await this.s3.delete(s3Key);
+
+    res.status(200).json({
+      message: `Artifact ${s3Key} deleted`,
+      s3Key,
+    });
   }
 
   // copy a video and its scenes

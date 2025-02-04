@@ -75,10 +75,10 @@ async function getAspectRatioImages(prompt: string): Promise<string[]> {
   ).filter(Boolean); // Remove null values
 }
 
-function fetchImageLinks(prompt: string): Promise<string[]> {
+export function fetchImageLinks(prompt: string): Promise<string[]> {
   const encodedPrompt = encodeURIComponent(prompt);
   const url = `https://www.midjourney.com/api/app/vector-search?prompt=${encodedPrompt}&page=1&_ql=explore`;
-
+  // TODO: Read cookies from environment variables
   const curlCommand = `
     curl -s '${url}' \
     -H 'accept: */*' \

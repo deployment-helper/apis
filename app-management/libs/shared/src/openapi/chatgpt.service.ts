@@ -3,7 +3,6 @@ import { OpenAI } from 'openai';
 import { ConfigService } from '@nestjs/config';
 import { ELanguage } from '@app/shared/types';
 import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class ChatgptService {
@@ -27,6 +26,24 @@ export class ChatgptService {
     return await this.sentPrompt(prompt);
   }
 
+  async sceneDescToVisualDesc(sceneDesc: string): Promise<string> {
+    const prompt = `Convert the following 
+    
+    "${sceneDesc}"
+    
+    scene description to visual description. 
+    I will be using that visual description to search images on midjourney.com.
+    midjourney.com works best with small visual descriptions like 30 to 60 words.
+    
+    use this pattern to create visual description:
+    Subject + Action + Setting + Mood + Style
+    
+    provide visual description in single sentence
+    
+    `;
+    return await this.sentPrompt(prompt);
+  }
+
   async generateScenesScript(
     filePath: string,
     promptFilePath: string,
@@ -35,7 +52,7 @@ export class ChatgptService {
     return await this.sentPromptWithFile(prompt.toString(), filePath);
   }
 
-  async sentPrompt(text: string): Promise<string> {
+  private async sentPrompt(text: string): Promise<string> {
     this.logger.log(`Sending prompt to OpenAI: ${text}`);
     const completion = await this.openapi.chat.completions.create({
       // model: 'gpt-3.5-turbo',
@@ -57,7 +74,7 @@ export class ChatgptService {
     const subtitle = fs.readFileSync(filePath);
     const completion = await this.openapi.chat.completions.create({
       // model: 'gpt-3.5-turbo',
-      model: 'gpt-4-turbo',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
