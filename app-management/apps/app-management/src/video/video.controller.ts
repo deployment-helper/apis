@@ -221,18 +221,18 @@ export class VideoController {
     @Param('id') id: string,
     @Body('s3Key') s3Key: string,
     @Body('dbKey') dbKey: string,
-    @Body('propertyToCompare') propertyToCompare: string,
+    @Body('keyToCompare') keyToCompare: string,
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     const allowedDBKeys = ['artifacts', 'generatedVideoInfo'];
     const allowedPropertyToCompare = ['cloudFile', 's3Key'];
     dbKey = allowedDBKeys.includes(dbKey) ? dbKey : 'artifacts';
-    propertyToCompare = allowedPropertyToCompare.includes(propertyToCompare)
-      ? propertyToCompare
+    keyToCompare = allowedPropertyToCompare.includes(keyToCompare)
+      ? keyToCompare
       : 's3Key';
     video[dbKey] = video?.[dbKey]?.filter(
-      (_item) => _item[propertyToCompare] !== s3Key,
+      (_item) => _item[keyToCompare] !== s3Key,
     );
 
     await this.fireStore.update('video', id, { [dbKey]: video[dbKey] });
