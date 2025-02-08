@@ -6,6 +6,7 @@ import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { IGenerateVideoDto } from '../types';
 import { DEFAULT_MP3_SPEAKING_RATE } from '@app/shared/constants';
 import { SynthesisService } from '@app/shared/gcp/synthesis.service';
+import { DEFAULT_AUDIO_EXTENSION } from '@apps/batch-server/constants';
 
 /**
  * This file create a arrary of MP3 info from S3 file
@@ -135,7 +136,7 @@ export class SlidesAudioGenerator {
       true,
       speakerRefFile,
     );
-    const filename = `${sceneId}/mp3-files/${name}.mp3`;
+    const filename = `${sceneId}/mp3-files/${name}.${DEFAULT_AUDIO_EXTENSION}`;
     const audioFilePath = await this.fs.createFile(
       filename,
       audio[0].data,
@@ -147,7 +148,7 @@ export class SlidesAudioGenerator {
       const s3Filepath = this.fs.getFullPathFromFilename(
         audioFilePath,
         'mp3-files',
-        '-s3.wav',
+        `-s3.${DEFAULT_AUDIO_EXTENSION}`,
       );
       const silenceMp3 = await this.s3.getFileAndSave(
         postFixSilence,
@@ -156,7 +157,7 @@ export class SlidesAudioGenerator {
       const outputFile = this.fs.getFullPathFromFilename(
         audioFilePath,
         'mp3-files',
-        '-silence.wav',
+        `-silence.${DEFAULT_AUDIO_EXTENSION}`,
       );
       await this.ffmpeg.concat([audioFilePath, silenceMp3], outputFile);
       this.logger.log('End synthesis');
@@ -171,7 +172,7 @@ export class SlidesAudioGenerator {
     const fileJson = JSON.parse(fileStr);
     const filename = this.s3.mp3FileNameFromS3Key(key, false);
     const audioFilePath = await this.fs.createFile(
-      `${pid}/mp3-files/${filename}.mp3`,
+      `${pid}/mp3-files/${filename}.${DEFAULT_AUDIO_EXTENSION}`,
       fileJson.audioContent,
       true,
     );
