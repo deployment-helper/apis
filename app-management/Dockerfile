@@ -2,6 +2,10 @@ FROM node:18 AS base
 
 WORKDIR /app
 
+# Install curl
+RUN apt-get update && apt-get install -y curl
+
+
 COPY apps ./apps
 COPY libs ./libs
 COPY nest-cli.json ./
@@ -16,6 +20,10 @@ RUN npm run build
 FROM node:18-alpine AS release
 # Create app directory
 WORKDIR /app
+
+# Install curl
+RUN apk add --no-cache curl
+
 # Install production dependencies
 COPY --from=BASE /app/package*.json ./
 RUN npm install --only=production
