@@ -109,6 +109,7 @@ export function fetchImageLinks(prompt: string): Promise<string[]> {
       }
 
       try {
+        console.log('Curl stdout:', stdout);
         const response = JSON.parse(stdout);
         const images =
           response?.jobs?.map(
