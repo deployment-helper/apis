@@ -10,6 +10,7 @@ import { IProject } from '@apps/app-management/types';
 async function sleep(seconds) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
+
 async function saveImageFromUrl(url: string): Promise<Buffer> {
   const response = await fetch(url, {
     headers: {
@@ -107,13 +108,12 @@ export class ApiRunner implements IApiRunner {
   async downloadImageAndSave(url: string, videoId: string) {
     // Download image from S3
     if (url.startsWith('https://cdn.midjourney.com/')) {
-      console.log('Downloading Midjourney image' + url);
+      this.logger.log('Downloading Midjourney image ' + url);
       const image = url
         .replace('https://cdn.midjourney.com/', '')
         .split('/')
         .join('_');
       const body = await saveImageFromUrl(url);
-      console.log(body);
       const fullPath = await this.fs.createFile(
         `${videoId}/image-files/${image}`,
         body,
