@@ -191,7 +191,7 @@ export class FfmpegService {
   }
 
   applyRandomSceneFilter(inputs: string, outputs: string) {
-    const randomFilters = ['filterRotate', 'filterZoomIn', 'filterZoomOut'];
+    const randomFilters = ['filterZoomOut', 'filterZoomIn'];
 
     const randomFilter =
       randomFilters[Math.floor(Math.random() * randomFilters.length)];
@@ -300,8 +300,8 @@ export class FfmpegService {
         filter: 'zoompan',
         inputs: '_zoompaned',
         options: {
-          z: 'min(max(zoom,pzoom)+0.0001,1.5)',
-          d: 50,
+          z: 'min(max(zoom,pzoom)+0.0015,1.5)',
+          d: 100,
           x: 'iw/2-(iw/zoom/2)',
           y: 'ih/2-(ih/zoom/2)',
           fps: DEFAULT_FPS,
@@ -320,8 +320,8 @@ export class FfmpegService {
         filter: 'zoompan',
         inputs: '_zoompaned',
         options: {
-          z: 'if(lte(on,1),1.5,max(zoom,pzoom)-0.0001)',
-          d: 50,
+          z: 'max(1.5-0.0015*on,1)',
+          d: 10,
           x: 'iw/2-(iw/zoom/2)',
           y: 'ih/2-(ih/zoom/2)',
           fps: DEFAULT_FPS,

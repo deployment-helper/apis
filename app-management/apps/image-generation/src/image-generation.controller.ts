@@ -20,12 +20,21 @@ export class ImageGenerationController {
     @Body()
     body: {
       sceneDesc: string;
+      visualDesc?: string;
     },
-  ): Promise<string[]> {
-    const visualDesc = await this.chatgptService.sceneDescToVisualDesc(
-      body.sceneDesc,
-    );
+  ): Promise<{ visualDesc: string; links: string[] }> {
+    let visualDesc = body.visualDesc;
+    if (visualDesc?.length === 0) {
+      visualDesc = await this.chatgptService.sceneDescToVisualDesc(
+        body.sceneDesc,
+      );
+    }
+
     this.logger.log(`Visual description: ${visualDesc}`);
-    return fetchImageLinks(`${visualDesc} 16:9 aspect ratio`);
+    const links = await fetchImageLinks(`${visualDesc} 16:9 aspect ratio`);
+    return {
+      visualDesc: `${visualDesc} 16:9 aspect ratio`,
+      links,
+    };
   }
 }

@@ -56,7 +56,8 @@ export class ChatgptService {
     this.logger.log(`Sending prompt to OpenAI: ${text}`);
     const completion = await this.openapi.chat.completions.create({
       // model: 'gpt-3.5-turbo',
-      model: 'gpt-4-turbo',
+      // TODO: model selection should be configurable
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -74,6 +75,7 @@ export class ChatgptService {
     const subtitle = fs.readFileSync(filePath);
     const completion = await this.openapi.chat.completions.create({
       // model: 'gpt-3.5-turbo',
+      // TODO: model selection should be configurable
       model: 'gpt-4o',
       messages: [
         {
