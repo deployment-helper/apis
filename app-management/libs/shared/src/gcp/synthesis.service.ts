@@ -104,7 +104,7 @@ export class SynthesisService {
   ) {
     this.logger.log('TTS synthesis');
     //send a post request to TTS server to synthesize the text
-    const ttsLangCode = language === language.split('-')[0] || 'en';
+    const ttsLangCode = language.split('-')[1] || 'en';
     const body = {
       text,
       language: ttsLangCode,
