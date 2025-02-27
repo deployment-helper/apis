@@ -109,6 +109,7 @@ export function fetchImageLinks(prompt: string): Promise<string[]> {
       }
 
       try {
+        console.log('Curl stdout:', stdout);
         const response = JSON.parse(stdout);
         const images =
           response?.jobs?.map(
@@ -118,7 +119,7 @@ export function fetchImageLinks(prompt: string): Promise<string[]> {
         resolve(images);
       } catch (parseError) {
         console.error('Error parsing response:', parseError.message);
-        reject(parseError);
+        resolve([]);
       }
     });
   });
