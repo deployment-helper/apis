@@ -85,6 +85,11 @@ export class VideoController {
     const generatedVideoAssets = video?.generatedVideoInfo.map(
       (_asset) => _asset.cloudFile,
     );
+
+    // Check and add thumbnail to the assets
+    if (video?.thumbnailUrl) {
+      generatedVideoAssets.push(video.thumbnailUrl);
+    }
     await this.sharedService.deleteS3Assets(
       scenes[0] || '',
       project.assets,

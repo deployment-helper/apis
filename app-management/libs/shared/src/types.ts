@@ -90,6 +90,7 @@ export interface IVideo {
   projectId: string;
   generatedVideoInfo?: IGeneratedVideoInfo[];
   artifacts?: IArtifacts[];
+  thumbnailUrl?: string;
 }
 
 export interface IScene {
