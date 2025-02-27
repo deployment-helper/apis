@@ -26,11 +26,8 @@ jobs:
       - name: Create GitHub Issue
         uses: actions/github-script@v6
         with:
-          script: |
-            console.log("Debug");
-            console.log(JSON.stringify(github));
-            console.log(JSON.stringify(context));
-            const inputs = github.context.payload.inputs;
+          script: |            
+            const inputs = context.payload.inputs;
             const { title, desc, thumbnail_url, video_url } = inputs;
             const issueTitle = `New Issue: ${title}`;
             const issueBody = `
