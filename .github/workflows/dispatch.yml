@@ -27,7 +27,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { title, desc, thumbnail_url, video_url } = github.event.inputs;
+            const inputs = github.context.payload.inputs;
+            const { title, desc, thumbnail_url, video_url } = inputs;
             const issueTitle = `New Issue: ${title}`;
             const issueBody = `
             **Description**: ${desc}
