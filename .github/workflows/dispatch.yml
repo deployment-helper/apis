@@ -29,6 +29,7 @@ jobs:
           script: |
             console.log("Debug");
             console.log(JSON.stringify(github));
+            console.log(JSON.stringify(context));
             const inputs = github.context.payload.inputs;
             const { title, desc, thumbnail_url, video_url } = inputs;
             const issueTitle = `New Issue: ${title}`;
