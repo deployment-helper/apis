@@ -22,5 +22,6 @@ jobs:
     steps:
       - name: Print Inputs
         run: |
+          echo "Triggered by branch: ${{ github.ref }}"
           echo "Message: ${{ github.event.inputs.message }}"
           echo "Environment: ${{ github.event.inputs.environment }}"
