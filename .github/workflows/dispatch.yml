@@ -26,7 +26,7 @@ jobs:
       - name: Create GitHub Issue
         uses: actions/github-script@v6
         with:
-          script: |            
+          script: |
             const inputs = context.payload.inputs;
             const { title, desc, thumbnail_url, video_url } = inputs;
             const issueTitle = `New Issue: ${title}`;
@@ -35,12 +35,13 @@ jobs:
             **Thumbnail URL**: ${thumbnail_url}
             **Video URL**: ${video_url}
             `;
-            const issue = await github.issues.create({
+            const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: issueTitle,
               body: issueBody,
             });
+            
             core.setOutput('issue_number', issue.data.number);
 
   modify-files:
