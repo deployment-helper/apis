@@ -23,6 +23,7 @@ import { IProject } from '@apps/app-management/types';
 import { S3Service } from '@app/shared/aws/s3.service';
 import { Request } from 'express';
 import { S3_ARTIFACTS_FOLDER } from '@apps/app-management/constants';
+import { GitHubService } from '@app/shared/github/github.service';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -32,6 +33,7 @@ export class VideoController {
     private readonly gemini: GeminiService,
     private readonly sharedService: SharedService,
     private readonly s3: S3Service,
+    private readonly github: GitHubService,
   ) {}
 
   @Get('/fix')
@@ -283,6 +285,34 @@ export class VideoController {
       scenesId: newScenes.id,
       audioLanguage: langTo,
     });
+  }
+
+  // Upload video to youtube
+  @Post('/:id/upload')
+  async uploadToYoutube(
+    @Param('id') id: string,
+    @Body()
+    data: {
+      branch: string;
+    },
+    @Req() req: any,
+  ) {
+    const video = await this.fireStore.get<IVideo>('video', id);
+    // TODO: add validation to video data passed and present to the video level
+    this.github.triggerWorkflow(
+      'naveedshahzad',
+      'allchannels',
+      'workflow_dispatch.yml',
+      data.branch,
+      {
+        branch_name: data.branch,
+        title: video.name,
+        desc: video.description,
+        thumbnail_url: video.thumbnailUrl || '',
+        video_url: video.generatedVideoInfo[0].cloudFile,
+        video_id: video.id,
+      },
+    );
   }
 
   @Get('project/:projectId')
