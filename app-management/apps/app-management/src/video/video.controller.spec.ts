@@ -6,6 +6,7 @@ import { GcpModule } from '@app/shared/gcp/gcp.module';
 import { AwsModule as SharedAwsModule } from '@app/shared/aws/aws.module';
 import { FsService } from '@app/shared/fs/fs.service';
 import { SharedService } from '@app/shared/shared.service';
+import { GitHubService } from '@app/shared/github/github.service';
 
 describe('VideoController', () => {
   let controller: VideoController;
@@ -13,7 +14,7 @@ describe('VideoController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [VideoController],
-      providers: [FsService, SharedService],
+      providers: [FsService, SharedService, GitHubService],
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         AwsModule,
