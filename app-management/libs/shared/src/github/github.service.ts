@@ -29,8 +29,7 @@ export class GitHubService {
     },
   ) {
     this.logger.log(`Triggering workflow ${workflowId} in ${owner}/${repo}`);
-
-    await this.octokit.request(
+    return this.octokit.request(
       'POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
       {
         owner: owner,

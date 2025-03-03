@@ -295,24 +295,31 @@ export class VideoController {
     data: {
       branch: string;
     },
-    @Req() req: any,
+    @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     // TODO: add validation to video data passed and present to the video level
-    this.github.triggerWorkflow(
-      'naveedshahzad',
-      'allchannels',
-      'workflow_dispatch.yml',
-      data.branch,
-      {
-        branch_name: data.branch,
-        title: video.name,
-        desc: video.description,
-        thumbnail_url: video.thumbnailUrl || '',
-        video_url: video.generatedVideoInfo[0].cloudFile,
-        video_id: video.id,
-      },
-    );
+    try {
+      await this.github.triggerWorkflow(
+        'naveedshahzad',
+        'allchannels',
+        'workflow_dispatch.yml',
+        data.branch,
+        {
+          branch_name: data.branch,
+          title: video.name,
+          desc: video.description,
+          thumbnail_url: video.thumbnailUrl || '',
+          video_url: video.generatedVideoInfo[0].cloudFile,
+          video_id: video.id,
+        },
+      );
+      return res
+        .status(201)
+        .json({ message: 'Video uploaded to YouTube successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error uploading video to youtube' });
+    }
   }
 
   @Get('project/:projectId')
