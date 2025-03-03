@@ -300,16 +300,39 @@ export class VideoController {
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
+    const s3DownloadKey = video.generatedVideoInfo?.pop()?.cloudFile;
     const videoSignedDownloadUrl = await this.s3.getSignedUrlForDownload(
-      video.generatedVideoInfo?.pop()?.cloudFile,
+      s3DownloadKey,
     );
-    // TODO: add validation to video data passed and present to the video level
+    const errors = [];
+
+    if (!data.branch) {
+      errors.push('Branch is required');
+    }
+    if (!data.title) {
+      errors.push('Title is required');
+    }
+    if (!data.desc) {
+      errors.push('Description is required');
+    }
+    if (!video?.thumbnailUrl) {
+      errors.push('Thumbnail is not uploaded');
+    }
+
+    if (!s3DownloadKey) {
+      errors.push('Video is not generated yet');
+    }
+
+    if (errors.length) {
+      return res.status(400).json({ errors });
+    }
+
     try {
       await this.github.triggerWorkflow(
         'naveedshahzad',
         'allchannels',
         'workflow_dispatch.yml',
-        data.branch,
+        'main',
         {
           branch_name: data.branch,
           title: data.title,
