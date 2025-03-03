@@ -298,6 +298,9 @@ export class VideoController {
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
+    const videoSignedDownloadUrl = await this.s3.getSignedUrlForDownload(
+      video.generatedVideoInfo[0].cloudFile,
+    );
     // TODO: add validation to video data passed and present to the video level
     try {
       await this.github.triggerWorkflow(
@@ -310,7 +313,7 @@ export class VideoController {
           title: video.name,
           desc: video.description,
           thumbnail_url: video.thumbnailUrl || '',
-          video_url: video.generatedVideoInfo[0].cloudFile,
+          video_url: videoSignedDownloadUrl,
           video_id: video.id,
         },
       );
