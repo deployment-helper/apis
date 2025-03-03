@@ -119,7 +119,7 @@ export function fetchImageLinks(prompt: string): Promise<string[]> {
         resolve(images);
       } catch (parseError) {
         console.error('Error parsing response:', parseError.message);
-        reject(parseError);
+        resolve([]);
       }
     });
   });
