@@ -294,12 +294,14 @@ export class VideoController {
     @Body()
     data: {
       branch: string;
+      title: string;
+      desc: string;
     },
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     const videoSignedDownloadUrl = await this.s3.getSignedUrlForDownload(
-      video.generatedVideoInfo[0].cloudFile,
+      video.generatedVideoInfo?.pop()?.cloudFile,
     );
     // TODO: add validation to video data passed and present to the video level
     try {
@@ -310,8 +312,8 @@ export class VideoController {
         data.branch,
         {
           branch_name: data.branch,
-          title: video.name,
-          desc: video.description,
+          title: data.title,
+          desc: data.desc,
           thumbnail_url: video.thumbnailUrl || '',
           video_url: videoSignedDownloadUrl,
           video_id: video.id,
