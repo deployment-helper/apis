@@ -23,6 +23,7 @@ import { IProject } from '@apps/app-management/types';
 import { S3Service } from '@app/shared/aws/s3.service';
 import { Request } from 'express';
 import { S3_ARTIFACTS_FOLDER } from '@apps/app-management/constants';
+import { GitHubService } from '@app/shared/github/github.service';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -32,6 +33,7 @@ export class VideoController {
     private readonly gemini: GeminiService,
     private readonly sharedService: SharedService,
     private readonly s3: S3Service,
+    private readonly github: GitHubService,
   ) {}
 
   @Get('/fix')
@@ -85,6 +87,11 @@ export class VideoController {
     const generatedVideoAssets = video?.generatedVideoInfo.map(
       (_asset) => _asset.cloudFile,
     );
+
+    // Check and add thumbnail to the assets
+    if (video?.thumbnailUrl) {
+      generatedVideoAssets.push(video.thumbnailUrl);
+    }
     await this.sharedService.deleteS3Assets(
       scenes[0] || '',
       project.assets,
@@ -278,6 +285,69 @@ export class VideoController {
       scenesId: newScenes.id,
       audioLanguage: langTo,
     });
+  }
+
+  // Upload video to youtube
+  @Post('/:id/upload')
+  async uploadToYoutube(
+    @Param('id') id: string,
+    @Body()
+    data: {
+      branch: string;
+      title: string;
+      desc: string;
+    },
+    @Res() res: any,
+  ) {
+    const video = await this.fireStore.get<IVideo>('video', id);
+    const s3DownloadKey = video.generatedVideoInfo?.pop()?.cloudFile;
+    const videoSignedDownloadUrl = await this.s3.getSignedUrlForDownload(
+      s3DownloadKey,
+    );
+    const errors = [];
+
+    if (!data.branch) {
+      errors.push('Branch is required');
+    }
+    if (!data.title) {
+      errors.push('Title is required');
+    }
+    if (!data.desc) {
+      errors.push('Description is required');
+    }
+    if (!video?.thumbnailUrl) {
+      errors.push('Thumbnail is not uploaded');
+    }
+
+    if (!s3DownloadKey) {
+      errors.push('Video is not generated yet');
+    }
+
+    if (errors.length) {
+      return res.status(400).json({ errors });
+    }
+
+    try {
+      await this.github.triggerWorkflow(
+        'naveedshahzad',
+        'allchannels',
+        'workflow_dispatch.yml',
+        'main',
+        {
+          branch_name: data.branch,
+          title: data.title,
+          desc: data.desc,
+          thumbnail_url: video.thumbnailUrl || '',
+          video_url: videoSignedDownloadUrl,
+          video_id: video.id,
+        },
+      );
+      return res
+        .status(201)
+        .json({ message: 'Video uploaded to YouTube successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error uploading video to youtube' });
+    }
   }
 
   @Get('project/:projectId')

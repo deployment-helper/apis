@@ -5,7 +5,9 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { ELanguage, IBodyCopyDrawText } from '@app/shared/types';
 import { FontsService } from '@app/shared/fonts.service';
 
+// TODO: keep this settings at project level
 const DEFAULT_FPS = 30;
+const DURATION_XFADE = 2;
 
 // Documentation - https://ffmpeg.org/ffmpeg-filters.html#Description
 @Injectable()
@@ -633,6 +635,79 @@ export class FfmpegService {
     });
   }
 
+  async filterXfadeTransitionFade(
+    inputFilePaths: string[],
+    outputFilePath: string,
+  ): Promise<void> {
+    let filter = '';
+    let cumulativeOffset = 0; // Keeps track of cumulative duration
+
+    for (let i = 1; i < inputFilePaths.length; i++) {
+      const duration = await this.mp3Duration(inputFilePaths[i - 1]);
+
+      if (!duration) {
+        this.logger.error(
+          `Could not determine duration for video ${inputFilePaths[i]}`,
+        );
+        return;
+      }
+
+      cumulativeOffset += duration;
+      const offset = cumulativeOffset - i * DURATION_XFADE;
+
+      if (i === 1) {
+        filter += `[0:v][${i}:v]xfade=transition=fade:duration=${DURATION_XFADE}:offset=${offset}[v${i}];`;
+        filter += `[0:a][${i}:a]acrossfade=d=${DURATION_XFADE}[a${i}];`;
+      } else {
+        filter += `[v${
+          i - 1
+        }][${i}:v]xfade=transition=fade:duration=${DURATION_XFADE}:offset=${offset}[v${i}];`;
+        filter += `[a${
+          i - 1
+        }][${i}:a]acrossfade=d=${DURATION_XFADE}:curve1=nofade:curve2=nofade[a${i}];`;
+      }
+    }
+
+    filter = filter.slice(0, -1); // Remove the last semicolon
+
+    const lastVideoIndex = inputFilePaths.length - 1;
+    const command = ffmpeg();
+
+    return new Promise((resolve, reject) => {
+      inputFilePaths.forEach((input) => {
+        command.input(input);
+      });
+
+      command
+        .complexFilter(filter)
+        .outputOptions([
+          `-map [v${lastVideoIndex}]`,
+          `-map [a${lastVideoIndex}]`,
+          '-c:v libx264',
+          '-c:a aac',
+          '-b:a 192k',
+        ])
+        .on('start', (commandLine) => {
+          this.logger.log('Generated FFmpeg Command:', commandLine);
+        })
+        .on('end', () => {
+          this.logger.log('Merging completed successfully');
+          resolve();
+        })
+        .on('error', (err) => {
+          this.logger.error('Error during merging:', err);
+          reject();
+        })
+        .save(outputFilePath);
+    });
+  }
+
+  /**
+   * Merge multiple video files into a single video file
+   * @param inputFilePaths
+   * @param outputFilePath
+   * @param duration
+   */
   async mergeToFile(
     inputFilePaths: string[],
     outputFilePath: string,
@@ -700,6 +775,7 @@ export class FfmpegService {
     });
   }
 
+  // TODO: rename this method to generic name
   mp3Duration(mp3File: string) {
     // Use ffprobe to get the duration of the MP3 audio
     return new Promise<number>((resolve, reject) => {

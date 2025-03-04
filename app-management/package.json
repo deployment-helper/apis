@@ -55,6 +55,7 @@
     "jsonwebtoken": "^9.0.1",
     "jwks-rsa": "^3.0.1",
     "nest-cli": "^0.0.5",
+    "octokit": "^3.2.1",
     "openai": "^4.47.2",
     "pg": "^8.11.2",
     "probe-image-size": "^7.2.3",

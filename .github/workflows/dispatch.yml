@@ -1,0 +1,74 @@
+name: Custom Trigger Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: "Branch name to checkout"
+        required: true
+      title:
+        description: "Title"
+        required: true
+      desc:
+        description: "Description"
+        required: true
+      thumbnail_url:
+        description: "Thumbnail URL"
+        required: true
+      video_url:
+        description: "Video URL"
+        required: true
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Issue
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const inputs = context.payload.inputs;
+            const { title, desc, thumbnail_url, video_url } = inputs;
+            const issueTitle = `New Issue: ${title}`;
+            const issueBody = `
+            **Description**: ${desc}
+            **Thumbnail URL**: ${thumbnail_url}
+            **Video URL**: ${video_url}
+            `;
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+            });
+            
+            core.setOutput('issue_number', issue.data.number);
+
+  modify-files:
+    runs-on: ubuntu-latest
+    needs: create-issue
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch_name }}
+
+      - name: Modify title.txt
+        run: echo "${{ github.event.inputs.title }}" > title.txt
+
+      - name: Modify desc.txt
+        run: echo "${{ github.event.inputs.desc }}" > desc.txt
+
+      - name: Modify thumbnail.txt
+        run: echo "${{ github.event.inputs.thumbnail_url }}" > thumbnail.txt
+
+      - name: Modify video_url.txt
+        run: echo "${{ github.event.inputs.video_url }}" > video_url.txt
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add title.txt desc.txt thumbnail.txt video_url.txt
+          git commit -m "Update files with workflow inputs"
+          git push origin ${{ github.event.inputs.branch_name }}

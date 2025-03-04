@@ -9,6 +9,7 @@ import { ImageService } from './image.service';
 import { ChatgptService } from './openapi/chatgpt.service';
 import { GeminiService } from './gcp/gemini.service';
 import { AwsModule } from './aws/aws.module';
+import { GitHubService } from './github/github.service';
 
 @Module({
   providers: [
@@ -20,6 +21,7 @@ import { AwsModule } from './aws/aws.module';
     ImageService,
     ChatgptService,
     GeminiService,
+    GitHubService,
   ],
   exports: [
     SharedService,
