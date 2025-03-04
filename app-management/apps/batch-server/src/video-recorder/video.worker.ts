@@ -132,7 +132,7 @@ export class VideoWorker implements IWorker {
       );
       this.logger.log('End audio and image merge');
 
-      this.logger.log('Merge all videos');
+      this.logger.log('Start Merge all videos');
       const uniqueVideoName = uuid();
       const mergeAllVideoPath = this.fs.getFullPath(
         `${data.videoId}/${uniqueVideoName}.mp4`,
@@ -143,11 +143,19 @@ export class VideoWorker implements IWorker {
 
       const totalDuration = await this.ffmpeg.getTotalDuration(videoPaths);
       this.logger.debug('Total duration', totalDuration);
-      await this.ffmpeg.mergeToFile(
-        videoPaths,
-        mergeAllVideoPath,
-        totalDuration,
-      );
+      if (videoMeta?.mergeEffect === 'fade') {
+        await this.ffmpeg.filterXfadeTransitionFade(
+          videoPaths,
+          mergeAllVideoPath,
+        );
+      } else {
+        await this.ffmpeg.mergeToFile(
+          videoPaths,
+          mergeAllVideoPath,
+          totalDuration,
+        );
+      }
+
       // TODO: Add BG when BG music added to the video.
       const backgroundMusic = await this.s3.getFileAndSave(
         videoMeta.backgroundMusic,

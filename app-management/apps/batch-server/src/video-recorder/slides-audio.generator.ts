@@ -76,6 +76,7 @@ export class SlidesAudioGenerator {
           slide.meta.voiceCode,
           slide.meta?.postFixSilence,
           data.speakerRefFile,
+          slide.meta?.preFixSilence,
         );
         audioFiles.push({
           file: audioFilePath,
@@ -126,6 +127,7 @@ export class SlidesAudioGenerator {
     voiceCode?: string,
     postFixSilence?: string,
     speakerRefFile?: string,
+    preFixSilence?: string,
   ) {
     this.logger.log('Begin synthesis');
     const audio = await this.synthesisService.synthesize(
@@ -142,25 +144,48 @@ export class SlidesAudioGenerator {
       audio[0].data,
       true,
     );
+    const outputFile = this.fs.getFullPathFromFilename(
+      audioFilePath,
+      'mp3-files',
+      `-silence.${DEFAULT_AUDIO_EXTENSION}`,
+    );
+
+    const inputFiles = [audioFilePath];
 
     if (postFixSilence) {
       this.logger.log(`Postfix silence ${postFixSilence}`);
-      const s3Filepath = this.fs.getFullPathFromFilename(
+      const localFilePath = this.fs.getFullPathFromFilename(
         audioFilePath,
         'mp3-files',
         `-s3.${DEFAULT_AUDIO_EXTENSION}`,
       );
       const silenceMp3 = await this.s3.getFileAndSave(
         postFixSilence,
-        s3Filepath,
+        localFilePath,
       );
-      const outputFile = this.fs.getFullPathFromFilename(
+      inputFiles.push(silenceMp3);
+    }
+
+    if (preFixSilence) {
+      this.logger.log(`Prefix silence ${preFixSilence}`);
+      const localFilePath = this.fs.getFullPathFromFilename(
         audioFilePath,
         'mp3-files',
-        `-silence.${DEFAULT_AUDIO_EXTENSION}`,
+        `-s3.${DEFAULT_AUDIO_EXTENSION}`,
       );
-      await this.ffmpeg.concat([audioFilePath, silenceMp3], outputFile);
-      this.logger.log('End synthesis');
+      const silenceMp3 = await this.s3.getFileAndSave(
+        preFixSilence,
+        localFilePath,
+      );
+
+      //insert at the beginning of the array
+      inputFiles.unshift(silenceMp3);
+    }
+
+    await this.ffmpeg.concat(inputFiles, outputFile);
+    this.logger.log('End synthesis');
+
+    if (inputFiles.length > 1) {
       return outputFile;
     }
 
