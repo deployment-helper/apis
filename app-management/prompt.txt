@@ -174,4 +174,4 @@ Call to Action:
 "If you found this story inspiring, make sure to give it a thumbs up and share it with your friends. And don’t forget to subscribe to our channel for more motivational content like this. Hit the bell icon so you never miss an update! What kind of person are you – a potato, an egg, or a coffee bean? Let us know in the comments below!"
 ```
 
-And please give this output in json format without anything extra 
+And please give this output in json format

@@ -43,19 +43,36 @@ function cleanSubtitles(lines: string[]): string[] {
 }
 
 function extractAndParseJSON(input: string): any | null {
-  try {
+  const jsonMatch = input.match(/\{.*\}/s); // `s` flag allows multi-line matching
+  const jsonString = jsonMatch[0]; // Extracted JSON part
+  if (jsonMatch) {
+    try {
       // Regular expression to find JSON content inside a string
-      const jsonMatch = input.match(/\{.*\}/s); // `s` flag allows multi-line matching
-      
-      if (jsonMatch) {
-          const jsonString = jsonMatch[0]; // Extracted JSON part
-          return JSON.parse(jsonString); // Parse and return JSON object
-      }
-
-      return null; // No JSON found
-  } catch (error) {
+      return JSON.parse(jsonString); // Parse and return JSON object
+    } catch (error) {
       console.error("Error parsing JSON:", error);
-      return null;
+      //Sometimes GPT responds with
+      // {
+      //   "Title": "Navigating the Challenges: The Ripple Effects of Policy Changes"
+      //   "Hook": "How do unforeseen policy decisions impact lives beyond the capital’s corridors? Let's dive into the challenges faced by those directly affected."
+      //   "Introduction": "On a fateful day, the U.S. Supreme Court made a decisive ruling against the Trump administration's attempt to withhold billions in foreign aid approved by Congress. This decision, while momentarily halting administrative ambitions, left broader implications resonating far from Washington, touching the lives of farmers like John Boyd Junior."
+      //   "Action": "Despite the Court's ruling, the situation remains unresolved as the case returns to lower courts. As past ripple effects illustrate, back in January, Trump's decision to freeze aid saw humanitarian efforts stall globally, tangibly affecting U.S. farmers who counted on USAID to purchase their produce. The critical conduit for their crops, it became a symbol of agricultural stability, now awaiting a resolution in the tumultuous political realm."
+      //   "Observation": "Farmers like Boyd, a fourth-generation farmer of wheat, corn, and soybeans in Virginia, found themselves at ground zero of this impasse. Leaning on the National Black Farmers Association, which he founded, Boyd has often been critical of Trump's unpredictable policy shifts, especially tariffs impacting global trade. He views these announcements as disruptions that unscrupulously gamble with livelihoods far removed from policymakers' world."
+      //   "Moral Lesson": "The story underscores a pivotal lesson on resilience amidst adversity. Like many American farmers, Boyd relies on funding as a lifeline, casting light on how swiftly policy changes can thrust traditional stability into unnerving uncertainty. Such moments test core values and resolve—the very essence of true character."
+      //   "Application": "Reflecting on real-world trials, our response defines us indelibly. Farmers' stories reveal narratives mirroring broader challenges, teaching us that confronting adversity with perseverance and innovation can define pathways to overcoming systemic pressures. This principle applies universally across personal struggles and societal shifts."
+      //   "Conclusion": "From Boyd's predicament to corporate reactions against imposing tariffs, the central theme remains: how we adapt under duress molds our future. The unfolding saga invites reflection on resilience, adaptability, and the journey from coping to thriving. Ultimately, it's this transformation that can inspire collective progress."
+      //   "Word Count": "Approximately 400 words"
+      //   "Call to Action": "If this narrative resonates with you, consider its implications on broader societal challenges. Share this story with those seeking understanding in turbulent times, and subscribe for more insights into the real stories behind today’s headlines. What steps can you take to transform adversity into opportunity in your own life? Share your thoughts in the comments below!"
+      // }
+      let fixedString = jsonString.replace(/"\s+"/g, '", "');
+
+      try {
+          return JSON.parse(fixedString);
+      } catch (error) {
+          console.error("Failed to fix JSON:", error);
+          return null;
+      }
+    }
   }
 }
 
