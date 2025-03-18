@@ -301,11 +301,8 @@ export class VideoController {
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     const s3DownloadKey = video.generatedVideoInfo?.pop()?.cloudFile;
-    const videoSignedDownloadUrl = await this.s3.getSignedUrlForDownload(
-      s3DownloadKey,
-    );
     const errors = [];
-
+    // TODO: this validation can be done at framework level.
     if (!data.branch) {
       errors.push('Branch is required');
     }
@@ -326,6 +323,10 @@ export class VideoController {
     if (errors.length) {
       return res.status(400).json({ errors });
     }
+
+    const videoSignedDownloadUrl = await this.s3.getSignedUrlForDownload(
+      s3DownloadKey,
+    );
 
     try {
       await this.github.triggerWorkflow(
