@@ -16,7 +16,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:bs:dev": "nest start batch-server --watch",
-    "start:img:dev": "nest start image-generation --watch",
+    "start:img:dev": "nest start image-generation --debug --watch",
     "start:debug": "PORT=9000 nest start --debug --watch",
     "start:prod": "node dist/apps/app-management/main",
     "start:bs:prod": "node dist/apps/batch-server/main",
