@@ -28,12 +28,13 @@ export class ImageGenerationController {
       visualDesc = await this.chatgptService.sceneDescToVisualDesc(
         body.sceneDesc,
       );
+      visualDesc = `${visualDesc} 16:9 aspect ratio`;
     }
 
     this.logger.log(`Visual description: ${visualDesc}`);
-    const links = await fetchImageLinks(`${visualDesc} 16:9 aspect ratio`);
+    const links = await fetchImageLinks(visualDesc);
     return {
-      visualDesc: `${visualDesc} 16:9 aspect ratio`,
+      visualDesc: `${visualDesc}`,
       links,
     };
   }
