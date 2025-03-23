@@ -75,6 +75,43 @@ async function getAspectRatioImages(prompt: string): Promise<string[]> {
   ).filter(Boolean); // Remove null values
 }
 
+export async function generageImageRPC(prompt: string): Promise<string[]> {
+  console.log("RPC Call top");
+  //https://009c-2401-4900-883d-cab9-4889-83ef-c7cc-c5bc.ngrok-free.app/
+  const serviceKey = process.env.SERVICE_KEY;
+  const imageService = process.env.IMAGE_SERVICE;
+  const response = await fetch(`${imageService}/ai/images/scene-images?key=${serviceKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ visualDesc: prompt }),
+  });
+
+  if (!response.ok) {
+    return null;
+  } else{
+  console.log(JSON.stringify(response));
+  const data = await response.json();
+  const image_links = data?.links || [];
+  console.log("RPC Call");
+  console.log(image_links);
+  return (
+    await Promise.all(
+      image_links.map(async (imageUrl) => {
+        try {
+          const aspectRatio = await getAspectRatio(imageUrl);
+          return aspectRatio === '1.78' ? imageUrl : null;
+        } catch (error) {
+          console.log('error' + error);
+          return null;
+        }
+      }),
+    )
+  ).filter(Boolean); // Remove null values
+}
+}
+
 export function fetchImageLinks(prompt: string): Promise<string[]> {
   const encodedPrompt = encodeURIComponent(prompt);
   const url = `https://www.midjourney.com/api/app/vector-search?prompt=${encodedPrompt}&page=1&_ql=explore`;
