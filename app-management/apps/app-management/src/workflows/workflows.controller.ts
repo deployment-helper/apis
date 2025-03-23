@@ -16,7 +16,7 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { IProject } from '@apps/app-management/types';
-import getAspectRatioImages from '@app/shared/fetchImageLinks';
+import { generageImageRPC } from '@app/shared/fetchImageLinks';
 
 function cleanSubtitles(lines: string[]): string[] {
   const cleanedLines: string[] = [];
@@ -159,21 +159,29 @@ export class WorkflowsController {
     // }
 
     this.logger.log('Finished generating scenes script.');
+    const flattenedJson = Object.keys(rawData).reduce((acc, key) => {
+      if (typeof rawData[key] === 'object' && !Array.isArray(rawData[key])) {
+      acc[key] = JSON.stringify(rawData[key]); // Convert nested objects to string
+      } else {
+      acc[key] = rawData[key]; // Keep other values as is
+      }
+      return acc;
+    }, {});
 
+    console.log(flattenedJson);
     const scriptData: any = {};
-    scriptData['Title'] = rawData['Title'] || rawData['title'];
-    scriptData['Hook'] = rawData['Hook'] || rawData['hook'];
-    scriptData['Introduction'] = rawData['Introduction'] || rawData['introduction'];
-    scriptData['Action'] = rawData['Action'] || rawData['action'];
-    scriptData['Observation'] = rawData['Observation'] || rawData['observation'] ;
-    scriptData['Moral Lesson'] = rawData['Moral Lesson'] || rawData['moral_lesson'] || rawData['moral lesson'] || rawData['moral-lesson'];
-    scriptData['Application'] = rawData['Application'] || rawData['application'];
-    scriptData['Extended Reflection'] = rawData['Extended Reflection'] || rawData['extended_reflection'] || rawData['extended reflection'] || rawData['extended-reflection'];
-    scriptData['Incorporating Personal Growth'] =
-      rawData['Incorporating Personal Growth'] || rawData['incorporating_personal_growth'] || rawData['incorporating personal growth'] || rawData['incorporating-personal-growth'];
-    scriptData['Motivational Dialogues'] = rawData['Motivational Dialogues'] || rawData['motivational_dialogues'] || rawData['motivational dialogues'] || rawData['motivational-dialogues'];
-    scriptData['Conclusion'] = rawData['Conclusion'] || rawData['conclusion'];
-    scriptData['Call to Action'] = rawData['Call to Action'] || rawData['call_to_action'] || rawData['call to action'] || rawData['call-to-action'];
+    scriptData['Title'] = flattenedJson['Title'] || flattenedJson['title'];
+    scriptData['Hook'] = flattenedJson['Hook'] || flattenedJson['hook'];
+    scriptData['Introduction'] = flattenedJson['Introduction'] || flattenedJson['introduction'];
+    scriptData['Action'] = flattenedJson['Action'] || flattenedJson['action'];
+    scriptData['Observation'] = flattenedJson['Observation'] || flattenedJson['observation'] ;
+    scriptData['Moral Lesson'] = flattenedJson['Moral Lesson'] || flattenedJson['moral_lesson'] || flattenedJson['moral lesson'] || flattenedJson['moral-lesson'];
+    scriptData['Application'] = flattenedJson['Application'] || flattenedJson['application'];
+    scriptData['Extended Reflection'] = flattenedJson['Extended Reflection'] || flattenedJson['extended_reflection'] || flattenedJson['extended reflection'] || flattenedJson['extended-reflection'];
+    scriptData['Incorporating Personal Growth'] = flattenedJson['Incorporating Personal Growth'] || flattenedJson['incorporating_personal_growth'] || flattenedJson['incorporating personal growth'] || flattenedJson['incorporating-personal-growth'];
+    scriptData['Motivational Dialogues'] = flattenedJson['Motivational Dialogues'] || flattenedJson['motivational_dialogues'] || flattenedJson['motivational dialogues'] || flattenedJson['motivational-dialogues'];
+    scriptData['Conclusion'] = flattenedJson['Conclusion'] || flattenedJson['conclusion'];
+    scriptData['Call to Action'] = flattenedJson['Call to Action'] || flattenedJson['call_to_action'] || flattenedJson['call to action'] || flattenedJson['call-to-action'];
 
     const videoTitle = scriptData.Title;
     let sceneDescriptions = [];
@@ -223,21 +231,23 @@ export class WorkflowsController {
     for (let i = 0; i < sceneDescriptions.length; i++) {
       let visualDescription = await this.chatgptService.sceneDescToVisualDesc(sceneDescriptions[i]);
       if (sceneDescriptions[i]) {
-        let images = await getAspectRatioImages(
+        let images = await generageImageRPC(
           visualDescription
         );
         if (images.length == 0) {
-          images = await getAspectRatioImages(
+          images = await generageImageRPC(
             sceneDescriptions[i].slice(0, 70),
           );
         }
         if (images.length == 0) {
-          images = await getAspectRatioImages(
+          images = await generageImageRPC(
             sceneDescriptions[i].slice(35, 105),
           );
         }
         if (images.length == 0) {
-          images = await getAspectRatioImages(
+          images = await generageImageRPC
+          
+          (
             sceneDescriptions[i].slice(0, 35),
           );
         }
@@ -283,7 +293,7 @@ export class WorkflowsController {
   @Get('image-links')
   async getImageLinks(@Query('prompt') prompt: string): Promise<string[]> {
     try {
-      const images = await getAspectRatioImages(prompt);
+      const images = await generageImageRPC(prompt);
       console.log('Image Links:', images);
       return images;
     } catch (error) {
