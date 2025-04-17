@@ -44,6 +44,13 @@ export class AuthGuard implements CanActivate {
     const key = req?.query?.key;
     if (key === this.serviceKey) {
       this.logger.log('LOGIN WITH DEVELOPMENT KEY');
+      req['user'] = {
+        // TODO: read api key name from database.
+        // How to store api key and name in database and read it here?
+        // considering security best practices.
+        sub: 'dev-key',
+        email: 'no-email@example.com',
+      };
       return true;
     }
 

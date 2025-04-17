@@ -10,6 +10,11 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  ProjectResponseDto,
+} from './dto/project.dto';
 
 @Controller('projects')
 @UseGuards(AuthGuard)
@@ -23,11 +28,7 @@ export class ProjectController {
   }
 
   @Post('/')
-  // project_name: string
-  createProject(
-    @Body() data: { projectName: string; projectDesc: string },
-    @Req() req: any,
-  ) {
+  createProject(@Body() data: CreateProjectDto, @Req() req: any) {
     return this.firestoreService.add('project', {
       ...data,
       userId: req.user.sub,
@@ -35,14 +36,17 @@ export class ProjectController {
   }
 
   @Get('/')
-  async getProjects(@Req() req: any) {
+  async getProjects(@Req() req: any): Promise<any[]> {
     return this.firestoreService.listByFields('project', [
       { field: 'userId', value: req.user.sub },
     ]);
   }
 
   @Get(':id')
-  async getProject(@Req() req: any, @Param('id') id: string) {
+  async getProject(
+    @Req() req: any,
+    @Param('id') id: string,
+  ): Promise<ProjectResponseDto> {
     return this.firestoreService.get('project', id);
   }
 
@@ -50,7 +54,7 @@ export class ProjectController {
   async updateProject(
     @Req() req: any,
     @Param('id') id: string,
-    @Body() data: any,
+    @Body() data: UpdateProjectDto,
   ) {
     return this.firestoreService.update('project', id, data);
   }

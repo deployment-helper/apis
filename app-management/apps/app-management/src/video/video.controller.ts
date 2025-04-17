@@ -44,10 +44,15 @@ export class VideoController {
 
   // create a video
   @Post('/')
+  // TODO: create a DTO for this request
   async createVideo(@Body() data: any, @Req() req: any) {
     // convert properties to object
     const obj = {};
     if (data.properties) {
+      /**
+       * @Optional
+       * Custom DB properties
+       */
       const pairs = data.properties.split('\n');
 
       pairs.forEach((pair) => {
@@ -357,7 +362,9 @@ export class VideoController {
     @Param('projectId') projectId: string,
   ) {
     return this.fireStore.listByFields('video', [
-      { field: 'userId', value: req.user.sub },
+      // TODO: validate user access to the project
+      // API Key access to the project
+      // { field: 'userId', value: req.user.sub },
       { field: 'isDeleted', value: false },
       { field: 'projectId', value: projectId },
     ]);
