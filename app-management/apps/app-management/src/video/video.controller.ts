@@ -24,6 +24,14 @@ import { S3Service } from '@app/shared/aws/s3.service';
 import { Request } from 'express';
 import { S3_ARTIFACTS_FOLDER } from '@apps/app-management/constants';
 import { GitHubService } from '@app/shared/github/github.service';
+import {
+  CreateVideoDto,
+  UpdateVideoDto,
+  DeleteArtifactDto,
+  YoutubeUploadDto,
+  UpdateScenesDto,
+  ChangeScenePositionDto,
+} from './dto';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -44,8 +52,7 @@ export class VideoController {
 
   // create a video
   @Post('/')
-  // TODO: create a DTO for this request
-  async createVideo(@Body() data: any, @Req() req: any) {
+  async createVideo(@Body() data: CreateVideoDto, @Req() req: any) {
     // convert properties to object
     const obj = {};
     if (data.properties) {
@@ -121,7 +128,7 @@ export class VideoController {
 
   // Update video by id
   @Put('/:id')
-  updateVideo(@Param('id') id: string, @Body() data: any) {
+  updateVideo(@Param('id') id: string, @Body() data: UpdateVideoDto) {
     return this.fireStore.update('video', id, data);
   }
 
@@ -143,7 +150,7 @@ export class VideoController {
     @Param('sceneId') sceneId: string,
     @Param('sceneArrayIndex') sceneArrayIndex: string,
     @Query('addAfter') addAfter: boolean,
-    @Body() data: any,
+    @Body() data: UpdateScenesDto,
   ) {
     if (data?.scenes && Array.isArray(data.scenes)) {
       return this.fireStore.updateScene(
@@ -182,7 +189,7 @@ export class VideoController {
     @Param('id') id: string,
     @Param('sceneId') sceneId: string,
     @Param('sceneArrayIndex') sceneArrayIndex: number,
-    @Body() data: { newPosition: number },
+    @Body() data: ChangeScenePositionDto,
   ) {
     return this.fireStore.changeScenePosition(
       `video/${id}/scenes`,
@@ -231,28 +238,30 @@ export class VideoController {
   @Delete('/:id/artifact')
   async deleteArtifact(
     @Param('id') id: string,
-    @Body('s3Key') s3Key: string,
-    @Body('dbKey') dbKey: string,
-    @Body('keyToCompare') keyToCompare: string,
+    @Body() deleteArtifactDto: DeleteArtifactDto,
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
     const allowedDBKeys = ['artifacts', 'generatedVideoInfo'];
     const allowedPropertyToCompare = ['cloudFile', 's3Key'];
-    dbKey = allowedDBKeys.includes(dbKey) ? dbKey : 'artifacts';
-    keyToCompare = allowedPropertyToCompare.includes(keyToCompare)
-      ? keyToCompare
+    const dbKey = allowedDBKeys.includes(deleteArtifactDto.dbKey)
+      ? deleteArtifactDto.dbKey
+      : 'artifacts';
+    const keyToCompare = allowedPropertyToCompare.includes(
+      deleteArtifactDto.keyToCompare,
+    )
+      ? deleteArtifactDto.keyToCompare
       : 's3Key';
     video[dbKey] = video?.[dbKey]?.filter(
-      (_item) => _item[keyToCompare] !== s3Key,
+      (_item) => _item[keyToCompare] !== deleteArtifactDto.s3Key,
     );
 
     await this.fireStore.update('video', id, { [dbKey]: video[dbKey] });
-    await this.s3.delete(s3Key);
+    await this.s3.delete(deleteArtifactDto.s3Key);
 
     res.status(200).json({
-      message: `Artifact ${s3Key} deleted`,
-      s3Key,
+      message: `Artifact ${deleteArtifactDto.s3Key} deleted`,
+      s3Key: deleteArtifactDto.s3Key,
     });
   }
 
@@ -296,12 +305,7 @@ export class VideoController {
   @Post('/:id/upload')
   async uploadToYoutube(
     @Param('id') id: string,
-    @Body()
-    data: {
-      branch: string;
-      title: string;
-      desc: string;
-    },
+    @Body() data: YoutubeUploadDto,
     @Res() res: any,
   ) {
     const video = await this.fireStore.get<IVideo>('video', id);
@@ -364,7 +368,6 @@ export class VideoController {
     return this.fireStore.listByFields('video', [
       // TODO: validate user access to the project
       // API Key access to the project
-      // { field: 'userId', value: req.user.sub },
       { field: 'isDeleted', value: false },
       { field: 'projectId', value: projectId },
     ]);
