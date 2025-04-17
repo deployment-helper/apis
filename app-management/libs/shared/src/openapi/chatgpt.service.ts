@@ -57,7 +57,7 @@ export class ChatgptService {
     const completion = await this.openapi.chat.completions.create({
       // model: 'gpt-3.5-turbo',
       // TODO: model selection should be configurable
-      model: 'gpt-4o',
+      model: 'gpt-4-turbo',
       messages: [
         {
           role: 'system',
