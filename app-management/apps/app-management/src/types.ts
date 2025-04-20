@@ -15,11 +15,13 @@ export interface IProject {
   projectName: string;
   userId: string;
   assets: string[];
+  defaultLayout?: string;
   defaultLanguage?: string;
   defaultVoice?: string;
   defaultBackgroundMusic?: string;
   defaultOverlay?: string;
   defaultMp3SpeakingRate?: number;
+  sceneRandomAsset?: boolean;
 }
 
 export interface IUser {

@@ -31,7 +31,9 @@ import {
   YoutubeUploadDto,
   UpdateScenesDto,
   ChangeScenePositionDto,
+  CreateVideoWithScenesDto,
 } from './dto';
+import { getLayoutContent, getDefaultAsset } from './layouts.helper';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -83,6 +85,112 @@ export class VideoController {
     });
 
     return this.fireStore.update('video', video.id, { scenesId: scenes.id });
+  }
+
+  // Create a video with scenes in one request
+  @Post('/create-with-scenes')
+  async createVideoWithScenes(
+    @Body() data: CreateVideoWithScenesDto,
+    @Req() req: any,
+  ) {
+    // First fetch the project to get its settings
+    const project = await this.fireStore.get<IProject>(
+      'project',
+      data.projectId,
+    );
+    if (!project) {
+      throw new Error(`Project with ID ${data.projectId} not found`);
+    }
+
+    // Prepare assets and layout information upfront
+    const layoutId = data.layoutId || project.defaultLayout || '';
+    const assets = data.defaultAsset
+      ? [data.defaultAsset]
+      : project.assets || [];
+
+    // Get the default asset for this layout type once
+    const defaultAsset =
+      assets.length > 0
+        ? getDefaultAsset(layoutId, project.sceneRandomAsset || false, assets)
+        : '';
+
+    // Create the video first
+    const videoData = {
+      name: data.name,
+      description: data.description,
+      projectId: data.projectId,
+      audioLanguage: data.audioLanguage || project.defaultLanguage,
+      voiceCode: data.voiceCode || project.defaultVoice,
+      backgroundMusic: data.backgroundMusic || project.defaultBackgroundMusic,
+      defaultAsset: defaultAsset || data.defaultAsset, // Set the selected asset as default
+      isDeleted: false,
+      userId: req.user.sub,
+    };
+
+    // Add any custom properties if provided
+    if (data.properties) {
+      const obj = {};
+      const pairs = data.properties.split('\n');
+
+      pairs.forEach((pair) => {
+        const [key, value] = pair.split('=');
+        obj[key] = value;
+      });
+
+      Object.assign(videoData, obj);
+    }
+
+    // Create the video in the database
+    const video = await this.fireStore.add('video', videoData);
+
+    // Create empty scenes collection for the video
+    const scenes = await this.fireStore.add(`video/${video.id}/scenes`, {
+      videoId: video.id,
+      scenes: [],
+    });
+
+    // Update the video with the scenes ID
+    await this.fireStore.update('video', video.id, { scenesId: scenes.id });
+
+    // If scene descriptions are provided, create scenes
+    if (
+      data.sceneDescriptions &&
+      data.sceneDescriptions.length > 0 &&
+      layoutId
+    ) {
+      // Prepare the base content structure once
+      const baseContent = getLayoutContent(layoutId, defaultAsset);
+
+      // Prepare scenes data based on the scene descriptions
+      const scenesData = data.sceneDescriptions.map((description) => {
+        // Clone the base content for this scene and customize it
+        const content =
+          data.sceneContent || JSON.parse(JSON.stringify(baseContent));
+
+        // Apply description to title field if applicable
+        if (content && content.title) {
+          content.title.value = description;
+        }
+
+        // Create the scene object
+        return {
+          id: uuid(),
+          description,
+          layoutId,
+          content,
+          image: defaultAsset, // Use the already selected asset for all scenes
+        };
+      });
+
+      // Update the scenes with the prepared data
+      await this.fireStore.updateScene(
+        `video/${video.id}/scenes`,
+        scenes.id,
+        scenesData,
+      );
+    }
+
+    return this.fireStore.get('video', video.id);
   }
 
   // Delete a video
