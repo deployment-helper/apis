@@ -123,6 +123,7 @@ export class VideoController {
       voiceCode: data.voiceCode || project.defaultVoice,
       backgroundMusic: data.backgroundMusic || project.defaultBackgroundMusic,
       defaultAsset: defaultAsset || data.defaultAsset, // Set the selected asset as default
+      visualPrompt: data.visualPrompt || '', // Store the visual prompt
       isDeleted: false,
       userId: req.user.sub,
     };

@@ -40,6 +40,11 @@ export class CreateVideoWithScenesDto {
   defaultAsset?: string;
 
   /**
+   * Visual prompt for AI-powered image generation (optional)
+   */
+  visualPrompt?: string;
+
+  /**
    * Custom properties as key-value pairs (optional)
    */
   properties?: string;

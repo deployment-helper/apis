@@ -1,3 +1,4 @@
+import { ELanguage } from '@app/shared/types';
 import { ProjectModel } from './models/user.model';
 
 export interface User {
@@ -52,6 +53,21 @@ export interface IPresentation {
   s3MetaFile: string;
   updatedAt?: number;
   createdAt: Date;
+}
+
+export interface IVideo {
+  id: string;
+  name: string;
+  description?: string;
+  projectId: string;
+  userId: string;
+  isDeleted: boolean;
+  defaultAsset?: string;
+  backgroundMusic?: string;
+  audioLanguage?: ELanguage;
+  voiceCode?: string;
+  visualPrompt?: string; // Visual prompt for AI-powered image generation
+  scenesId?: string;
 }
 
 interface exoportDefault {
