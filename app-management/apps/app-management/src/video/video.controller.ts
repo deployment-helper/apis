@@ -19,7 +19,7 @@ import { FirestoreService } from '@app/shared/gcp/firestore.service';
 import { ELanguage, IArtifacts, IScenes, IVideo } from '@app/shared/types';
 import { GeminiService } from '@app/shared/gcp/gemini.service';
 import { SharedService } from '@app/shared/shared.service';
-import { IProject } from '@apps/app-management/types';
+import { IProject, VideoStatus } from '@apps/app-management/types';
 import { S3Service } from '@app/shared/aws/s3.service';
 import { Request } from 'express';
 import { S3_ARTIFACTS_FOLDER } from '@apps/app-management/constants';
@@ -76,6 +76,7 @@ export class VideoController {
       ...obj,
       isDeleted: false,
       userId: req.user.sub,
+      status: data.status || VideoStatus.IN_PROGRESS,
     });
 
     // Create a scenes sub collection for the video
@@ -142,7 +143,10 @@ export class VideoController {
     }
 
     // Create the video in the database
-    const video = await this.fireStore.add('video', videoData);
+    const video = await this.fireStore.add('video', {
+      ...videoData,
+      status: VideoStatus.IN_PROGRESS,
+    });
 
     // Create empty scenes collection for the video
     const scenes = await this.fireStore.add(`video/${video.id}/scenes`, {

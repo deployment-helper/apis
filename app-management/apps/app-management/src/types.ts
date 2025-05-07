@@ -11,6 +11,13 @@ export enum ProjectTypes {
   slideProjects = 'slideProjects',
 }
 
+// New enum for video statuses
+export enum VideoStatus {
+  IN_PROGRESS = 'in_progress',
+  PUBLISHED = 'published',
+  ERROR = 'error',
+}
+
 export interface IProject {
   id: string;
   projectName: string;
@@ -68,6 +75,7 @@ export interface IVideo {
   voiceCode?: string;
   visualPrompt?: string; // Visual prompt for AI-powered image generation
   scenesId?: string;
+status?: VideoStatus; // Track video processing status
 }
 
 interface exoportDefault {

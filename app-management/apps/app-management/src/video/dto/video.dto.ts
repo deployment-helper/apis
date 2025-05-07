@@ -1,4 +1,5 @@
 import { ELanguage, IGeneratedVideoInfo } from '@app/shared/types';
+import { VideoStatus } from '@apps/app-management/types';
 
 /**
  * DTO for creating a new video
@@ -14,6 +15,7 @@ export class CreateVideoDto {
   defaultAsset?: string;
   isPublished?: boolean;
   properties?: string;
+  status?: VideoStatus;
 }
 
 /**
@@ -30,6 +32,7 @@ export class UpdateVideoDto {
   defaultAsset?: string;
   isPublished?: boolean;
   thumbnailUrl?: string;
+  status?: VideoStatus;
 }
 
 /**
