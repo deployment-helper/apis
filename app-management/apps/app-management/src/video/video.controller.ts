@@ -465,6 +465,12 @@ export class VideoController {
           video_id: video.id,
         },
       );
+
+      // Update video status to PUBLISHED after successful upload
+      await this.fireStore.update('video', id, {
+        status: VideoStatus.PUBLISHED,
+      });
+
       return res
         .status(201)
         .json({ message: 'Video uploaded to YouTube successfully' });

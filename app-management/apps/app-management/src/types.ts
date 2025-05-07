@@ -75,7 +75,7 @@ export interface IVideo {
   voiceCode?: string;
   visualPrompt?: string; // Visual prompt for AI-powered image generation
   scenesId?: string;
-status?: VideoStatus; // Track video processing status
+  status?: VideoStatus; // Track video processing status
 }
 
 interface exoportDefault {
