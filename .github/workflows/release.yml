@@ -44,7 +44,6 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          #          GitHub Personal Access Token
           password: ${{ secrets.ACCESS_TOKEN }}
       - uses: docker/build-push-action@v4
         with:
@@ -91,14 +90,12 @@ jobs:
         run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.REGION }}
-          image: "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          platform: managed
-          flags: "--port=8000 --allow-unauthenticated"
+        run: |
+          gcloud run deploy ai-agent \
+          --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          --region ${{ env.REGION }} \
+          --platform managed \
+          --allow-unauthenticated \
 
       - name: Show Deployed URL
         run: echo "Deployed to ${{ steps.deploy.outputs.url }}"
