@@ -17,6 +17,7 @@ export class AuthGuard implements CanActivate {
   logger = new Logger(AuthGuard.name);
 
   constructor(private readonly configServ: ConfigService) {
+    // TODO: read service key from headers
     this.serviceKey = configServ.getOrThrow('SERVICE_KEY');
     this.jwksIns = new jwks.JwksClient({
       jwksUri: configServ.getOrThrow('AWS_COGNITO_JWKS_URL'),
