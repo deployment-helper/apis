@@ -104,7 +104,7 @@ export class VideoController {
     }
 
     // Prepare assets and layout information upfront
-    const layoutId = data.layoutId || project.defaultLayout || '';
+    const layoutId = data.layoutId || project.defaultLayout || 'layout3';
     const videoType = data.videoType  || 'message';
     const assets = data.defaultAsset
       ? [data.defaultAsset]
@@ -123,8 +123,8 @@ export class VideoController {
       projectId: data.projectId,
       audioLanguage: data.audioLanguage || project.defaultLanguage,
       voiceCode: data.voiceCode || project.defaultVoice,
-      backgroundMusic: data.backgroundMusic || project.defaultBackgroundMusic,
-      defaultAsset: defaultAsset || data.defaultAsset, // Set the selected asset as default
+      backgroundMusic: data.backgroundMusic || project.defaultBackgroundMusic || '',
+      defaultAsset: defaultAsset || data.defaultAsset || '', // Set the selected asset as default
       visualPrompt: data.visualPrompt || '', // Store the visual prompt
       isDeleted: false,
       userId: req.user.sub,
