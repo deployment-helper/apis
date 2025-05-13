@@ -1,5 +1,4 @@
-import { ELanguage } from '@app/shared/types';
-
+import { v4 as uuid } from 'uuid';
 /**
  * Helper functions to identify image files based on extension
  * Similar to getVideosFromAssets in the frontend
@@ -52,6 +51,17 @@ export const LAYOUTS = {
         placeholder: 'Subtitle',
       },
     },
+    prepareContent: (raw: any) => {
+      // Accepts string or object with title/subtitle
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout1.content));
+      if (typeof raw === 'object' && raw !== null) {
+        if (raw.title) content.title.value = raw.title;
+        if (raw.subtitle) content.subtitle.value = raw.subtitle;
+      } else {
+        content.title.value = raw;
+      }
+      return content;
+    },
   },
   layout2: {
     content: {
@@ -61,6 +71,15 @@ export const LAYOUTS = {
         value: '/no-image.png',
         placeholder: 'Image',
       },
+    },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout2.content));
+      if (typeof raw === 'string') {
+        content.image.value = raw;
+      } else if (raw && raw.image) {
+        content.image.value = raw.image;
+      }
+      return content;
     },
   },
   layout3: {
@@ -73,6 +92,11 @@ export const LAYOUTS = {
         placeholder: 'Title',
       },
     },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout3.content));
+      content.title.value = typeof raw === 'string' ? raw : raw?.title || '';
+      return content;
+    },
   },
   layout4: {
     content: {
@@ -82,6 +106,15 @@ export const LAYOUTS = {
         value: '',
         placeholder: 'video',
       },
+    },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout4.content));
+      if (typeof raw === 'string') {
+        content.video.value = raw;
+      } else if (raw && raw.video) {
+        content.video.value = raw.video;
+      }
+      return content;
     },
   },
   layout5: {
@@ -100,6 +133,16 @@ export const LAYOUTS = {
         placeholder: 'Title',
       },
     },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout5.content));
+      if (typeof raw === 'object' && raw !== null) {
+        if (raw.image) content.image.value = raw.image;
+        if (raw.title) content.title.value = raw.title;
+      } else {
+        content.title.value = raw;
+      }
+      return content;
+    },
   },
   layout6: {
     content: {
@@ -117,6 +160,16 @@ export const LAYOUTS = {
         placeholder: 'Title',
       },
     },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout6.content));
+      if (typeof raw === 'object' && raw !== null) {
+        if (raw.video) content.video.value = raw.video;
+        if (raw.title) content.title.value = raw.title;
+      } else {
+        content.title.value = raw;
+      }
+      return content;
+    },
   },
   layout7: {
     content: {
@@ -126,6 +179,90 @@ export const LAYOUTS = {
         value: '',
         placeholder: 'image',
       },
+    },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout7.content));
+      if (typeof raw === 'string') {
+        content.image.value = raw;
+      } else if (raw && raw.image) {
+        content.image.value = raw.image;
+      }
+      return content;
+    },
+  },
+  layout8: {
+    content: {
+      question: {
+        type: 'input',
+        name: 'question',
+        bodyCopyType: 'title',
+        value: 'What is your question?',
+        placeholder: 'Enter your question',
+      },
+      options: {
+        type: 'input',
+        name: 'options',
+        bodyCopyType: 'subtitle',
+        value:
+          '[{"text": "Option 1", "isCorrect": true}, ' +
+          '{"text": "Option 2", "isCorrect": false}]',
+        placeholder: 'Add JSON array of options with isCorrect flag',
+      },
+      isShowAnswer: {
+        type: 'input',
+        name: 'isShowAnswer',
+        value: 'false',
+        placeholder: 'true/false',
+      },
+    },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout8.content));
+      if (typeof raw === 'object' && raw !== null) {
+        if (raw.question) content.question.value = raw.question;
+        if (raw.options) content.options.value = JSON.stringify(raw.options);
+        if (raw.isShowAnswer !== undefined) {
+          content.isShowAnswer.value = String(raw.isShowAnswer);
+        }
+      } else {
+        content.question.value = raw;
+      }
+      return content;
+    },
+  },
+  layout9: {
+    content: {
+      question: {
+        type: 'input',
+        name: 'question',
+        bodyCopyType: 'title',
+        value: 'What is your question?',
+        placeholder: 'Enter your question',
+      },
+      correctAnswer: {
+        type: 'input',
+        name: 'correctAnswer',
+        bodyCopyType: 'subtitle',
+        value: 'The correct answer',
+        placeholder: 'Enter the correct answer',
+      },
+      explanation: {
+        type: 'input',
+        name: 'explanation',
+        bodyCopyType: 'body',
+        value: 'Explanation for the correct answer',
+        placeholder: 'Enter explanation for why this is correct',
+      },
+    },
+    prepareContent: (raw: any) => {
+      const content = JSON.parse(JSON.stringify(LAYOUTS.layout9.content));
+      if (typeof raw === 'object' && raw !== null) {
+        if (raw.question) content.question.value = raw.question;
+        if (raw.correctAnswer) content.correctAnswer.value = raw.correctAnswer;
+        if (raw.explanation) content.explanation.value = raw.explanation;
+      } else {
+        content.question.value = raw;
+      }
+      return content;
     },
   },
 };
@@ -188,31 +325,83 @@ export function getDefaultAsset(
  */
 export function getLayoutContent(
   layoutId: string,
-  asset?: string,
-  description?: string,
+  raw?: any,
 ) {
   const layout = LAYOUTS[layoutId];
   if (!layout) {
     return null;
   }
 
-  // Create a deep copy to avoid modifying the original
-  const contentCopy = JSON.parse(JSON.stringify(layout.content));
+  const contentCopy = layout.prepareContent
+    ? layout.prepareContent(raw)
+    : JSON.parse(JSON.stringify(layout.content));
+  
+  return contentCopy
+}
 
-  // Apply asset to appropriate field based on layout type
-  if (asset) {
-    if (contentCopy.image) {
-      contentCopy.image.value = asset;
-    }
-    if (contentCopy.video) {
-      contentCopy.video.value = asset;
-    }
-  }
+/**
+ * Prepares an array of scene content objects based on video type, layout, and raw content array.
+ * @param videoType The type of video ('message' | 'mcq')
+ * @param layoutId The layout identifier
+ * @param rawContentArr Array of raw content (e.g., descriptions, questions)
+ * @returns Array of scene content objects
+ */
+export function prepareScenesContent(
+  videoType: 'message' | 'mcq',
+  layoutId: string,
+  rawContentArr: any[],
+) {
+  const scenes: Array<Record<string, any>> = [];
+  rawContentArr.forEach((raw) => {
+    let content: Record<string, any> = {};
+    if (videoType === 'message') {
+      // message type works with layouts those have single content filed
+      // that content filed will have same filed value and description
+      // For message, treat raw as description/title
+      content = getLayoutContent(layoutId, raw);
+      scenes.push({
+        content,
+        description: raw.desc ? raw.desc : raw,
+        layoutId,
+        id: uuid(),
+      });
+    } else if (videoType === 'mcq') {
+      const questionContent = getLayoutContent('layout3', raw.question);
+      const optionsContent = getLayoutContent('layout8', raw);
+      const rightOptionsContent = getLayoutContent('layout8', {...raw, isShowAnswer: true});
+      const explanationContent = getLayoutContent('layout9', raw);
+      scenes.push({
+        content: questionContent,
+        layoutId: 'layout3',
+        description: raw.questionDescription,
+        id: uuid(),
+      });
+      scenes.push({
+        content: optionsContent,
+        layoutId: 'layout8',
+        description: raw.optionsDescription,
+        id: uuid(),
+      });
+      scenes.push({
+        content: rightOptionsContent,
+        layoutId: 'layout8',
+        description: raw.correctAnswerDescription,
+        id: uuid(),
+      });
+      scenes.push({
+        content: explanationContent,
+        layoutId: 'layout9',
+        description: raw.explanationDescription,
+        id: uuid(),
+      });
+    } else {
+      console.warn('Unknown video type:', videoType);
+      scenes.push({
+        content,
+        layoutId,
+      });
+    }    
+  });
 
-  // Apply description to title if available
-  if (description && contentCopy.title) {
-    contentCopy.title.value = description;
-  }
-
-  return contentCopy;
+  return scenes;
 }
