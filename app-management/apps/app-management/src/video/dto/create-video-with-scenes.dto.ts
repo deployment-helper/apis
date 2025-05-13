@@ -20,6 +20,13 @@ export class CreateVideoWithScenesDto {
   projectId: string;
 
   /**
+   * Video type to create (required)
+   * message - for a message a video where each scene has a simple text description and title.
+   * mcq - for a multiple-choice question video where each scene has a question and options and multiple scenes will be created for the single question.
+   */
+  videoType: 'message' | 'mcq';
+
+  /**
    * Language for audio generation (optional)
    */
   audioLanguage?: ELanguage;
@@ -64,5 +71,5 @@ export class CreateVideoWithScenesDto {
    * Array of scene descriptions, one per scene (optional)
    * Each description will be used to create a separate scene
    */
-  sceneDescriptions?: string[];
+  raw?: Array<any>;
 }

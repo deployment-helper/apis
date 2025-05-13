@@ -33,7 +33,7 @@ import {
   ChangeScenePositionDto,
   CreateVideoWithScenesDto,
 } from './dto';
-import { getLayoutContent, getDefaultAsset } from './layouts.helper';
+import { getLayoutContent, getDefaultAsset, prepareScenesContent } from './layouts.helper';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -105,6 +105,7 @@ export class VideoController {
 
     // Prepare assets and layout information upfront
     const layoutId = data.layoutId || project.defaultLayout || '';
+    const videoType = data.videoType  || 'message';
     const assets = data.defaultAsset
       ? [data.defaultAsset]
       : project.assets || [];
@@ -159,33 +160,12 @@ export class VideoController {
 
     // If scene descriptions are provided, create scenes
     if (
-      data.sceneDescriptions &&
-      data.sceneDescriptions.length > 0 &&
+      data.raw &&
+      data.raw.length > 0 &&
       layoutId
     ) {
-      // Prepare the base content structure once
-      const baseContent = getLayoutContent(layoutId, defaultAsset);
-
       // Prepare scenes data based on the scene descriptions
-      const scenesData = data.sceneDescriptions.map((description) => {
-        // Clone the base content for this scene and customize it
-        const content =
-          data.sceneContent || JSON.parse(JSON.stringify(baseContent));
-
-        // Apply description to title field if applicable
-        if (content && content.title) {
-          content.title.value = description;
-        }
-
-        // Create the scene object
-        return {
-          id: uuid(),
-          description,
-          layoutId,
-          content,
-          image: defaultAsset, // Use the already selected asset for all scenes
-        };
-      });
+      const scenesData = prepareScenesContent(videoType, layoutId, data.raw);
 
       // Update the scenes with the prepared data
       await this.fireStore.updateScene(
@@ -395,7 +375,7 @@ export class VideoController {
       generatedVideoInfo: [],
       userId: req.user.sub,
     });
-
+    
     const scenes = langTo
       ? await this.gemini.translateScenes(
           scenesDocs[0].scenes,
