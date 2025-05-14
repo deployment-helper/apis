@@ -48,6 +48,8 @@ export class SlidesRunner implements IWebRunner {
         this.slides.push({
           file: imagePath,
           description: meta.description,
+          layoutId: meta.layoutid,
+          slideId: meta.slideid,
           meta,
         });
       } while (await this.hasNextAndClick());

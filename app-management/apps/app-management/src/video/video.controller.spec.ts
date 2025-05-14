@@ -107,7 +107,7 @@ describe('VideoController', () => {
         name: 'Test Video',
         description: 'Test Description',
         layoutId: 'layout1',
-        sceneDescriptions: ['Scene 1', 'Scene 2'],
+        raw: ['Scene 1', 'Scene 2'],
       };
       const mockVideo = { id: 'video1' };
       const mockScenes = { id: 'scenes1' };

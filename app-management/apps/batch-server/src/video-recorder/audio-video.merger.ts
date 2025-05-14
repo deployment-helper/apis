@@ -4,6 +4,26 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { FfmpegService } from '@app/shared/ffmpeg.service';
 import { IBodyCopyDrawText } from '@app/shared/types';
 
+// Define layout types and their configurations
+interface LayoutConfig {
+  mediaType: 'image' | 'video';
+  includeTitle: boolean;
+}
+
+// Layout configuration mapping
+const LAYOUT_CONFIG: Record<string, LayoutConfig> = {
+  layout1: { mediaType: 'image', includeTitle: false },
+  layout2: { mediaType: 'image', includeTitle: false },
+  layout3: { mediaType: 'image', includeTitle: false },
+  layout4: { mediaType: 'video', includeTitle: false },
+  layout5: { mediaType: 'image', includeTitle: true },
+  layout6: { mediaType: 'video', includeTitle: true },
+  layout7: { mediaType: 'image', includeTitle: false },
+  layout8: { mediaType: 'image', includeTitle: false },
+  layout9: { mediaType: 'image', includeTitle: false },
+  // Add new layouts here following the same pattern
+};
+
 @Injectable()
 export class AudioVideoMerger {
   private readonly logger = new Logger(AudioVideoMerger.name);
@@ -33,6 +53,11 @@ export class AudioVideoMerger {
         this.logger.warn('No audio file found for slide');
         continue;
       }
+      if (!sceneInfo.layoutId) {
+        this.logger.log(`Continue ${sceneInfo}`);
+        this.logger.warn('No layout found for slide');
+        continue;
+      }
 
       const filename = sceneAudio.meta.filename;
       const videoId = sceneAudio.meta.pid;
@@ -49,23 +74,14 @@ export class AudioVideoMerger {
       // );
       this.logger.log('Start ffmpeg');
       try {
-        if (sceneInfo.layout === 'layout2') {
-          await this.layout2(sceneAudio.file, sceneInfo.file, videoPath);
-        } else if (sceneInfo.layout === 'layout4') {
-          await this.layout4(sceneAudio.file, sceneInfo.file, videoPath);
-        } else if (sceneInfo.layout === 'layout5') {
-          await this.layout5(sceneAudio.file, sceneInfo.file, videoPath, {
-            text: sceneInfo.meta.title,
-            type: 'title',
-          });
-        } else if (sceneInfo.layout === 'layout6') {
-          await this.layout6(sceneAudio.file, sceneInfo.file, videoPath, {
-            text: sceneInfo.meta.title,
-            type: 'title',
-          });
-        } else {
-          this.logger.error(`Layout not found ${sceneInfo.layout}`);
-        }
+        this.logger.debug(sceneInfo)
+        await this.processLayout(
+          sceneAudio.file,
+          sceneInfo.file,
+          videoPath,
+          sceneInfo.layoutId,
+          sceneInfo.meta,
+        );
 
         // this.logger.log('Add caption to video');
         // TODO: caption is not synced and not working for some languages like Hindi.
@@ -89,17 +105,85 @@ export class AudioVideoMerger {
     return videos;
   }
 
+  /**
+   * Process layout based on configuration
+   * @param mp3FilePath Audio file path
+   * @param mediaFilePath Image or video file path
+   * @param outputFilePath Output file path
+   * @param layout Layout type
+   * @param meta Metadata containing title information
+   */
+  async processLayout(
+    mp3FilePath: string,
+    mediaFilePath: string,
+    outputFilePath: string,
+    layout: string,
+    meta: any,
+  ) {
+    const config = LAYOUT_CONFIG[layout];
+
+    if (!config) {
+      this.logger.error(`Layout not found ${layout}`);
+      return;
+    }
+
+    // Prepare title configuration if needed
+    const bodyCopy = config.includeTitle
+      ? { text: meta.title, type: 'title' as const }
+      : undefined;
+
+    // Process based on media type
+    if (config.mediaType === 'image') {
+      await this.processMp3AndImage(mp3FilePath, mediaFilePath, outputFilePath, bodyCopy);
+    } else if (config.mediaType === 'video') {
+      await this.processMp3AndVideo(mp3FilePath, mediaFilePath, outputFilePath, bodyCopy);
+    }
+  }
+
+  /**
+   * Process MP3 and image files
+   */
+  private async processMp3AndImage(
+    mp3FilePath: string,
+    imageFilePath: string,
+    outputFilePath: string,
+    bodyCopy?: IBodyCopyDrawText,
+  ) {
+    await this.ffmpeg.mergeMp3AndImage(
+      mp3FilePath,
+      imageFilePath,
+      outputFilePath,
+      bodyCopy,
+    );
+  }
+
+  /**
+   * Process MP3 and video files
+   */
+  private async processMp3AndVideo(
+    mp3FilePath: string,
+    videoFilePath: string,
+    outputFilePath: string,
+    bodyCopy?: IBodyCopyDrawText,
+  ) {
+    await this.ffmpeg.mergeMp3AndVideo(
+      mp3FilePath,
+      videoFilePath,
+      outputFilePath,
+      bodyCopy,
+    );
+  }
+
+  // The following methods are preserved for backward compatibility
+  // and can be removed once all code is migrated to the new approach
+
   // Image layout
   async layout2(
     mp3FilePath: string,
     imageFilePath: string,
     outputFilePath: string,
   ) {
-    await this.ffmpeg.mergeMp3AndImage(
-      mp3FilePath,
-      imageFilePath,
-      outputFilePath,
-    );
+    await this.processMp3AndImage(mp3FilePath, imageFilePath, outputFilePath);
   }
 
   // Video layout
@@ -108,11 +192,7 @@ export class AudioVideoMerger {
     videoFilePath: string,
     outputFilePath: string,
   ) {
-    await this.ffmpeg.mergeMp3AndVideo(
-      mp3FilePath,
-      videoFilePath,
-      outputFilePath,
-    );
+    await this.processMp3AndVideo(mp3FilePath, videoFilePath, outputFilePath);
   }
 
   // Image + Title layout
@@ -122,12 +202,7 @@ export class AudioVideoMerger {
     outputFilePath: string,
     bodyCopy: IBodyCopyDrawText,
   ) {
-    await this.ffmpeg.mergeMp3AndImage(
-      mp3FilePath,
-      videoFilePath,
-      outputFilePath,
-      bodyCopy,
-    );
+    await this.processMp3AndImage(mp3FilePath, videoFilePath, outputFilePath, bodyCopy);
   }
 
   // Video + Title layout
@@ -137,11 +212,6 @@ export class AudioVideoMerger {
     outputFilePath: string,
     bodyCopy: IBodyCopyDrawText,
   ) {
-    await this.ffmpeg.mergeMp3AndVideo(
-      mp3FilePath,
-      videoFilePath,
-      outputFilePath,
-      bodyCopy,
-    );
+    await this.processMp3AndVideo(mp3FilePath, videoFilePath, outputFilePath, bodyCopy);
   }
 }
