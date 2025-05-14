@@ -156,19 +156,24 @@ export class VideoWorker implements IWorker {
         );
       }
 
-      // TODO: Add BG when BG music added to the video.
-      const backgroundMusic = await this.s3.getFileAndSave(
-        videoMeta.backgroundMusic,
-      );
+      let outputVideoPath = mergeAllVideoPath;
 
-      this.logger.log(`'Background music path = ${backgroundMusic}`);
-      await this.ffmpeg.addBackgroundMusicToVideo(
-        mergeAllVideoPath,
-        videoWithBGMusicPath,
-        backgroundMusic,
-      );
+      // Add background music only when it's available
+      if (videoMeta?.backgroundMusic) {
+        this.logger.log('Adding background music to video');
+        const backgroundMusic = await this.s3.getFileAndSave(
+          videoMeta.backgroundMusic,
+        );
 
-      let outputVideoPath = videoWithBGMusicPath;
+        this.logger.log(`Background music path = ${backgroundMusic}`);
+        await this.ffmpeg.addBackgroundMusicToVideo(
+          mergeAllVideoPath,
+          videoWithBGMusicPath,
+          backgroundMusic,
+        );
+
+        outputVideoPath = videoWithBGMusicPath;
+      }
 
       // Add overlay to video
       let overlayVideoPath = undefined;
