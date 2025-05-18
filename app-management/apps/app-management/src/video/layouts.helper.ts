@@ -323,10 +323,7 @@ export function getDefaultAsset(
  * Gets a layout content structure by ID with optional asset/description customization
  * Mimics the frontend getLayout behavior
  */
-export function getLayoutContent(
-  layoutId: string,
-  raw?: any,
-) {
+export function getLayoutContent(layoutId: string, raw?: any) {
   const layout = LAYOUTS[layoutId];
   if (!layout) {
     return null;
@@ -335,8 +332,8 @@ export function getLayoutContent(
   const contentCopy = layout.prepareContent
     ? layout.prepareContent(raw)
     : JSON.parse(JSON.stringify(layout.content));
-  
-  return contentCopy
+
+  return contentCopy;
 }
 
 /**
@@ -368,7 +365,10 @@ export function prepareScenesContent(
     } else if (videoType === 'mcq') {
       const questionContent = getLayoutContent('layout3', raw.question);
       const optionsContent = getLayoutContent('layout8', raw);
-      const rightOptionsContent = getLayoutContent('layout8', {...raw, isShowAnswer: true});
+      const rightOptionsContent = getLayoutContent('layout8', {
+        ...raw,
+        isShowAnswer: true,
+      });
       const explanationContent = getLayoutContent('layout9', raw);
       scenes.push({
         content: questionContent,
@@ -400,7 +400,7 @@ export function prepareScenesContent(
         content,
         layoutId,
       });
-    }    
+    }
   });
 
   return scenes;

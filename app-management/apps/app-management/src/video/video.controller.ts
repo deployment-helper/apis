@@ -12,7 +12,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { v4 as uuid } from 'uuid' 
+import { v4 as uuid } from 'uuid';
 
 import { AuthGuard } from '@apps/app-management/auth/auth.guard';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
@@ -33,7 +33,11 @@ import {
   ChangeScenePositionDto,
   CreateVideoWithScenesDto,
 } from './dto';
-import { getLayoutContent, getDefaultAsset, prepareScenesContent } from './layouts.helper';
+import {
+  getLayoutContent,
+  getDefaultAsset,
+  prepareScenesContent,
+} from './layouts.helper';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
@@ -105,7 +109,7 @@ export class VideoController {
 
     // Prepare assets and layout information upfront
     const layoutId = data.layoutId || project.defaultLayout || 'layout3';
-    const videoType = data.videoType  || 'message';
+    const videoType = data.videoType || 'message';
     const assets = data.defaultAsset
       ? [data.defaultAsset]
       : project.assets || [];
@@ -123,7 +127,8 @@ export class VideoController {
       projectId: data.projectId,
       audioLanguage: data.audioLanguage || project.defaultLanguage,
       voiceCode: data.voiceCode || project.defaultVoice,
-      backgroundMusic: data.backgroundMusic || project.defaultBackgroundMusic || '',
+      backgroundMusic:
+        data.backgroundMusic || project.defaultBackgroundMusic || '',
       defaultAsset: defaultAsset || data.defaultAsset || '', // Set the selected asset as default
       visualPrompt: data.visualPrompt || '', // Store the visual prompt
       isDeleted: false,
@@ -159,11 +164,7 @@ export class VideoController {
     await this.fireStore.update('video', video.id, { scenesId: scenes.id });
 
     // If scene descriptions are provided, create scenes
-    if (
-      data.raw &&
-      data.raw.length > 0 &&
-      layoutId
-    ) {
+    if (data.raw && data.raw.length > 0 && layoutId) {
       // Prepare scenes data based on the scene descriptions
       const scenesData = prepareScenesContent(videoType, layoutId, data.raw);
 
@@ -375,7 +376,7 @@ export class VideoController {
       generatedVideoInfo: [],
       userId: req.user.sub,
     });
-    
+
     const scenes = langTo
       ? await this.gemini.translateScenes(
           scenesDocs[0].scenes,
