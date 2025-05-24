@@ -54,7 +54,7 @@ export class VideoProcessor {
     this.logger.log(job.data);
 
     const browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--enable-gpu', '--use-angle'],
     });
 

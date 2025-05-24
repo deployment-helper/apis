@@ -6,7 +6,7 @@ export class ImageService {
   private readonly logger = new Logger(ImageService.name);
 
   async cropImage(
-    imageBuffer: Buffer,
+    imageBuffer: Uint8Array,
     cropOptions: {
       top: number;
       left: number;

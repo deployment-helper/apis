@@ -260,7 +260,9 @@ export class VideoWorker implements IWorker {
       this.logger.log('Star browser');
       const browser = await puppeteer
         .launch({
-          headless: 'new',
+          // TODO: need to test shell for this browser as that mode is more performant for
+          // screenshots and video generation
+          headless: true,
           timeout: 0,
           args: ['--no-sandbox', '--enable-gpu', '--disable-setuid-sandbox'],
         })

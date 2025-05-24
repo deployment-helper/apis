@@ -6,10 +6,6 @@ import { FsService } from '@app/shared/fs/fs.service';
 import { S3Service } from '@app/shared/aws/s3.service';
 import { ImageService } from '@app/shared/image.service';
 
-/**
- * This Slide runner is designed for Vinay's slides portal.
- * Runner take screenshot and get meta information for provided URLs slides
- */
 export class SlidesRunner implements IWebRunner {
   nextArrowSelector = 'aside .navigate-right.enabled .controls-arrow';
   slideSelector = '.slides section.present';
@@ -116,18 +112,19 @@ export class SlidesRunner implements IWebRunner {
     return await this.page.click(this.nextArrowSelector);
   }
 
-  async takeScreenshot(): Promise<Buffer> {
+  async takeScreenshot(): Promise<Uint8Array> {
     return await this.page.screenshot({ encoding: 'binary' });
   }
 
-  async takeScreenshotAndSave(meta: any, pid: string) {
-    let image = await this.takeScreenshot();
-    image = await this.imageService.cropImage(image, {
-      left: 132,
-      right: 132,
-      top: 68,
-      bottom: 80,
+  async takeElementScreenshot(elementSelector: string): Promise<Uint8Array> {
+    const element = await this.page.$(elementSelector);
+    return await element.screenshot({
+      encoding: 'binary',
     });
+  }
+
+  async takeScreenshotAndSave(meta: any, pid: string) {
+    const image = await this.takeElementScreenshot(this.slideSelector);
     const filename = this.s3.mp3FileNameFromS3Key(meta.name, false);
     const imagePath = await this.fs.createFile(
       `${pid}/image-files/${filename}.png`,
