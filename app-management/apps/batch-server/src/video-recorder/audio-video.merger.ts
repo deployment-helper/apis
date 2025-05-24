@@ -11,16 +11,44 @@ interface LayoutConfig {
 }
 
 // Layout configuration mapping
+// TODO: This layout configuration should be moved to a separate file
 const LAYOUT_CONFIG: Record<string, LayoutConfig> = {
-  layout1: { mediaType: 'image', includeTitle: false },
-  layout2: { mediaType: 'image', includeTitle: false },
-  layout3: { mediaType: 'image', includeTitle: false },
-  layout4: { mediaType: 'video', includeTitle: false },
-  layout5: { mediaType: 'image', includeTitle: true },
-  layout6: { mediaType: 'video', includeTitle: true },
-  layout7: { mediaType: 'image', includeTitle: false },
-  layout8: { mediaType: 'image', includeTitle: false },
-  layout9: { mediaType: 'image', includeTitle: false },
+  layout1: {
+    mediaType: 'image',
+    includeTitle: false,
+  },
+  layout2: {
+    mediaType: 'image',
+    includeTitle: false,
+  },
+  layout3: {
+    mediaType: 'image',
+    includeTitle: false,
+  },
+  layout4: {
+    mediaType: 'video',
+    includeTitle: false,
+  },
+  layout5: {
+    mediaType: 'image',
+    includeTitle: true,
+  },
+  layout6: {
+    mediaType: 'video',
+    includeTitle: true,
+  },
+  layout7: {
+    mediaType: 'image',
+    includeTitle: false,
+  },
+  layout8: {
+    mediaType: 'image',
+    includeTitle: false,
+  },
+  layout9: {
+    mediaType: 'image',
+    includeTitle: false,
+  },
   // Add new layouts here following the same pattern
 };
 
@@ -74,7 +102,7 @@ export class AudioVideoMerger {
       // );
       this.logger.log('Start ffmpeg');
       try {
-        this.logger.debug(sceneInfo)
+        this.logger.debug(sceneInfo);
         await this.processLayout(
           sceneAudio.file,
           sceneInfo.file,
@@ -134,9 +162,23 @@ export class AudioVideoMerger {
 
     // Process based on media type
     if (config.mediaType === 'image') {
-      await this.processMp3AndImage(mp3FilePath, mediaFilePath, outputFilePath, bodyCopy);
+      // Get applyDefaultAnimation from scene meta or config with a default of true
+      const applyAnimation = !!meta?.applyDefaultAnimation;
+
+      await this.processMp3AndImage(
+        mp3FilePath,
+        mediaFilePath,
+        outputFilePath,
+        bodyCopy,
+        applyAnimation,
+      );
     } else if (config.mediaType === 'video') {
-      await this.processMp3AndVideo(mp3FilePath, mediaFilePath, outputFilePath, bodyCopy);
+      await this.processMp3AndVideo(
+        mp3FilePath,
+        mediaFilePath,
+        outputFilePath,
+        bodyCopy,
+      );
     }
   }
 
@@ -148,12 +190,14 @@ export class AudioVideoMerger {
     imageFilePath: string,
     outputFilePath: string,
     bodyCopy?: IBodyCopyDrawText,
+    applyDefaultAnimation = false,
   ) {
     await this.ffmpeg.mergeMp3AndImage(
       mp3FilePath,
       imageFilePath,
       outputFilePath,
       bodyCopy,
+      applyDefaultAnimation,
     );
   }
 
@@ -172,46 +216,5 @@ export class AudioVideoMerger {
       outputFilePath,
       bodyCopy,
     );
-  }
-
-  // The following methods are preserved for backward compatibility
-  // and can be removed once all code is migrated to the new approach
-
-  // Image layout
-  async layout2(
-    mp3FilePath: string,
-    imageFilePath: string,
-    outputFilePath: string,
-  ) {
-    await this.processMp3AndImage(mp3FilePath, imageFilePath, outputFilePath);
-  }
-
-  // Video layout
-  async layout4(
-    mp3FilePath: string,
-    videoFilePath: string,
-    outputFilePath: string,
-  ) {
-    await this.processMp3AndVideo(mp3FilePath, videoFilePath, outputFilePath);
-  }
-
-  // Image + Title layout
-  async layout5(
-    mp3FilePath: string,
-    videoFilePath: string,
-    outputFilePath: string,
-    bodyCopy: IBodyCopyDrawText,
-  ) {
-    await this.processMp3AndImage(mp3FilePath, videoFilePath, outputFilePath, bodyCopy);
-  }
-
-  // Video + Title layout
-  async layout6(
-    mp3FilePath: string,
-    videoFilePath: string,
-    outputFilePath: string,
-    bodyCopy: IBodyCopyDrawText,
-  ) {
-    await this.processMp3AndVideo(mp3FilePath, videoFilePath, outputFilePath, bodyCopy);
   }
 }

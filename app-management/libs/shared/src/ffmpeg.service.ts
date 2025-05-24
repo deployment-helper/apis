@@ -21,6 +21,7 @@ export class FfmpegService {
     imageFilePath: string,
     outputFilePath: string,
     bodyCopy?: IBodyCopyDrawText,
+    applyDefaultAnimation = false,
   ): Promise<void> {
     // delete previous output file
     await this.fs.deleteFile(outputFilePath);
@@ -40,13 +41,29 @@ export class FfmpegService {
       const complexFilter = [
         this.filterFps('1:v', 'fps'),
         this.filterSetpts('fps', 'setpts'),
-        ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
+      ];
+
+      // Only apply random scene filter if applyDefaultAnimation is true
+      if (applyDefaultAnimation) {
+        complexFilter.push(
+          ...this.applyRandomSceneFilter('setpts', 'randomFiltered'),
+        );
+      } else {
+        // If no animation, just pass setpts output to be used as randomFiltered
+        complexFilter.push({
+          filter: 'copy',
+          inputs: 'setpts',
+          outputs: 'randomFiltered',
+        });
+      }
+
+      complexFilter.push(
         this.filterScale('randomFiltered', 'scaled', {
           w: '1920',
           h: '1080',
         }),
         this.filterSetSar('scaled', 'output'),
-      ];
+      );
 
       if (bodyCopy) {
         output = 'bodyCopyOutput';

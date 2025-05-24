@@ -80,21 +80,30 @@ export class SlidesRunner implements IWebRunner {
 
   async getSlideMeta(): Promise<any> {
     const item = await this.page.$(this.slideSelector);
+    const booleanKeys = ['applydefaultanimation'];
     try {
       if (item) {
-        const dataset = await item.evaluate((el) => {
-          const htmlElement = el as HTMLElement;
-          const dataset = htmlElement.dataset;
-          // Create an empty key-value map
-          const datasetMap = {};
+        const dataset: Record<string, string | boolean> = await item.evaluate(
+          (el) => {
+            const htmlElement = el as HTMLElement;
+            const dataset = htmlElement.dataset;
+            // Create an empty key-value map
+            const datasetMap = {};
 
-          // Iterate through the dataset properties and populate the map
-          for (const key in dataset) {
-            datasetMap[key] = dataset[key];
+            // Iterate through the dataset properties and populate the map
+            for (const key in dataset) {
+              datasetMap[key] = dataset[key];
+            }
+
+            return datasetMap;
+          },
+        );
+        // Convert boolean keys from string to boolean
+        for (const key of booleanKeys) {
+          if (dataset[key]) {
+            dataset[key] = dataset[key] === 'true' ? true : false;
           }
-
-          return datasetMap;
-        });
+        }
         this.logger.debug(`Dataset ${JSON.stringify(dataset)}`);
         return dataset;
       }

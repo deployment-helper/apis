@@ -29,7 +29,7 @@ export interface IApiRunner {
 }
 
 export type TSlideInfo = {
-  file: string;  
+  file: string;
   slideId?: string;
   layoutId?: string;
   meta?: any;
