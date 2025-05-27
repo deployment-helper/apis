@@ -10,6 +10,7 @@ import { AwsModule } from './aws/aws.module';
 import { VideoModule } from './video/video.module';
 import { AiModule } from './ai/ai.module';
 import { OpenapiModule } from './openapi/openapi.module';
+import { AgentModule } from './agent/agent.module';
 import { WorkflowsController } from './workflows/workflows.controller';
 import { ChatgptService } from '@app/shared/openapi/chatgpt.service';
 import { FirestoreService } from '@app/shared/gcp/firestore.service';
@@ -47,6 +48,7 @@ import {
     VideoModule,
     AiModule,
     OpenapiModule,
+    AgentModule,
   ],
   controllers: [AppController, WorkflowsController, BatchController],
   providers: [AppService, ChatgptService, FirestoreService],
