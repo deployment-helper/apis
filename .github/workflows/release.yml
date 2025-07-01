@@ -110,6 +110,8 @@ jobs:
             NODE_ENV= 'production'
             FONT_DIR=${{ secrets.FONT_DIR }}
             TTS_SERVER_URL=${{ secrets.TTS_SERVER_URL }}
+            AGENT_SERVICE_URL= https://temp-url.com
+            AGENT_SERVICE_KEY= temp_key
           secrets: |
             AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest
             AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest
