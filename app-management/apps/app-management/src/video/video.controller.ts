@@ -11,6 +11,7 @@ import {
   Req,
   Res,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 
@@ -33,15 +34,12 @@ import {
   ChangeScenePositionDto,
   CreateVideoWithScenesDto,
 } from './dto';
-import {
-  getLayoutContent,
-  getDefaultAsset,
-  prepareScenesContent,
-} from './layouts.helper';
+import { getDefaultAsset, prepareScenesContent } from './layouts.helper';
 
 @Controller('videos')
 @UseGuards(AuthGuard)
 export class VideoController {
+  private logger = new Logger('VideoController');
   constructor(
     private readonly fireStore: FirestoreService,
     private readonly gemini: GeminiService,
@@ -451,11 +449,14 @@ export class VideoController {
       await this.fireStore.update('video', id, {
         status: VideoStatus.PUBLISHED,
       });
-
+      this.logger.log(
+        `Video ${id} uploaded to YouTube successfully on branch ${data.branch}`,
+      );
       return res
         .status(201)
         .json({ message: 'Video uploaded to YouTube successfully' });
     } catch (error) {
+      this.logger.error('Error uploading video to YouTube', error);
       res.status(500).json({ message: 'Error uploading video to youtube' });
     }
   }
