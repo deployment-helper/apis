@@ -27,4 +27,16 @@ export class SynthesisController {
       body.speakerRefFile,
     );
   }
+
+  @Post('multi-voice')
+  async synthesizeMultiVoiceConversation(
+    @Body()
+    body: {
+      conversationText: string;
+    },
+  ) {
+    return this.synthesisService.synthesizeMultiVoiceConversation(
+      body.conversationText,
+    );
+  }
 }
